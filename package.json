@@ -62,5 +62,9 @@
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3",
     "zustand": "^5.0.14"
+  },
+  "dependencies": {
+    "@tailwindcss/postcss": "^4.3.2",
+    "vite": "^8.1.3"
   }
 }

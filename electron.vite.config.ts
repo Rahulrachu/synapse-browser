@@ -6,10 +6,12 @@ export default defineConfig({
   main: {
     plugins: [externalizeDepsPlugin()],
     build: {
-      outDir: 'dist/main',
+      lib: {
+        entry: path.resolve(__dirname, 'src/main/background.ts'),
+      },
       rollupOptions: {
-        input: {
-          index: path.resolve(__dirname, 'src/main/background.ts'),
+        output: {
+          format: 'es',
         },
       },
     },
@@ -17,10 +19,12 @@ export default defineConfig({
   preload: {
     plugins: [externalizeDepsPlugin()],
     build: {
-      outDir: 'dist/preload',
+      lib: {
+        entry: path.resolve(__dirname, 'src/main/preload.ts'),
+      },
       rollupOptions: {
-        input: {
-          index: path.resolve(__dirname, 'src/main/preload.ts'),
+        output: {
+          format: 'es',
         },
       },
     },
@@ -38,7 +42,9 @@ export default defineConfig({
     },
     plugins: [react()],
     build: {
-      outDir: 'dist/renderer',
+      rollupOptions: {
+        input: path.resolve(__dirname, 'index.html'),
+      },
     },
   },
 });
