@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain, Menu, dialog, session } from 'electron';
 import path from 'path';
 import { isDev } from '../common/utils';
 import BrowserManager from './BrowserManager';
+import DownloadManager from './DownloadManager';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -32,6 +33,7 @@ export function createWindow() {
 
   setupIPC();
   setupContextMenu();
+  DownloadManager.setupDownloadHandler(mainWindow);
 
   mainWindow.on('closed', () => {
     mainWindow = null;
@@ -68,9 +70,24 @@ function setupIPC() {
     return BrowserManager.getCurrentUrl();
   });
 
-  ipcMain.handle('get-current-title', async () => {
-    return BrowserManager.getCurrentTitle();
-  });
+ipcMain.handle('get-current-title', async () => {
+  return BrowserManager.getCurrentTitle();
+});
+
+// Download handlers
+ipcMain.handle('get-downloads', async () => {
+  return DownloadManager.getDownloads();
+});
+
+ipcMain.handle('open-downloads-folder', async () => {
+  DownloadManager.openDownloadsFolder();
+  return true;
+});
+
+ipcMain.handle('clear-downloads', async () => {
+  DownloadManager.clearDownloads();
+  return true;
+});
 
   ipcMain.handle('get-app-version', () => app.getVersion());
   ipcMain.handle('get-app-path', () => app.getAppPath());

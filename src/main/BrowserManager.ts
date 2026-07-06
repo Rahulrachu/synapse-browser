@@ -1,5 +1,6 @@
 import { BrowserWindow, webContents, WebContents } from 'electron';
 import { getMainWindow } from './BrowserWindow';
+import { setupContextMenu } from './ContextMenu';
 
 interface TabInfo {
   id: string;
@@ -46,6 +47,7 @@ class BrowserManager {
 
     // Setup event listeners
     this.setupWebContentsListeners(tabWindow.webContents, tabId);
+    setupContextMenu(tabWindow.webContents);
 
     // Navigate to URL
     if (url !== 'about:blank') {
