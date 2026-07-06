@@ -2,6 +2,7 @@ import { app, ipcMain } from 'electron';
 import { createWindow } from './BrowserWindow';
 import BrowserManager from './BrowserManager';
 import Storage from './Storage';
+import SessionManager from './SessionManager';
 
 let mainWindow: any = null;
 
@@ -117,4 +118,29 @@ ipcMain.handle('add-to-history', async (event, url: string, title: string) => {
 ipcMain.handle('clear-history', async () => {
   Storage.clearHistory();
   return true;
+});
+
+// Session handlers
+ipcMain.handle('get-sessions', async () => {
+  return SessionManager.getSessions();
+});
+
+ipcMain.handle('get-session', async (event, id: string) => {
+  return SessionManager.getSession(id);
+});
+
+ipcMain.handle('save-session', async (event, name: string, tabs: any[]) => {
+  return SessionManager.saveSession(name, tabs);
+});
+
+ipcMain.handle('update-session', async (event, id: string, tabs: any[]) => {
+  return SessionManager.updateSession(id, tabs);
+});
+
+ipcMain.handle('delete-session', async (event, id: string) => {
+  return SessionManager.deleteSession(id);
+});
+
+ipcMain.handle('rename-session', async (event, id: string, newName: string) => {
+  return SessionManager.renameSession(id, newName);
 });
