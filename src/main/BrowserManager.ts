@@ -1,20 +1,23 @@
-import { BrowserWindow, webContents, WebContents } from 'electron';
+import { WebContentsView, ipcMain, app } from 'electron';
 import { getMainWindow } from './BrowserWindow';
 import { setupContextMenu } from './ContextMenu';
 
 interface TabInfo {
   id: string;
-  windowId: number;
+  viewId?: number;
   url: string;
   title: string;
   favicon?: string;
   isLoading: boolean;
+  canGoBack: boolean;
+  canGoForward: boolean;
 }
 
 class BrowserManager {
   private tabs: Map<string, TabInfo> = new Map();
   private activeTabId: string | null = null;
-  private tabWindows: Map<string, BrowserWindow> = new Map(); // tabId -> BrowserWindow
+  private tabViews: Map<string, WebContentsView> = new Map(); // tabId -> WebContentsView
+  private currentBrowserBounds: { x: number; y: number; width: number; height: number } | null = null;
 
   createTab(url: string = 'about:blank'): string {
     const mainWindow = getMainWindow();
@@ -22,12 +25,10 @@ class BrowserManager {
 
     const tabId = Date.now().toString();
 
-    // Create a new BrowserWindow for this tab (hidden, will be embedded)
-    const tabWindow = new BrowserWindow({
-      show: false,
+    // Create a new WebContentsView for this tab
+    const view = new WebContentsView({
       webPreferences: {
         sandbox: true,
-        preload: require.resolve('./preload.js'),
         contextIsolation: true,
         nodeIntegration: false,
       },
@@ -35,35 +36,44 @@ class BrowserManager {
 
     const tabInfo: TabInfo = {
       id: tabId,
-      windowId: tabWindow.id,
+      viewId: view.webContents.id,
       url,
       title: 'New Tab',
       isLoading: false,
+      canGoBack: false,
+      canGoForward: false,
     };
 
     this.tabs.set(tabId, tabInfo);
-    this.tabWindows.set(tabId, tabWindow);
+    this.tabViews.set(tabId, view);
     this.activeTabId = tabId;
 
     // Setup event listeners
-    this.setupWebContentsListeners(tabWindow.webContents, tabId);
-    setupContextMenu(tabWindow.webContents);
+    this.setupWebContentsListeners(view.webContents, tabId);
+    setupContextMenu(view.webContents);
 
     // Navigate to URL
     if (url !== 'about:blank') {
-      tabWindow.webContents.loadURL(url).catch((err: Error) => {
+      view.webContents.loadURL(url).catch((err: Error) => {
         console.error('Failed to load URL:', err);
-        tabWindow.webContents.loadURL('about:blank').catch(console.error);
+        view.webContents.loadURL('about:blank').catch(console.error);
       });
     } else {
-      tabWindow.webContents.loadURL('about:blank').catch(console.error);
+      view.webContents.loadURL('about:blank').catch(console.error);
     }
 
+    // Attach view to main window if bounds are set
+    if (this.currentBrowserBounds) {
+      mainWindow.contentView.addChildView(view);
+      view.setBounds(this.currentBrowserBounds);
+    }
+
+    this.broadcastTabsUpdate();
     return tabId;
   }
 
-  private setupWebContentsListeners(wc: WebContents, tabId: string) {
-    wc.on('page-title-updated', (event, title) => {
+  private setupWebContentsListeners(wc: any, tabId: string) {
+    wc.on('page-title-updated', (event: any, title: string) => {
       const tab = this.tabs.get(tabId);
       if (tab) {
         tab.title = title;
@@ -87,10 +97,37 @@ class BrowserManager {
       }
     });
 
-    wc.on('did-navigate', (event, url) => {
+    wc.on('did-navigate', (event: any, url: string) => {
       const tab = this.tabs.get(tabId);
       if (tab) {
         tab.url = url;
+        this.broadcastTabUpdate(tabId);
+      }
+    });
+
+    wc.on('did-navigate-in-page', (event: any, url: string) => {
+      const tab = this.tabs.get(tabId);
+      if (tab) {
+        tab.url = url;
+        this.broadcastTabUpdate(tabId);
+      }
+    });
+
+    // Track navigation history state
+    wc.on('did-start-navigation', () => {
+      const tab = this.tabs.get(tabId);
+      if (tab) {
+        tab.canGoBack = wc.canGoBack();
+        tab.canGoForward = wc.canGoForward();
+        this.broadcastTabUpdate(tabId);
+      }
+    });
+
+    wc.on('did-stop-loading', () => {
+      const tab = this.tabs.get(tabId);
+      if (tab) {
+        tab.canGoBack = wc.canGoBack();
+        tab.canGoForward = wc.canGoForward();
         this.broadcastTabUpdate(tabId);
       }
     });
@@ -115,16 +152,20 @@ class BrowserManager {
   closeTab(tabId: string): void {
     const tab = this.tabs.get(tabId);
     if (tab) {
-      const tabWindow = this.tabWindows.get(tabId);
-      if (tabWindow && !tabWindow.isDestroyed()) {
-        tabWindow.close();
+      const view = this.tabViews.get(tabId);
+      if (view) {
+        const mainWindow = getMainWindow();
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.contentView.removeChildView(view);
+        }
       }
       this.tabs.delete(tabId);
-      this.tabWindows.delete(tabId);
+      this.tabViews.delete(tabId);
 
       if (this.activeTabId === tabId) {
         const remainingTabs = Array.from(this.tabs.keys());
         this.activeTabId = remainingTabs[0] || null;
+        this.updateActiveTabView();
       }
 
       this.broadcastTabsUpdate();
@@ -134,7 +175,25 @@ class BrowserManager {
   setActiveTab(tabId: string): void {
     if (this.tabs.has(tabId)) {
       this.activeTabId = tabId;
+      this.updateActiveTabView();
       this.broadcastTabsUpdate();
+    }
+  }
+
+  private updateActiveTabView(): void {
+    const mainWindow = getMainWindow();
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+
+    // Hide all views except active
+    for (const [tabId, view] of this.tabViews.entries()) {
+      if (tabId === this.activeTabId) {
+        view.setVisible(true);
+        if (this.currentBrowserBounds) {
+          view.setBounds(this.currentBrowserBounds);
+        }
+      } else {
+        view.setVisible(false);
+      }
     }
   }
 
@@ -148,8 +207,8 @@ class BrowserManager {
     const tab = this.tabs.get(this.activeTabId);
     if (!tab) return false;
 
-    const tabWindow = this.tabWindows.get(this.activeTabId);
-    if (!tabWindow || tabWindow.isDestroyed()) return false;
+    const view = this.tabViews.get(this.activeTabId);
+    if (!view) return false;
 
     // Ensure URL has protocol
     let finalUrl = url;
@@ -157,7 +216,7 @@ class BrowserManager {
       finalUrl = 'https://' + url;
     }
 
-    tabWindow.webContents.loadURL(finalUrl).catch((err: Error) => {
+    view.webContents.loadURL(finalUrl).catch((err: Error) => {
       console.error('Failed to load URL:', err);
     });
 
@@ -167,14 +226,11 @@ class BrowserManager {
   goBack(): boolean {
     if (!this.activeTabId) return false;
 
-    const tab = this.tabs.get(this.activeTabId);
-    if (!tab) return false;
+    const view = this.tabViews.get(this.activeTabId);
+    if (!view) return false;
 
-    const tabWindow = this.tabWindows.get(this.activeTabId);
-    if (!tabWindow || tabWindow.isDestroyed()) return false;
-
-    if (tabWindow.webContents.canGoBack()) {
-      tabWindow.webContents.goBack();
+    if (view.webContents.canGoBack()) {
+      view.webContents.goBack();
       return true;
     }
 
@@ -184,14 +240,11 @@ class BrowserManager {
   goForward(): boolean {
     if (!this.activeTabId) return false;
 
-    const tab = this.tabs.get(this.activeTabId);
-    if (!tab) return false;
+    const view = this.tabViews.get(this.activeTabId);
+    if (!view) return false;
 
-    const tabWindow = this.tabWindows.get(this.activeTabId);
-    if (!tabWindow || tabWindow.isDestroyed()) return false;
-
-    if (tabWindow.webContents.canGoForward()) {
-      tabWindow.webContents.goForward();
+    if (view.webContents.canGoForward()) {
+      view.webContents.goForward();
       return true;
     }
 
@@ -201,26 +254,20 @@ class BrowserManager {
   reload(): boolean {
     if (!this.activeTabId) return false;
 
-    const tab = this.tabs.get(this.activeTabId);
-    if (!tab) return false;
+    const view = this.tabViews.get(this.activeTabId);
+    if (!view) return false;
 
-    const tabWindow = this.tabWindows.get(this.activeTabId);
-    if (!tabWindow || tabWindow.isDestroyed()) return false;
-
-    tabWindow.webContents.reload();
+    view.webContents.reload();
     return true;
   }
 
   stopLoading(): boolean {
     if (!this.activeTabId) return false;
 
-    const tab = this.tabs.get(this.activeTabId);
-    if (!tab) return false;
+    const view = this.tabViews.get(this.activeTabId);
+    if (!view) return false;
 
-    const tabWindow = this.tabWindows.get(this.activeTabId);
-    if (!tabWindow || tabWindow.isDestroyed()) return false;
-
-    tabWindow.webContents.stop();
+    view.webContents.stop();
     return true;
   }
 
@@ -238,13 +285,16 @@ class BrowserManager {
     return tab?.title || '';
   }
 
-  private broadcastTabsUpdate() {
-    const mainWindow = getMainWindow();
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('tabs-updated', {
-        tabs: this.getAllTabs(),
-        activeTabId: this.activeTabId,
-      });
+  // Called by React when browser area size changes
+  setBrowserAreaBounds(bounds: { x: number; y: number; width: number; height: number }): void {
+    this.currentBrowserBounds = bounds;
+
+    // Update active view bounds
+    if (this.activeTabId) {
+      const view = this.tabViews.get(this.activeTabId);
+      if (view) {
+        view.setBounds(bounds);
+      }
     }
   }
 
@@ -255,11 +305,14 @@ class BrowserManager {
     return this.createTab(tab.url);
   }
 
-  getWebContents(tabId: string): WebContents | null {
-    const tabWindow = this.tabWindows.get(tabId);
-    if (!tabWindow || tabWindow.isDestroyed()) return null;
-
-    return tabWindow.webContents;
+  private broadcastTabsUpdate() {
+    const mainWindow = getMainWindow();
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('tabs-updated', {
+        tabs: this.getAllTabs(),
+        activeTabId: this.activeTabId,
+      });
+    }
   }
 }
 

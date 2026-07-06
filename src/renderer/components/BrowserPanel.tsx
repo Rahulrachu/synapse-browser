@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, ArrowRight, RotateCcw, Loader, Home, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, RotateCcw, Loader, Home, X, Plus } from 'lucide-react';
 import { useWorkspaceStore } from '../store/workspaceStore';
 import { useBrowserStore } from '../store/browserStore';
 import AdvancedTabBar from './AdvancedTabBar';
@@ -9,11 +9,13 @@ interface Tab {
   title: string;
   url: string;
   isLoading: boolean;
-  windowId: number;
+  viewId?: number;
   isPinned?: boolean;
   isSleeping?: boolean;
   color?: string;
   groupId?: string;
+  canGoBack?: boolean;
+  canGoForward?: boolean;
 }
 
 export default function BrowserPanel() {
@@ -24,7 +26,7 @@ export default function BrowserPanel() {
   const [urlInput, setUrlInput] = useState('');
   const [canGoBack, setCanGoBack] = useState(false);
   const [canGoForward, setCanGoForward] = useState(false);
-  const webviewRef = useRef<any>(null);
+  const browserAreaRef = useRef<HTMLDivElement>(null);
 
   // Initialize tabs on mount
   useEffect(() => {
@@ -42,6 +44,8 @@ export default function BrowserPanel() {
         setActiveTabId(result.activeTabId);
         if (mappedTabs.length > 0) {
           setUrlInput(mappedTabs[0].url);
+          setCanGoBack(mappedTabs[0].canGoBack || false);
+          setCanGoForward(mappedTabs[0].canGoForward || false);
         }
       } catch (error) {
         console.error('Failed to initialize tabs:', error);
@@ -69,6 +73,8 @@ export default function BrowserPanel() {
       );
       if (tab.id === activeTabId) {
         setUrlInput(tab.url);
+        setCanGoBack(tab.canGoBack || false);
+        setCanGoForward(tab.canGoForward || false);
       }
     };
 
@@ -80,6 +86,36 @@ export default function BrowserPanel() {
       (window as any).electron.ipcRenderer.removeListener('tab-updated', handleTabUpdated);
     };
   }, [storeTabs]);
+
+  // Send browser area bounds to main process when size changes
+  useEffect(() => {
+    const sendBrowserBounds = () => {
+      if (browserAreaRef.current) {
+        const rect = browserAreaRef.current.getBoundingClientRect();
+        (window as any).electron.ipcRenderer.invoke('resize-browser-area', {
+          x: Math.round(rect.left),
+          y: Math.round(rect.top),
+          width: Math.round(rect.width),
+          height: Math.round(rect.height),
+        }).catch((err: Error) => {
+          console.error('Failed to resize browser area:', err);
+        });
+      }
+    };
+
+    // Send on mount
+    sendBrowserBounds();
+
+    // Send on window resize
+    const handleResize = () => {
+      sendBrowserBounds();
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   const handleAddTab = async () => {
     try {
@@ -122,6 +158,8 @@ export default function BrowserPanel() {
       const tab = result.tabs.find((t: Tab) => t.id === tabId);
       if (tab) {
         setUrlInput(tab.url);
+        setCanGoBack(tab.canGoBack || false);
+        setCanGoForward(tab.canGoForward || false);
       }
     } catch (error) {
       console.error('Failed to select tab:', error);
@@ -255,39 +293,31 @@ export default function BrowserPanel() {
               : 'bg-gray-100 border-gray-300 text-gray-900 placeholder-gray-500'
           } focus:outline-none focus:ring-2 focus:ring-synapse-accent`}
         />
+        {activeTab?.isLoading && (
+          <Loader size={18} className="animate-spin text-synapse-accent" />
+        )}
       </div>
 
-      {/* Browser Content Area - Placeholder */}
-      <div className={`flex-1 overflow-hidden ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
-        {activeTab ? (
-          <div className="w-full h-full flex items-center justify-center">
-            <div className="text-center">
-              <p className={`mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-400'}`}>
-                Browser View
-              </p>
-              <p className={`text-sm ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
-                {activeTab.url}
-              </p>
-              <p className={`text-xs mt-2 ${isDarkMode ? 'text-gray-600' : 'text-gray-600'}`}>
-                {activeTab.isLoading ? 'Loading...' : 'Page loaded'}
-              </p>
-              {activeTab.isSleeping && (
-                <p className="text-xs mt-2 text-yellow-500">This tab is sleeping (memory optimized)</p>
-              )}
-            </div>
-          </div>
-        ) : (
+      {/* Browser Content Area - WebContentsView will render here */}
+      <div
+        ref={browserAreaRef}
+        className={`flex-1 overflow-hidden ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}
+      >
+        {tabs.length === 0 ? (
           <div className="w-full h-full flex items-center justify-center">
             <div className="text-center">
               <p className={isDarkMode ? 'text-gray-400' : 'text-gray-400'}>No tabs open</p>
               <button
                 onClick={handleAddTab}
-                className="mt-4 px-4 py-2 bg-synapse-accent text-white rounded hover:bg-synapse-accent-light transition"
+                className="mt-4 px-4 py-2 bg-synapse-accent text-white rounded hover:bg-synapse-accent-light transition flex items-center gap-2 mx-auto"
               >
+                <Plus size={18} />
                 Open New Tab
               </button>
             </div>
           </div>
+        ) : (
+          <div className="w-full h-full" />
         )}
       </div>
     </div>

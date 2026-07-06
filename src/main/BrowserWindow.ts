@@ -92,6 +92,20 @@ ipcMain.handle('clear-downloads', async () => {
   ipcMain.handle('get-app-version', () => app.getVersion());
   ipcMain.handle('get-app-path', () => app.getAppPath());
   ipcMain.handle('get-user-data-path', () => app.getPath('userData'));
+
+  // Browser area management
+  ipcMain.handle('resize-browser-area', async (event, bounds: { x: number; y: number; width: number; height: number }) => {
+    BrowserManager.setBrowserAreaBounds(bounds);
+    return true;
+  });
+
+  ipcMain.handle('duplicate-tab', async (event, tabId: string) => {
+    const newTabId = BrowserManager.duplicateTab(tabId);
+    return {
+      tabs: BrowserManager.getAllTabs(),
+      activeTabId: newTabId,
+    };
+  });
 }
 
 function setupContextMenu() {
