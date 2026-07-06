@@ -1,6 +1,7 @@
 import { app, ipcMain } from 'electron';
 import { createWindow } from './BrowserWindow';
 import BrowserManager from './BrowserManager';
+import Storage from './Storage';
 
 let mainWindow: any = null;
 
@@ -90,4 +91,30 @@ ipcMain.handle('get-current-url', async () => {
 
 ipcMain.handle('get-current-title', async () => {
   return BrowserManager.getCurrentTitle();
+});
+
+// Storage handlers
+ipcMain.handle('get-bookmarks', async () => {
+  return Storage.getBookmarks();
+});
+
+ipcMain.handle('add-bookmark', async (event, title: string, url: string) => {
+  return Storage.addBookmark(title, url);
+});
+
+ipcMain.handle('remove-bookmark', async (event, id: string) => {
+  return Storage.removeBookmark(id);
+});
+
+ipcMain.handle('get-history', async (event, limit?: number) => {
+  return Storage.getHistory(limit);
+});
+
+ipcMain.handle('add-to-history', async (event, url: string, title: string) => {
+  return Storage.addToHistory(url, title);
+});
+
+ipcMain.handle('clear-history', async () => {
+  Storage.clearHistory();
+  return true;
 });
