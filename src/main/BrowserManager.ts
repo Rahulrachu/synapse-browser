@@ -3,7 +3,7 @@ import { getMainWindow } from './BrowserWindow';
 
 interface TabInfo {
   id: string;
-  webContentsId: number;
+  windowId: number;
   url: string;
   title: string;
   favicon?: string;
@@ -13,41 +13,48 @@ interface TabInfo {
 class BrowserManager {
   private tabs: Map<string, TabInfo> = new Map();
   private activeTabId: string | null = null;
-  private webContentsMap: Map<number, string> = new Map(); // webContentsId -> tabId
+  private tabWindows: Map<string, BrowserWindow> = new Map(); // tabId -> BrowserWindow
 
   createTab(url: string = 'about:blank'): string {
     const mainWindow = getMainWindow();
     if (!mainWindow) throw new Error('Main window not found');
 
     const tabId = Date.now().toString();
-    const newWebContents = webContents.create({
-      sandbox: true,
-      preload: require.resolve('./preload.js'),
+
+    // Create a new BrowserWindow for this tab (hidden, will be embedded)
+    const tabWindow = new BrowserWindow({
+      show: false,
+      webPreferences: {
+        sandbox: true,
+        preload: require.resolve('./preload.js'),
+        contextIsolation: true,
+        nodeIntegration: false,
+      },
     });
 
     const tabInfo: TabInfo = {
       id: tabId,
-      webContentsId: newWebContents.id,
+      windowId: tabWindow.id,
       url,
       title: 'New Tab',
       isLoading: false,
     };
 
     this.tabs.set(tabId, tabInfo);
-    this.webContentsMap.set(newWebContents.id, tabId);
+    this.tabWindows.set(tabId, tabWindow);
     this.activeTabId = tabId;
 
     // Setup event listeners
-    this.setupWebContentsListeners(newWebContents, tabId);
+    this.setupWebContentsListeners(tabWindow.webContents, tabId);
 
     // Navigate to URL
     if (url !== 'about:blank') {
-      newWebContents.loadURL(url).catch((err) => {
+      tabWindow.webContents.loadURL(url).catch((err: Error) => {
         console.error('Failed to load URL:', err);
-        newWebContents.loadURL('about:blank');
+        tabWindow.webContents.loadURL('about:blank').catch(console.error);
       });
     } else {
-      newWebContents.loadURL('about:blank');
+      tabWindow.webContents.loadURL('about:blank').catch(console.error);
     }
 
     return tabId;
@@ -89,7 +96,7 @@ class BrowserManager {
 
   private broadcastTabUpdate(tabId: string) {
     const mainWindow = getMainWindow();
-    if (mainWindow) {
+    if (mainWindow && !mainWindow.isDestroyed()) {
       const tab = this.tabs.get(tabId);
       mainWindow.webContents.send('tab-updated', tab);
     }
@@ -106,12 +113,12 @@ class BrowserManager {
   closeTab(tabId: string): void {
     const tab = this.tabs.get(tabId);
     if (tab) {
-      const wc = webContents.fromId(tab.webContentsId);
-      if (wc && !wc.isDestroyed()) {
-        wc.destroy();
+      const tabWindow = this.tabWindows.get(tabId);
+      if (tabWindow && !tabWindow.isDestroyed()) {
+        tabWindow.close();
       }
       this.tabs.delete(tabId);
-      this.webContentsMap.delete(tab.webContentsId);
+      this.tabWindows.delete(tabId);
 
       if (this.activeTabId === tabId) {
         const remainingTabs = Array.from(this.tabs.keys());
@@ -139,8 +146,8 @@ class BrowserManager {
     const tab = this.tabs.get(this.activeTabId);
     if (!tab) return false;
 
-    const wc = webContents.fromId(tab.webContentsId);
-    if (!wc || wc.isDestroyed()) return false;
+    const tabWindow = this.tabWindows.get(this.activeTabId);
+    if (!tabWindow || tabWindow.isDestroyed()) return false;
 
     // Ensure URL has protocol
     let finalUrl = url;
@@ -148,7 +155,7 @@ class BrowserManager {
       finalUrl = 'https://' + url;
     }
 
-    wc.loadURL(finalUrl).catch((err) => {
+    tabWindow.webContents.loadURL(finalUrl).catch((err: Error) => {
       console.error('Failed to load URL:', err);
     });
 
@@ -161,11 +168,11 @@ class BrowserManager {
     const tab = this.tabs.get(this.activeTabId);
     if (!tab) return false;
 
-    const wc = webContents.fromId(tab.webContentsId);
-    if (!wc || wc.isDestroyed()) return false;
+    const tabWindow = this.tabWindows.get(this.activeTabId);
+    if (!tabWindow || tabWindow.isDestroyed()) return false;
 
-    if (wc.canGoBack()) {
-      wc.goBack();
+    if (tabWindow.webContents.canGoBack()) {
+      tabWindow.webContents.goBack();
       return true;
     }
 
@@ -178,11 +185,11 @@ class BrowserManager {
     const tab = this.tabs.get(this.activeTabId);
     if (!tab) return false;
 
-    const wc = webContents.fromId(tab.webContentsId);
-    if (!wc || wc.isDestroyed()) return false;
+    const tabWindow = this.tabWindows.get(this.activeTabId);
+    if (!tabWindow || tabWindow.isDestroyed()) return false;
 
-    if (wc.canGoForward()) {
-      wc.goForward();
+    if (tabWindow.webContents.canGoForward()) {
+      tabWindow.webContents.goForward();
       return true;
     }
 
@@ -195,10 +202,10 @@ class BrowserManager {
     const tab = this.tabs.get(this.activeTabId);
     if (!tab) return false;
 
-    const wc = webContents.fromId(tab.webContentsId);
-    if (!wc || wc.isDestroyed()) return false;
+    const tabWindow = this.tabWindows.get(this.activeTabId);
+    if (!tabWindow || tabWindow.isDestroyed()) return false;
 
-    wc.reload();
+    tabWindow.webContents.reload();
     return true;
   }
 
@@ -208,10 +215,10 @@ class BrowserManager {
     const tab = this.tabs.get(this.activeTabId);
     if (!tab) return false;
 
-    const wc = webContents.fromId(tab.webContentsId);
-    if (!wc || wc.isDestroyed()) return false;
+    const tabWindow = this.tabWindows.get(this.activeTabId);
+    if (!tabWindow || tabWindow.isDestroyed()) return false;
 
-    wc.stop();
+    tabWindow.webContents.stop();
     return true;
   }
 
@@ -231,7 +238,7 @@ class BrowserManager {
 
   private broadcastTabsUpdate() {
     const mainWindow = getMainWindow();
-    if (mainWindow) {
+    if (mainWindow && !mainWindow.isDestroyed()) {
       mainWindow.webContents.send('tabs-updated', {
         tabs: this.getAllTabs(),
         activeTabId: this.activeTabId,
@@ -247,11 +254,10 @@ class BrowserManager {
   }
 
   getWebContents(tabId: string): WebContents | null {
-    const tab = this.tabs.get(tabId);
-    if (!tab) return null;
+    const tabWindow = this.tabWindows.get(tabId);
+    if (!tabWindow || tabWindow.isDestroyed()) return null;
 
-    const wc = webContents.fromId(tab.webContentsId);
-    return wc && !wc.isDestroyed() ? wc : null;
+    return tabWindow.webContents;
   }
 }
 
