@@ -5,6 +5,7 @@ import Storage from './Storage';
 import SessionManager from './SessionManager';
 import TabGroupManager from './TabGroupManager';
 import PanelManager from './PanelManager';
+import AIServiceManager from './AIServiceManager';
 
 let mainWindow: any = null;
 
@@ -244,4 +245,62 @@ ipcMain.handle('remove-panel-from-layout', async (event, layoutId: string, panel
 
 ipcMain.handle('resize-panel', async (event, layoutId: string, panelId: string, newSize: number) => {
   return PanelManager.resizePanel(layoutId, panelId, newSize);
+});
+
+// AI Service handlers
+ipcMain.handle('add-ai-service', async (event, service: string, name: string, config: any) => {
+  return AIServiceManager.addService(service as any, name, config);
+});
+
+ipcMain.handle('get-ai-services', async () => {
+  return AIServiceManager.getServices();
+});
+
+ipcMain.handle('get-ai-service', async (event, id: string) => {
+  return AIServiceManager.getService(id);
+});
+
+ipcMain.handle('get-ai-services-by-type', async (event, service: string) => {
+  return AIServiceManager.getServicesByType(service as any);
+});
+
+ipcMain.handle('update-ai-service', async (event, id: string, updates: any) => {
+  return AIServiceManager.updateService(id, updates);
+});
+
+ipcMain.handle('delete-ai-service', async (event, id: string) => {
+  return AIServiceManager.deleteService(id);
+});
+
+ipcMain.handle('enable-ai-service', async (event, id: string) => {
+  return AIServiceManager.enableService(id);
+});
+
+ipcMain.handle('disable-ai-service', async (event, id: string) => {
+  return AIServiceManager.disableService(id);
+});
+
+// AI Conversation handlers
+ipcMain.handle('create-conversation', async (event, serviceId: string, title?: string) => {
+  return AIServiceManager.createConversation(serviceId, title);
+});
+
+ipcMain.handle('get-conversation', async (event, id: string) => {
+  return AIServiceManager.getConversation(id);
+});
+
+ipcMain.handle('get-conversations', async (event, serviceId?: string) => {
+  return AIServiceManager.getConversations(serviceId);
+});
+
+ipcMain.handle('add-message', async (event, conversationId: string, role: string, content: string) => {
+  return AIServiceManager.addMessage(conversationId, role as any, content);
+});
+
+ipcMain.handle('update-conversation-title', async (event, id: string, title: string) => {
+  return AIServiceManager.updateConversationTitle(id, title);
+});
+
+ipcMain.handle('delete-conversation', async (event, id: string) => {
+  return AIServiceManager.deleteConversation(id);
 });
