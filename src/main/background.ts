@@ -6,6 +6,8 @@ import SessionManager from './SessionManager';
 import TabGroupManager from './TabGroupManager';
 import PanelManager from './PanelManager';
 import AIServiceManager from './AIServiceManager';
+import ProjectManager from './ProjectManager';
+import GitManager from './GitManager';
 
 let mainWindow: any = null;
 
@@ -303,4 +305,95 @@ ipcMain.handle('update-conversation-title', async (event, id: string, title: str
 
 ipcMain.handle('delete-conversation', async (event, id: string) => {
   return AIServiceManager.deleteConversation(id);
+});
+
+// Project handlers
+ipcMain.handle('add-project', async (event, rootPath: string, name?: string) => {
+  return ProjectManager.addProject(rootPath, name);
+});
+
+ipcMain.handle('get-projects', async () => {
+  return ProjectManager.getProjects();
+});
+
+ipcMain.handle('get-project', async (event, id: string) => {
+  return ProjectManager.getProject(id);
+});
+
+ipcMain.handle('update-project-last-opened', async (event, id: string) => {
+  return ProjectManager.updateProjectLastOpened(id);
+});
+
+ipcMain.handle('delete-project', async (event, id: string) => {
+  return ProjectManager.deleteProject(id);
+});
+
+ipcMain.handle('rename-project', async (event, id: string, newName: string) => {
+  return ProjectManager.renameProject(id, newName);
+});
+
+ipcMain.handle('get-project-files', async (event, projectId: string, relativePath?: string) => {
+  return ProjectManager.getProjectFiles(projectId, relativePath);
+});
+
+ipcMain.handle('read-file', async (event, projectId: string, filePath: string) => {
+  return ProjectManager.readFile(projectId, filePath);
+});
+
+ipcMain.handle('write-file', async (event, projectId: string, filePath: string, content: string) => {
+  return ProjectManager.writeFile(projectId, filePath, content);
+});
+
+ipcMain.handle('delete-file', async (event, projectId: string, filePath: string) => {
+  return ProjectManager.deleteFile(projectId, filePath);
+});
+
+ipcMain.handle('create-file', async (event, projectId: string, filePath: string) => {
+  return ProjectManager.createFile(projectId, filePath);
+});
+
+ipcMain.handle('create-directory', async (event, projectId: string, dirPath: string) => {
+  return ProjectManager.createDirectory(projectId, dirPath);
+});
+
+// Git handlers
+ipcMain.handle('set-git-project-path', async (event, projectPath: string) => {
+  GitManager.setProjectPath(projectPath);
+  return true;
+});
+
+ipcMain.handle('get-git-status', async () => {
+  return GitManager.getStatus();
+});
+
+ipcMain.handle('get-git-commit-history', async (event, limit?: number) => {
+  return GitManager.getCommitHistory(limit);
+});
+
+ipcMain.handle('git-commit', async (event, message: string) => {
+  return GitManager.commit(message);
+});
+
+ipcMain.handle('git-push', async () => {
+  return GitManager.push();
+});
+
+ipcMain.handle('git-pull', async () => {
+  return GitManager.pull();
+});
+
+ipcMain.handle('git-create-branch', async (event, branchName: string) => {
+  return GitManager.createBranch(branchName);
+});
+
+ipcMain.handle('git-switch-branch', async (event, branchName: string) => {
+  return GitManager.switchBranch(branchName);
+});
+
+ipcMain.handle('git-get-branches', async () => {
+  return GitManager.getBranches();
+});
+
+ipcMain.handle('git-get-diff', async (event, filePath?: string) => {
+  return GitManager.getDiff(filePath);
 });
