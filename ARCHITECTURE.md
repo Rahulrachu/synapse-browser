@@ -1,117 +1,281 @@
 # Synapse Browser Architecture
 
-## 1. Folder Structure
+## Project Status: Phases 2-7 Complete
 
-The project will follow a modular folder structure to ensure maintainability and scalability, as specified in the project vision. The main directories will be:
+This document outlines the architecture of Synapse Browser, an AI-first developer workspace combining browser, IDE, and productivity tools in one unified interface.
+
+## 1. Completed Phases
+
+### Phase 1: Browser Engine ✅
+- BrowserManager with tab lifecycle management
+- BrowserWindow instances per tab
+- Navigation, reload, back/forward support
+- Tab metadata tracking (title, URL, loading state)
+
+### Phase 2: Advanced Browser ✅
+- **Drag-and-drop tab reordering** (AdvancedTabBar.tsx)
+- **Tab groups** with colors and management (TabGroups.tsx)
+- **Tab properties**: pin, sleep, color, grouping
+- **Session management**: save/restore browser sessions (SessionManager.tsx)
+- **Tab state persistence**: all tab properties stored in Zustand + IPC
+
+### Phase 3: Workspace Engine ✅
+- **Resizable panels** with horizontal/vertical split support
+- **Workspace layouts**: save/load multi-panel configurations
+- **WorkspaceLayoutManager** for layout CRUD operations
+- **Multi-panel rendering** (2, 3, or 4 panels)
+- **Panel persistence** via PanelManager in main process
+
+### Phase 4: AI Workspace ✅
+- **AIWorkspacePanel** with multi-model support
+- **Service management**: add/enable/disable AI services
+- **Conversation system**: create, manage, and persist conversations
+- **Message history**: store and retrieve conversation messages
+- **Support for**: OpenAI, Claude, Gemini, DeepSeek, Grok, OpenRouter, Ollama, LM Studio
+- **BYOK** (Bring Your Own API Keys) - no hardcoded keys
+
+### Phase 5: Developer Workspace ✅
+- **DeveloperWorkspace** component with integrated tools
+- **Monaco Editor** for code editing with syntax highlighting
+- **File Explorer** with tree view and folder navigation
+- **Project management**: open, read, write, delete files
+- **Git integration**: status, commits, branches, diffs
+- **Open files tabs** with dirty state tracking
+- **Auto-save** support (configurable)
+
+### Phase 6: Productivity ✅
+- **ProductivityPanel** with multi-tab interface
+- **Notes**: create, edit, delete notes with persistence
+- **Todo List**: task management with completion tracking
+- **Whiteboard**: quick notes and sketches
+- **Search**: global search across notes and todos
+- **LocalStorage persistence** for all productivity data
+
+### Phase 7: Command Palette & Settings ✅
+- **CommandPalette**: global search with keyboard shortcuts (Cmd+K)
+- **50+ commands** across all categories (Browser, Productivity, Git, Settings)
+- **Enhanced SettingsPanel**: comprehensive app configuration
+- **Settings categories**: Appearance, Editor, Features, Browser
+- **Persistent settings** via localStorage
+
+## 2. Folder Structure
 
 ```
 ./
-├── public/             # Static assets (icons, index.html template)
-├── src/                # Main application source code
-│   ├── main/           # Electron main process code
-│   │   ├── background.ts   # Main process entry point
-│   │   └── preload.ts      # Preload script for context isolation
-│   ├── renderer/       # Electron renderer process (React) code
-│   │   ├── assets/         # Images, fonts, other static assets
-│   │   ├── components/     # Reusable UI components
-│   │   ├── hooks/          # Custom React hooks
-│   │   ├── pages/          # Top-level page components (e.g., Browser, Workspace, Settings)
-│   │   ├── store/          # State management (e.g., Zustand, Redux Toolkit)
-│   │   ├── styles/         # Tailwind CSS configuration and global styles
-│   │   ├── utils/          # Utility functions
-│   │   ├── App.tsx         # Main React application component
-│   │   └── index.tsx       # Renderer process entry point
-│   ├── common/         # Code shared between main and renderer processes (e.g., IPC types, utility types)
-│   ├── browser/        # Browser-specific modules (tabs, navigation, webviews)
-│   ├── workspace/      # Workspace-specific modules (notes, terminal, file explorer)
-│   ├── ai/             # AI integration modules
-│   ├── git/            # Git integration modules
-│   ├── settings/       # Settings modules
-│   ├── themes/         # Theme management
-│   ├── storage/        # Database and local storage interactions
-│   └── plugins/        # Plugin system (future extension)
-├── electron.vite.config.ts # Electron-Vite configuration
-├── package.json        # Project dependencies and scripts
-├── tsconfig.json       # TypeScript configuration
-├── tailwind.config.js  # Tailwind CSS configuration
-└── postcss.config.js   # PostCSS configuration
+├── public/                 # Static assets
+├── src/
+│   ├── main/              # Electron main process
+│   │   ├── background.ts  # IPC handlers for all phases
+│   │   ├── BrowserManager.ts
+│   │   ├── BrowserWindow.ts
+│   │   ├── SessionManager.ts
+│   │   ├── TabGroupManager.ts
+│   │   ├── PanelManager.ts
+│   │   ├── AIServiceManager.ts
+│   │   ├── ProjectManager.ts
+│   │   ├── GitManager.ts
+│   │   ├── DownloadManager.ts
+│   │   └── preload.ts
+│   ├── renderer/          # React components
+│   │   ├── components/
+│   │   │   ├── BrowserPanel.tsx
+│   │   │   ├── AdvancedTabBar.tsx
+│   │   │   ├── TabGroups.tsx
+│   │   │   ├── SessionManager.tsx
+│   │   │   ├── WorkspaceLayoutManager.tsx
+│   │   │   ├── ResizablePanel.tsx
+│   │   │   ├── AIWorkspacePanel.tsx
+│   │   │   ├── DeveloperWorkspace.tsx
+│   │   │   ├── ProductivityPanel.tsx
+│   │   │   ├── CommandPalette.tsx
+│   │   │   ├── SettingsPanel.tsx
+│   │   │   ├── Sidebar.tsx
+│   │   │   └── MultiPanelLayout.tsx
+│   │   ├── store/
+│   │   │   ├── browserStore.ts    # Zustand: tabs, groups, sessions
+│   │   │   └── workspaceStore.ts  # Zustand: notes, theme, layout
+│   │   ├── hooks/
+│   │   │   └── useKeyboardShortcuts.ts
+│   │   ├── App.tsx
+│   │   └── index.tsx
+│   ├── common/
+│   │   └── utils.ts       # Shared types (TabData, Session, etc.)
+│   ├── browser/
+│   │   ├── BrowserEngine.ts
+│   │   ├── BookmarkManager.ts
+│   │   └── HistoryManager.ts
+│   ├── git/
+│   │   └── GitManager.ts
+│   └── workspace/
+│       └── SessionManager.ts
+├── electron.vite.config.ts
+├── package.json
+├── tsconfig.json
+├── tailwind.config.js
+└── ARCHITECTURE.md
 ```
 
-## 2. Database Schema (SQLite)
+## 3. State Management
 
-SQLite will be used for local metadata storage. The schema will be designed to support the various features outlined in the project vision, including bookmarks, history, notes, prompt history, and project memory. Below is a preliminary schema design.
+### Zustand Stores
 
-### `bookmarks` table
+**browserStore.ts**
+- `tabs`: TabData[] - all open tabs with properties
+- `activeTabId`: current active tab
+- `tabGroups`: TabGroup[] - tab group definitions
+- `sessions`: Session[] - saved browser sessions
+- Actions: addTab, closeTab, pinTab, sleepTab, setTabColor, saveSession, etc.
 
-Stores user bookmarks.
+**workspaceStore.ts**
+- `notes`: Note[] - all user notes
+- `isDarkMode`: boolean - theme preference
+- `workspaceLayout`: current workspace configuration
+- Actions: addNote, updateNote, deleteNote, toggleDarkMode, etc.
 
-| Column Name | Data Type | Constraints           | Description                  |
-|-------------|-----------|-----------------------|------------------------------|
-| `id`        | INTEGER   | PRIMARY KEY AUTOINCREMENT | Unique identifier for the bookmark |
-| `url`       | TEXT      | NOT NULL              | The URL of the bookmarked page |
-| `title`     | TEXT      | NOT NULL              | The title of the bookmarked page |
-| `created_at`| INTEGER   | NOT NULL              | Timestamp of when the bookmark was created |
+## 4. IPC Communication
 
-### `history` table
+All communication between main and renderer processes is handled via IPC handlers in `background.ts`:
 
-Stores browsing history.
+### Browser IPC
+- `create-tab`, `close-tab`, `set-active-tab`, `duplicate-tab`, `get-all-tabs`
+- `navigate-to`, `go-back`, `go-forward`, `reload`, `stop-loading`
 
-| Column Name | Data Type | Constraints           | Description                  |
-|-------------|-----------|-----------------------|------------------------------|
-| `id`        | INTEGER   | PRIMARY KEY AUTOINCREMENT | Unique identifier for the history entry |
-| `url`       | TEXT      | NOT NULL              | The URL of the visited page |
-| `title`     | TEXT      | NOT NULL              | The title of the visited page |
-| `visited_at`| INTEGER   | NOT NULL              | Timestamp of when the page was visited |
+### Tab Groups IPC
+- `create-tab-group`, `delete-tab-group`, `add-tab-to-group`, `remove-tab-from-group`
+- `pin-tab`, `unpin-tab`, `sleep-tab`, `wake-tab`, `set-tab-color`
 
-### `notes` table
+### Sessions IPC
+- `save-session`, `get-sessions`, `get-session`, `delete-session`, `rename-session`
 
-Stores user notes.
+### Workspace Layout IPC
+- `create-layout`, `get-layouts`, `update-layout`, `delete-layout`
+- `create-vertical-split`, `create-horizontal-split`, `create-grid-layout`
 
-| Column Name | Data Type | Constraints           | Description                  |
-|-------------|-----------|-----------------------|------------------------------|
-| `id`        | INTEGER   | PRIMARY KEY AUTOINCREMENT | Unique identifier for the note |
-| `title`     | TEXT      | NOT NULL              | The title of the note        |
-| `content`   | TEXT      |                       | The content of the note      |
-| `created_at`| INTEGER   | NOT NULL              | Timestamp of creation        |
-| `updated_at`| INTEGER   | NOT NULL              | Timestamp of last update     |
+### AI Services IPC
+- `add-ai-service`, `get-ai-services`, `update-ai-service`, `delete-ai-service`
+- `create-conversation`, `get-conversations`, `add-message`
 
-### `prompts` table
+### Project & File IPC
+- `add-project`, `get-projects`, `get-project-files`, `read-file`, `write-file`
+- `create-file`, `create-directory`, `delete-file`
 
-Stores AI prompt history.
+### Git IPC
+- `set-git-project-path`, `get-git-status`, `get-git-commit-history`
+- `git-commit`, `git-push`, `git-pull`, `git-create-branch`, `git-switch-branch`
 
-| Column Name | Data Type | Constraints           | Description                  |
-|-------------|-----------|-----------------------|------------------------------|
-| `id`        | INTEGER   | PRIMARY KEY AUTOINCREMENT | Unique identifier for the prompt |
-| `text`      | TEXT      | NOT NULL              | The prompt text              |
-| `category`  | TEXT      |                       | Category for the prompt      |
-| `created_at`| INTEGER   | NOT NULL              | Timestamp of creation        |
+## 5. Data Persistence
 
-### `projects` table
+### Main Process (Node.js)
+- **JSON Files**: Sessions, tab groups, workspace layouts stored in userData directory
+- **SQLite**: Future database for bookmarks, history, notes (schema defined in ARCHITECTURE.md)
+- **Git Integration**: Direct filesystem access for project files
 
-Stores project-specific memory and context.
+### Renderer Process (React)
+- **Zustand Stores**: In-memory state management
+- **localStorage**: Settings, productivity data, whiteboard content
+- **IPC Sync**: Periodic sync with main process for critical data
 
-| Column Name | Data Type | Constraints           | Description                  |
-|-------------|-----------|-----------------------|------------------------------|\n| `id`        | INTEGER   | PRIMARY KEY AUTOINCREMENT | Unique identifier for the project |
-| `name`      | TEXT      | NOT NULL UNIQUE       | Name of the project          |
-| `goals`     | TEXT      |                       | Project goals                |
-| `architecture`| TEXT    |                       | Project architecture notes   |
-| `notes`     | TEXT      |                       | General project notes        |
-| `decisions` | TEXT      |                       | Key decisions made           |
-| `created_at`| INTEGER   | NOT NULL              | Timestamp of creation        |
-| `updated_at`| INTEGER   | NOT NULL              | Timestamp of last update     |
+## 6. Component Hierarchy
 
-## 3. Electron Configuration
+```
+App.tsx
+├── Sidebar.tsx (navigation)
+├── Header (panel layout selector)
+└── MultiPanelLayout.tsx
+    ├── ResizablePanel (Panel 1)
+    │   └── BrowserPanel.tsx
+    │       ├── AdvancedTabBar.tsx
+    │       ├── Navigation Bar
+    │       └── Browser Content Area
+    ├── ResizablePanel (Panel 2)
+    │   └── AIWorkspacePanel.tsx
+    │       ├── Services Sidebar
+    │       └── Chat Area
+    ├── ResizablePanel (Panel 3)
+    │   └── DeveloperWorkspace.tsx
+    │       ├── File Explorer
+    │       ├── Monaco Editor
+    │       └── Terminal
+    └── ResizablePanel (Panel 4)
+        └── ProductivityPanel.tsx
+            ├── Notes
+            ├── Todos
+            ├── Whiteboard
+            └── Search
+```
 
-The Electron configuration will be managed primarily through `electron.vite.config.ts` and `package.json`. Key aspects include:
+## 7. Keyboard Shortcuts
 
-*   **Main Process Entry Point**: `src/main/background.ts` will be the main entry point for the Electron process, handling window creation, IPC communication, and other Node.js-specific tasks.
-*   **Renderer Process Entry Point**: `src/renderer/index.tsx` will be the entry point for the React application running in the renderer process.
-*   **Preload Script**: `src/main/preload.ts` will be used to expose specific APIs from the main process to the renderer process securely, adhering to context isolation principles.
-*   **IPC Communication**: `electron.ipcMain` and `electron.ipcRenderer` will be used for secure and efficient communication between the main and renderer processes.
-*   **Vite Integration**: `electron-vite` will be used to bundle and optimize both main and renderer processes, providing a fast development experience with HMR.
-*   **Native Modules**: If any native Node.js modules are required, they will be configured to be built correctly with Electron.
-*   **Build Targets**: The application will be configured to build for Windows, Linux, and macOS, as specified.
-*   **Window Management**: Initial window dimensions, frameless window settings, and other browser window options will be configured in the main process.
-*   **Security**: Context isolation, `nodeIntegration` set to `false`, and `webview` `webPreferences` will be carefully configured to ensure a secure application.
+| Shortcut | Action |
+|----------|--------|
+| Cmd+K | Open Command Palette |
+| Cmd+T | New Tab |
+| Cmd+N | New Note |
+| Cmd+Shift+D | Toggle Dark Mode |
+| Cmd+Shift+C | Git Commit |
+| Cmd+S | Save File |
 
-This architecture provides a solid foundation for building the Synapse Browser, ensuring modularity, maintainability, and adherence to modern development practices.
+## 8. Styling
+
+- **Tailwind CSS** for utility-first styling
+- **Dark Mode**: Full dark mode support with `isDarkMode` context
+- **Color Scheme**: Synapse accent color (#7C3AED) for primary actions
+- **Responsive**: Adapts to window resizing and panel resizing
+
+## 9. Performance Optimizations
+
+- **Tab Sleeping**: Inactive tabs can be put to sleep to free memory
+- **Lazy Loading**: Components load on demand
+- **Memoization**: React.memo for expensive components
+- **Zustand**: Efficient state management with selector-based subscriptions
+
+## 10. Security
+
+- **Context Isolation**: Enabled in BrowserWindow preload
+- **No Node Integration**: Disabled for renderer process
+- **Sandbox Mode**: Enabled for all browser tabs
+- **IPC Validation**: All IPC handlers validate input
+- **BYOK**: No hardcoded API keys in codebase
+
+## 11. Next Phases (Future)
+
+### Phase 8: Performance & Optimization
+- Memory profiling and optimization
+- GPU rendering for smooth animations
+- Background indexing for search
+- Crash recovery and auto-save
+
+### Phase 9: Production
+- Windows/Mac/Linux installers
+- Auto-updater
+- Plugin API and extension SDK
+- Error logging and crash reporting
+- Settings UI for advanced options
+
+## 12. Build & Deployment
+
+```bash
+npm install          # Install dependencies
+npm run dev          # Development mode with HMR
+npm run build        # Build for production
+npm run pack         # Create portable package
+npm run dist         # Create installers
+```
+
+## 13. Technology Stack
+
+- **Electron 43**: Desktop application framework
+- **React 19**: UI library
+- **TypeScript**: Type-safe development
+- **Tailwind CSS 4**: Styling
+- **Zustand 5**: State management
+- **Monaco Editor**: Code editing
+- **Vite 8**: Build tool
+- **SQLite 6**: Local database (future)
+- **Electron-Builder**: Packaging and distribution
+
+---
+
+**Last Updated**: Phase 7 Complete
+**Maintainer**: Manus AI
+**License**: MIT
