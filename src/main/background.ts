@@ -4,6 +4,7 @@ import BrowserManager from './BrowserManager';
 import Storage from './Storage';
 import SessionManager from './SessionManager';
 import TabGroupManager from './TabGroupManager';
+import PanelManager from './PanelManager';
 
 let mainWindow: any = null;
 
@@ -194,4 +195,53 @@ ipcMain.handle('set-tab-color', async (event, tabId: string, color: string) => {
 
 ipcMain.handle('get-tab-properties', async (event, tabId: string) => {
   return TabGroupManager.getTabProperties(tabId);
+});
+
+// Panel/Workspace Layout handlers
+ipcMain.handle('create-layout', async (event, name: string, layout: any) => {
+  return PanelManager.createLayout(name, layout);
+});
+
+ipcMain.handle('get-layouts', async () => {
+  return PanelManager.getLayouts();
+});
+
+ipcMain.handle('get-layout', async (event, id: string) => {
+  return PanelManager.getLayout(id);
+});
+
+ipcMain.handle('update-layout', async (event, id: string, layout: any) => {
+  return PanelManager.updateLayout(id, layout);
+});
+
+ipcMain.handle('delete-layout', async (event, id: string) => {
+  return PanelManager.deleteLayout(id);
+});
+
+ipcMain.handle('rename-layout', async (event, id: string, newName: string) => {
+  return PanelManager.renameLayout(id, newName);
+});
+
+ipcMain.handle('create-vertical-split', async (event, leftTab: string, rightTab: string) => {
+  return PanelManager.createVerticalSplit(leftTab, rightTab);
+});
+
+ipcMain.handle('create-horizontal-split', async (event, topTab: string, bottomTab: string) => {
+  return PanelManager.createHorizontalSplit(topTab, bottomTab);
+});
+
+ipcMain.handle('create-grid-layout', async (event, tabs: string[]) => {
+  return PanelManager.createGridLayout(tabs);
+});
+
+ipcMain.handle('add-panel-to-layout', async (event, layoutId: string, tabId: string, position: string) => {
+  return PanelManager.addPanelToLayout(layoutId, tabId, position as any);
+});
+
+ipcMain.handle('remove-panel-from-layout', async (event, layoutId: string, panelId: string) => {
+  return PanelManager.removePanelFromLayout(layoutId, panelId);
+});
+
+ipcMain.handle('resize-panel', async (event, layoutId: string, panelId: string, newSize: number) => {
+  return PanelManager.resizePanel(layoutId, panelId, newSize);
 });
