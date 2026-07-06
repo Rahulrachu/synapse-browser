@@ -3,6 +3,7 @@ import { createWindow } from './BrowserWindow';
 import BrowserManager from './BrowserManager';
 import Storage from './Storage';
 import SessionManager from './SessionManager';
+import TabGroupManager from './TabGroupManager';
 
 let mainWindow: any = null;
 
@@ -143,4 +144,54 @@ ipcMain.handle('delete-session', async (event, id: string) => {
 
 ipcMain.handle('rename-session', async (event, id: string, newName: string) => {
   return SessionManager.renameSession(id, newName);
+});
+
+// Tab Group handlers
+ipcMain.handle('create-tab-group', async (event, name: string, color: string) => {
+  return TabGroupManager.createGroup(name, color);
+});
+
+ipcMain.handle('get-tab-groups', async () => {
+  return TabGroupManager.getGroups();
+});
+
+ipcMain.handle('delete-tab-group', async (event, id: string) => {
+  return TabGroupManager.deleteGroup(id);
+});
+
+ipcMain.handle('add-tab-to-group', async (event, tabId: string, groupId: string) => {
+  return TabGroupManager.addTabToGroup(tabId, groupId);
+});
+
+ipcMain.handle('remove-tab-from-group', async (event, tabId: string) => {
+  return TabGroupManager.removeTabFromGroup(tabId);
+});
+
+ipcMain.handle('pin-tab', async (event, tabId: string) => {
+  TabGroupManager.pinTab(tabId);
+  return true;
+});
+
+ipcMain.handle('unpin-tab', async (event, tabId: string) => {
+  TabGroupManager.unpinTab(tabId);
+  return true;
+});
+
+ipcMain.handle('sleep-tab', async (event, tabId: string) => {
+  TabGroupManager.sleepTab(tabId);
+  return true;
+});
+
+ipcMain.handle('wake-tab', async (event, tabId: string) => {
+  TabGroupManager.wakeTab(tabId);
+  return true;
+});
+
+ipcMain.handle('set-tab-color', async (event, tabId: string, color: string) => {
+  TabGroupManager.setTabColor(tabId, color);
+  return true;
+});
+
+ipcMain.handle('get-tab-properties', async (event, tabId: string) => {
+  return TabGroupManager.getTabProperties(tabId);
 });
