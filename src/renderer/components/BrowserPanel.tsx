@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Plus, X, ArrowLeft, ArrowRight, RotateCcw, Loader, Home } from 'lucide-react';
+import { ArrowLeft, ArrowRight, RotateCcw, Loader, Home, X } from 'lucide-react';
 import { useWorkspaceStore } from '../store/workspaceStore';
+import { useBrowserStore } from '../store/browserStore';
+import AdvancedTabBar from './AdvancedTabBar';
 
 interface Tab {
   id: string;
@@ -8,10 +10,15 @@ interface Tab {
   url: string;
   isLoading: boolean;
   windowId: number;
+  isPinned?: boolean;
+  isSleeping?: boolean;
+  color?: string;
+  groupId?: string;
 }
 
 export default function BrowserPanel() {
   const isDarkMode = useWorkspaceStore((state) => state.isDarkMode);
+  const { tabs: storeTabs } = useBrowserStore();
   const [tabs, setTabs] = useState<Tab[]>([]);
   const [activeTabId, setActiveTabId] = useState<string | null>(null);
   const [urlInput, setUrlInput] = useState('');
@@ -24,10 +31,17 @@ export default function BrowserPanel() {
     const initTabs = async () => {
       try {
         const result = await (window as any).electron.ipcRenderer.invoke('get-all-tabs');
-        setTabs(result.tabs);
+        const mappedTabs = result.tabs.map((tab: any) => ({
+          ...tab,
+          isPinned: storeTabs.find(t => t.id === tab.id)?.isPinned || false,
+          isSleeping: storeTabs.find(t => t.id === tab.id)?.isSleeping || false,
+          color: storeTabs.find(t => t.id === tab.id)?.color,
+          groupId: storeTabs.find(t => t.id === tab.id)?.groupId,
+        }));
+        setTabs(mappedTabs);
         setActiveTabId(result.activeTabId);
-        if (result.tabs.length > 0) {
-          setUrlInput(result.tabs[0].url);
+        if (mappedTabs.length > 0) {
+          setUrlInput(mappedTabs[0].url);
         }
       } catch (error) {
         console.error('Failed to initialize tabs:', error);
@@ -38,7 +52,14 @@ export default function BrowserPanel() {
 
     // Listen for tab updates
     const handleTabsUpdated = (data: any) => {
-      setTabs(data.tabs);
+      const mappedTabs = data.tabs.map((tab: any) => ({
+        ...tab,
+        isPinned: storeTabs.find(t => t.id === tab.id)?.isPinned || false,
+        isSleeping: storeTabs.find(t => t.id === tab.id)?.isSleeping || false,
+        color: storeTabs.find(t => t.id === tab.id)?.color,
+        groupId: storeTabs.find(t => t.id === tab.id)?.groupId,
+      }));
+      setTabs(mappedTabs);
       setActiveTabId(data.activeTabId);
     };
 
@@ -58,12 +79,19 @@ export default function BrowserPanel() {
       (window as any).electron.ipcRenderer.removeListener('tabs-updated', handleTabsUpdated);
       (window as any).electron.ipcRenderer.removeListener('tab-updated', handleTabUpdated);
     };
-  }, [activeTabId]);
+  }, [storeTabs]);
 
   const handleAddTab = async () => {
     try {
       const result = await (window as any).electron.ipcRenderer.invoke('create-tab', 'about:blank');
-      setTabs(result.tabs);
+      const mappedTabs = result.tabs.map((tab: any) => ({
+        ...tab,
+        isPinned: storeTabs.find(t => t.id === tab.id)?.isPinned || false,
+        isSleeping: storeTabs.find(t => t.id === tab.id)?.isSleeping || false,
+        color: storeTabs.find(t => t.id === tab.id)?.color,
+        groupId: storeTabs.find(t => t.id === tab.id)?.groupId,
+      }));
+      setTabs(mappedTabs);
       setActiveTabId(result.activeTabId);
     } catch (error) {
       console.error('Failed to create tab:', error);
@@ -73,7 +101,14 @@ export default function BrowserPanel() {
   const handleCloseTab = async (tabId: string) => {
     try {
       const result = await (window as any).electron.ipcRenderer.invoke('close-tab', tabId);
-      setTabs(result.tabs);
+      const mappedTabs = result.tabs.map((tab: any) => ({
+        ...tab,
+        isPinned: storeTabs.find(t => t.id === tab.id)?.isPinned || false,
+        isSleeping: storeTabs.find(t => t.id === tab.id)?.isSleeping || false,
+        color: storeTabs.find(t => t.id === tab.id)?.color,
+        groupId: storeTabs.find(t => t.id === tab.id)?.groupId,
+      }));
+      setTabs(mappedTabs);
       setActiveTabId(result.activeTabId);
     } catch (error) {
       console.error('Failed to close tab:', error);
@@ -105,7 +140,8 @@ export default function BrowserPanel() {
 
   const handleGoBack = async () => {
     try {
-      await (window as any).electron.ipcRenderer.invoke('go-back');
+      const result = await (window as any).electron.ipcRenderer.invoke('go-back');
+      setCanGoBack(result?.canGoBack || false);
     } catch (error) {
       console.error('Failed to go back:', error);
     }
@@ -113,7 +149,8 @@ export default function BrowserPanel() {
 
   const handleGoForward = async () => {
     try {
-      await (window as any).electron.ipcRenderer.invoke('go-forward');
+      const result = await (window as any).electron.ipcRenderer.invoke('go-forward');
+      setCanGoForward(result?.canGoForward || false);
     } catch (error) {
       console.error('Failed to go forward:', error);
     }
@@ -138,7 +175,14 @@ export default function BrowserPanel() {
   const handleDuplicateTab = async (tabId: string) => {
     try {
       const result = await (window as any).electron.ipcRenderer.invoke('duplicate-tab', tabId);
-      setTabs(result.tabs);
+      const mappedTabs = result.tabs.map((tab: any) => ({
+        ...tab,
+        isPinned: storeTabs.find(t => t.id === tab.id)?.isPinned || false,
+        isSleeping: storeTabs.find(t => t.id === tab.id)?.isSleeping || false,
+        color: storeTabs.find(t => t.id === tab.id)?.color,
+        groupId: storeTabs.find(t => t.id === tab.id)?.groupId,
+      }));
+      setTabs(mappedTabs);
       setActiveTabId(result.activeTabId);
     } catch (error) {
       console.error('Failed to duplicate tab:', error);
@@ -153,44 +197,15 @@ export default function BrowserPanel() {
         isDarkMode ? 'border-gray-700 bg-synapse-darker' : 'border-gray-300 bg-white'
       } overflow-hidden`}
     >
-      {/* Tab Bar */}
-      <div
-        className={`flex items-center gap-1 px-2 py-2 border-b ${
-          isDarkMode ? 'border-gray-700 bg-synapse-dark' : 'border-gray-200 bg-gray-50'
-        } overflow-x-auto`}
-      >
-        {tabs.map((tab) => (
-          <div
-            key={tab.id}
-            onClick={() => handleSelectTab(tab.id)}
-            className={`flex items-center gap-2 px-3 py-1 rounded-t cursor-pointer transition whitespace-nowrap ${
-              activeTabId === tab.id
-                ? 'bg-synapse-accent text-white'
-                : isDarkMode
-                  ? 'bg-gray-700 hover:bg-gray-600'
-                  : 'bg-gray-200 hover:bg-gray-300'
-            }`}
-          >
-            {tab.isLoading && <Loader size={14} className="animate-spin" />}
-            <span className="text-sm truncate max-w-[100px]">{tab.title || 'New Tab'}</span>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                handleCloseTab(tab.id);
-              }}
-              className="hover:bg-red-500 rounded p-0.5 transition"
-            >
-              <X size={14} />
-            </button>
-          </div>
-        ))}
-        <button
-          onClick={handleAddTab}
-          className={`ml-auto p-1 rounded hover:bg-synapse-accent hover:text-white transition`}
-        >
-          <Plus size={18} />
-        </button>
-      </div>
+      {/* Advanced Tab Bar */}
+      <AdvancedTabBar
+        tabs={tabs}
+        activeTabId={activeTabId}
+        onAddTab={handleAddTab}
+        onSelectTab={handleSelectTab}
+        onCloseTab={handleCloseTab}
+        onDuplicateTab={handleDuplicateTab}
+      />
 
       {/* Navigation Bar */}
       <div
@@ -242,22 +257,29 @@ export default function BrowserPanel() {
         />
       </div>
 
-      {/* Browser Content Area */}
-      <div className="flex-1 overflow-hidden bg-white">
+      {/* Browser Content Area - Placeholder */}
+      <div className={`flex-1 overflow-hidden ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
         {activeTab ? (
           <div className="w-full h-full flex items-center justify-center">
             <div className="text-center">
-              <p className="text-gray-400 mb-2">Browser View</p>
-              <p className="text-sm text-gray-500">{activeTab.url}</p>
-              <p className="text-xs text-gray-600 mt-2">
+              <p className={`mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-400'}`}>
+                Browser View
+              </p>
+              <p className={`text-sm ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                {activeTab.url}
+              </p>
+              <p className={`text-xs mt-2 ${isDarkMode ? 'text-gray-600' : 'text-gray-600'}`}>
                 {activeTab.isLoading ? 'Loading...' : 'Page loaded'}
               </p>
+              {activeTab.isSleeping && (
+                <p className="text-xs mt-2 text-yellow-500">This tab is sleeping (memory optimized)</p>
+              )}
             </div>
           </div>
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <div className="text-center">
-              <p className="text-gray-400">No tabs open</p>
+              <p className={isDarkMode ? 'text-gray-400' : 'text-gray-400'}>No tabs open</p>
               <button
                 onClick={handleAddTab}
                 className="mt-4 px-4 py-2 bg-synapse-accent text-white rounded hover:bg-synapse-accent-light transition"

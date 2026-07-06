@@ -6,6 +6,21 @@ export interface TabData {
   url: string;
   favicon?: string;
   isActive: boolean;
+  // Phase 2: Advanced tab properties
+  groupId?: string;
+  color?: string;
+  isPinned?: boolean;
+  isSleeping?: boolean;
+  lastActiveTime?: number;
+  isDragging?: boolean;
+}
+
+export interface TabGroup {
+  id: string;
+  name: string;
+  color: string;
+  tabIds: string[];
+  createdAt: number;
 }
 
 export interface WorkspaceLayout {
@@ -34,4 +49,12 @@ export interface Prompt {
   text: string;
   category: string;
   createdAt: number;
+}
+
+export interface Session {
+  id: string;
+  name: string;
+  tabs: TabData[];
+  createdAt: number;
+  updatedAt: number;
 }
