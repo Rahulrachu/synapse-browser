@@ -1,4 +1,3 @@
-
 import { BaseAgent } from './BaseAgent';
 import { 
   AgentId, 
@@ -11,6 +10,7 @@ import {
 } from './types';
 import { AgentMessageBus } from './AgentMessageBus';
 import AgentLogger from './AgentLogger';
+import { BugFixingEngine } from '../main/BugFixingEngine';
 
 export interface ReviewTaskContext {
   code: string;
@@ -39,6 +39,8 @@ export interface ReviewResult {
 }
 
 export class ReviewerAgent extends BaseAgent {
+  private bugFixingEngine: BugFixingEngine;
+
   constructor(id: AgentId, messageBus: AgentMessageBus, initialContext: AgentContext) {
     const capabilities: AgentCapability[] = [
       {
@@ -63,6 +65,8 @@ export class ReviewerAgent extends BaseAgent {
       }
     ];
     super(id, 'Reviewer Agent', capabilities, messageBus, initialContext);
+    const projectPath = initialContext.sharedData?.get('projectPath') || process.cwd();
+    this.bugFixingEngine = new BugFixingEngine(projectPath);
   }
 
   protected async handleMessage(message: AgentMessage): Promise<void> {
@@ -75,7 +79,6 @@ export class ReviewerAgent extends BaseAgent {
         }
         break;
       case 'coding_task_completed':
-        // Automatically trigger a review if needed
         AgentLogger.info(`ReviewerAgent notified of completed coding task: ${message.payload.taskId}`, this.id);
         break;
     }
@@ -109,16 +112,16 @@ export class ReviewerAgent extends BaseAgent {
     try {
       let output;
       const goal = task.goal.toLowerCase();
+      const code = task.context?.code || '';
 
       if (goal.includes('security') || goal.includes('audit')) {
-        output = await this.performSecurityAudit(task.context?.code || '', task.context);
+        output = await this.performSecurityAudit(code, task.context);
       } else if (goal.includes('quality') || goal.includes('check')) {
-        output = await this.checkQuality(task.context?.code || '', task.context);
+        output = await this.checkQuality(code, task.context);
       } else if (goal.includes('documentation') || goal.includes('docs')) {
-        output = await this.reviewDocumentation(task.context?.code || '', task.context);
+        output = await this.reviewDocumentation(code, task.context);
       } else {
-        // Default to general review if no specific type is mentioned
-        output = await this.reviewCode(task.context?.code || '', task.context);
+        output = await this.reviewCode(code, task.context);
       }
 
       const agentResult: AgentResult = {
@@ -163,57 +166,45 @@ export class ReviewerAgent extends BaseAgent {
     }
   }
 
-  // --- Core Architecture Interfaces (Skeletons) ---
-
-  /**
-   * Reviews code for general quality and logic.
-   */
   public async reviewCode(code: string, context?: ReviewTaskContext): Promise<ReviewResult> {
     AgentLogger.info('Reviewing code...', this.id);
+    const analysis = await this.bugFixingEngine.analyzeCode(code);
+    const comments: ReviewComment[] = analysis.bugs.map((b: any) => ({
+      line: b.line,
+      message: b.message,
+      severity: b.severity as any,
+      category: 'bug'
+    }));
+
     return {
       reviewId: `rev-${Date.now()}`,
-      approved: true,
-      comments: [],
-      metrics: { score: 100, issuesFound: 0 }
+      approved: comments.filter(c => c.severity === 'error').length === 0,
+      comments,
+      metrics: {
+        score: Math.max(0, 100 - comments.length * 10),
+        issuesFound: comments.length
+      }
     };
   }
 
-  /**
-   * Performs a security audit on the code.
-   */
   public async performSecurityAudit(code: string, context?: ReviewTaskContext): Promise<ReviewResult> {
     AgentLogger.info('Performing security audit...', this.id);
-    return {
-      reviewId: `sec-${Date.now()}`,
-      approved: true,
-      comments: [],
-      metrics: { score: 100, issuesFound: 0 }
-    };
+    const result = await this.reviewCode(code, context);
+    result.reviewId = `sec-${Date.now()}`;
+    return result;
   }
 
-  /**
-   * Checks code against quality standards.
-   */
   public async checkQuality(code: string, context?: ReviewTaskContext): Promise<ReviewResult> {
     AgentLogger.info('Checking code quality...', this.id);
-    return {
-      reviewId: `qual-${Date.now()}`,
-      approved: true,
-      comments: [],
-      metrics: { score: 100, issuesFound: 0 }
-    };
+    const result = await this.reviewCode(code, context);
+    result.reviewId = `qual-${Date.now()}`;
+    return result;
   }
 
-  /**
-   * Reviews code documentation and comments.
-   */
   public async reviewDocumentation(code: string, context?: ReviewTaskContext): Promise<ReviewResult> {
     AgentLogger.info('Reviewing documentation...', this.id);
-    return {
-      reviewId: `doc-${Date.now()}`,
-      approved: true,
-      comments: [],
-      metrics: { score: 100, issuesFound: 0 }
-    };
+    const result = await this.reviewCode(code, context);
+    result.reviewId = `doc-${Date.now()}`;
+    return result;
   }
 }

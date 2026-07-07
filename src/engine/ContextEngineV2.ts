@@ -79,6 +79,17 @@ export class ContextEngineV2 {
       ...updates,
     };
     this.notifyListeners();
+    console.log('Context updated:', this.state);
+  }
+
+  // Backward compatibility
+  getContext(): ContextState {
+    return this.state;
+  }
+
+  // Backward compatibility
+  getContextSummary(): string {
+    return this.generateContextSummary();
   }
 
   // Update active tab

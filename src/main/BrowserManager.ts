@@ -13,12 +13,21 @@ interface TabInfo {
   canGoForward: boolean;
 }
 
+/**
+ * Manages browser tabs, their WebContents views, and navigation state.
+ * Acts as the central controller for the multi-tab browser interface.
+ */
 class BrowserManager {
   private tabs: Map<string, TabInfo> = new Map();
   private activeTabId: string | null = null;
   private tabViews: Map<string, WebContentsView> = new Map(); // tabId -> WebContentsView
   private currentBrowserBounds: { x: number; y: number; width: number; height: number } | null = null;
 
+  /**
+   * Creates a new browser tab and its associated WebContentsView.
+   * @param url The initial URL to load. Defaults to 'about:blank'.
+   * @returns The unique ID of the newly created tab.
+   */
   createTab(url: string = 'about:blank'): string {
     const mainWindow = getMainWindow();
     if (!mainWindow) throw new Error('Main window not found');
@@ -72,6 +81,11 @@ class BrowserManager {
     return tabId;
   }
 
+  /**
+   * Sets up event listeners for a tab's WebContents to track navigation, loading, and title changes.
+   * @param wc The WebContents instance.
+   * @param tabId The ID of the tab.
+   */
   private setupWebContentsListeners(wc: any, tabId: string) {
     wc.on('page-title-updated', (event: any, title: string) => {
       const tab = this.tabs.get(tabId);
@@ -133,6 +147,10 @@ class BrowserManager {
     });
   }
 
+  /**
+   * Broadcasts an update for a specific tab to the renderer process.
+   * @param tabId The ID of the tab that was updated.
+   */
   private broadcastTabUpdate(tabId: string) {
     const mainWindow = getMainWindow();
     if (mainWindow && !mainWindow.isDestroyed()) {
@@ -141,18 +159,36 @@ class BrowserManager {
     }
   }
 
+  /**
+   * Retrieves information about a specific tab.
+   * @param tabId The ID of the tab.
+   * @returns The tab information or undefined if not found.
+   */
   getTab(tabId: string): TabInfo | undefined {
     return this.tabs.get(tabId);
   }
 
+  /**
+   * Retrieves the WebContentsView associated with a specific tab.
+   * @param tabId The ID of the tab.
+   * @returns The WebContentsView or undefined if not found.
+   */
   getWebContents(tabId: string): WebContentsView | undefined {
     return this.tabViews.get(tabId);
   }
 
+  /**
+   * Retrieves information about all currently open tabs.
+   * @returns An array of all tab information objects.
+   */
   getAllTabs(): TabInfo[] {
     return Array.from(this.tabs.values());
   }
 
+  /**
+   * Closes a specific tab and destroys its associated WebContentsView.
+   * @param tabId The ID of the tab to close.
+   */
   closeTab(tabId: string): void {
     const tab = this.tabs.get(tabId);
     if (tab) {
@@ -176,6 +212,10 @@ class BrowserManager {
     }
   }
 
+  /**
+   * Sets the specified tab as the active (visible) tab.
+   * @param tabId The ID of the tab to activate.
+   */
   setActiveTab(tabId: string): void {
     if (this.tabs.has(tabId)) {
       this.activeTabId = tabId;
@@ -184,6 +224,9 @@ class BrowserManager {
     }
   }
 
+  /**
+   * Updates the visibility and bounds of the WebContentsViews based on the currently active tab.
+   */
   private updateActiveTabView(): void {
     const mainWindow = getMainWindow();
     if (!mainWindow || mainWindow.isDestroyed()) return;
@@ -201,10 +244,19 @@ class BrowserManager {
     }
   }
 
+  /**
+   * Retrieves information about the currently active tab.
+   * @returns The active tab information or null if no tab is active.
+   */
   getActiveTab(): TabInfo | null {
     return this.activeTabId ? this.tabs.get(this.activeTabId) || null : null;
   }
 
+  /**
+   * Navigates the active tab to a specified URL.
+   * @param url The URL to navigate to.
+   * @returns True if navigation started successfully, false otherwise.
+   */
   navigateTo(url: string): boolean {
     if (!this.activeTabId) return false;
 
@@ -227,6 +279,10 @@ class BrowserManager {
     return true;
   }
 
+  /**
+   * Navigates the active tab back in its history.
+   * @returns True if navigation started successfully, false otherwise.
+   */
   goBack(): boolean {
     if (!this.activeTabId) return false;
 
@@ -241,6 +297,10 @@ class BrowserManager {
     return false;
   }
 
+  /**
+   * Navigates the active tab forward in its history.
+   * @returns True if navigation started successfully, false otherwise.
+   */
   goForward(): boolean {
     if (!this.activeTabId) return false;
 
@@ -255,6 +315,10 @@ class BrowserManager {
     return false;
   }
 
+  /**
+   * Reloads the current page in the active tab.
+   * @returns True if reload started successfully, false otherwise.
+   */
   reload(): boolean {
     if (!this.activeTabId) return false;
 
@@ -265,6 +329,10 @@ class BrowserManager {
     return true;
   }
 
+  /**
+   * Stops the active tab from loading.
+   * @returns True if stop command was sent successfully, false otherwise.
+   */
   stopLoading(): boolean {
     if (!this.activeTabId) return false;
 
@@ -275,6 +343,10 @@ class BrowserManager {
     return true;
   }
 
+  /**
+   * Retrieves the URL of the currently active tab.
+   * @returns The current URL or an empty string if no tab is active.
+   */
   getCurrentUrl(): string {
     if (!this.activeTabId) return '';
 
@@ -282,6 +354,10 @@ class BrowserManager {
     return tab?.url || '';
   }
 
+  /**
+   * Retrieves the title of the currently active tab.
+   * @returns The current title or an empty string if no tab is active.
+   */
   getCurrentTitle(): string {
     if (!this.activeTabId) return '';
 
@@ -289,7 +365,10 @@ class BrowserManager {
     return tab?.title || '';
   }
 
-  // Called by React when browser area size changes
+  /**
+   * Sets the bounds for the browser area. Called by the renderer process when the window resizes.
+   * @param bounds The new bounds for the browser area.
+   */
   setBrowserAreaBounds(bounds: { x: number; y: number; width: number; height: number }): void {
     this.currentBrowserBounds = bounds;
 
@@ -302,6 +381,11 @@ class BrowserManager {
     }
   }
 
+  /**
+   * Duplicates an existing tab by creating a new tab with the same URL.
+   * @param tabId The ID of the tab to duplicate.
+   * @returns The ID of the newly created tab, or null if the original tab was not found.
+   */
   duplicateTab(tabId: string): string | null {
     const tab = this.tabs.get(tabId);
     if (!tab) return null;
@@ -309,6 +393,9 @@ class BrowserManager {
     return this.createTab(tab.url);
   }
 
+  /**
+   * Broadcasts the full list of tabs and the active tab ID to the renderer process.
+   */
   private broadcastTabsUpdate() {
     const mainWindow = getMainWindow();
     if (mainWindow && !mainWindow.isDestroyed()) {

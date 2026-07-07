@@ -71,6 +71,12 @@ export interface RiskItem {
   suggestion: string;
 }
 
+/**
+ * Provides comprehensive analysis of a software repository.
+ * This service generates an architectural diagram, explains folder structure, builds a dependency graph,
+ * identifies important files, finds entry points, maps API endpoints, analyzes database schemas,
+ * extracts TODO items, and performs a risk analysis.
+ */
 export class RepositoryAnalysisService {
   private projectPath: string;
 
@@ -78,6 +84,10 @@ export class RepositoryAnalysisService {
     this.projectPath = projectPath;
   }
 
+  /**
+   * Performs a full analysis of the repository, gathering various insights.
+   * @returns A promise that resolves to a `RepositoryAnalysis` object containing all gathered information.
+   */
   async analyzeRepository(): Promise<RepositoryAnalysis> {
     const [
       architecture,
@@ -114,6 +124,10 @@ export class RepositoryAnalysisService {
     };
   }
 
+  /**
+   * Generates a high-level architecture diagram in Mermaid syntax based on top-level directories.
+   * @returns A promise that resolves to an `ArchitectureDiagram` object.
+   */
   private async generateArchitectureDiagram(): Promise<ArchitectureDiagram> {
     const dirs = this.getTopLevelDirectories();
     const mermaidCode = `graph TB
@@ -126,6 +140,10 @@ ${dirs.map((dir) => `    ${dir}["📁 ${dir}"]`).join('\n')}
     };
   }
 
+  /**
+   * Analyzes the top-level folder structure and provides explanations for common directories.
+   * @returns A promise that resolves to a `FolderExplanation` object.
+   */
   private async analyzeFolderStructure(): Promise<FolderExplanation> {
     const explanation: FolderExplanation = {};
 
@@ -154,6 +172,10 @@ ${dirs.map((dir) => `    ${dir}["📁 ${dir}"]`).join('\n')}
     return explanation;
   }
 
+  /**
+   * Builds a simplified dependency graph based on `package.json` dependencies.
+   * @returns A promise that resolves to a `DependencyGraph` object.
+   */
   private async buildDependencyGraph(): Promise<DependencyGraph> {
     const packageJsonPath = path.join(this.projectPath, 'package.json');
     let dependencies: Record<string, string> = {};
@@ -190,6 +212,10 @@ ${dirs.map((dir) => `    ${dir}["📁 ${dir}"]`).join('\n')}
     return { nodes, edges };
   }
 
+  /**
+   * Identifies and lists important files in the repository based on predefined patterns.
+   * @returns A promise that resolves to an array of `ImportantFile` objects.
+   */
   private async identifyImportantFiles(): Promise<ImportantFile[]> {
     const importantFiles: ImportantFile[] = [];
 
@@ -218,6 +244,10 @@ ${dirs.map((dir) => `    ${dir}["📁 ${dir}"]`).join('\n')}
     return importantFiles.slice(0, 10);
   }
 
+  /**
+   * Finds potential entry points of the application by checking `package.json` and common file names.
+   * @returns A promise that resolves to an array of `EntryPoint` objects.
+   */
   private async findEntryPoints(): Promise<EntryPoint[]> {
     const entryPoints: EntryPoint[] = [];
 
@@ -263,6 +293,10 @@ ${dirs.map((dir) => `    ${dir}["📁 ${dir}"]`).join('\n')}
     return entryPoints;
   }
 
+  /**
+   * Maps API endpoints by scanning for route definitions in `src/api` directory.
+   * @returns A promise that resolves to an array of `APIEndpoint` objects.
+   */
   private async mapAPIEndpoints(): Promise<APIEndpoint[]> {
     const endpoints: APIEndpoint[] = [];
 
@@ -291,6 +325,10 @@ ${dirs.map((dir) => `    ${dir}["📁 ${dir}"]`).join('\n')}
     return endpoints;
   }
 
+  /**
+   * Analyzes the database structure, currently supporting Prisma schemas.
+   * @returns A promise that resolves to an array of `DatabaseSchema` objects.
+   */
   private async analyzeDatabaseStructure(): Promise<DatabaseSchema[]> {
     const schemas: DatabaseSchema[] = [];
 
@@ -316,6 +354,10 @@ ${dirs.map((dir) => `    ${dir}["📁 ${dir}"]`).join('\n')}
     return schemas;
   }
 
+  /**
+   * Extracts TODO, FIXME, HACK, and BUG comments from source code files.
+   * @returns A promise that resolves to an array of `TodoItem` objects.
+   */
   private async extractTodoItems(): Promise<TodoItem[]> {
     const todos: TodoItem[] = [];
 
@@ -342,6 +384,10 @@ ${dirs.map((dir) => `    ${dir}["📁 ${dir}"]`).join('\n')}
     return todos.slice(0, 20);
   }
 
+  /**
+   * Performs a basic risk analysis, checking for potential security (hardcoded secrets) and performance (lodash usage) issues.
+   * @returns A promise that resolves to an array of `RiskItem` objects.
+   */
   private async performRiskAnalysis(): Promise<RiskItem[]> {
     const risks: RiskItem[] = [];
 
@@ -383,6 +429,10 @@ ${dirs.map((dir) => `    ${dir}["📁 ${dir}"]`).join('\n')}
     return risks;
   }
 
+  /**
+   * Retrieves the names of top-level directories in the project, excluding dotfiles.
+   * @returns An array of directory names.
+   */
   private getTopLevelDirectories(): string[] {
     const entries = fs.readdirSync(this.projectPath, { withFileTypes: true });
     return entries
@@ -391,6 +441,10 @@ ${dirs.map((dir) => `    ${dir}["📁 ${dir}"]`).join('\n')}
       .slice(0, 10);
   }
 
+  /**
+   * Recursively gets all file paths within the project directory, excluding `node_modules` and `.git`.
+   * @returns An array of relative file paths.
+   */
   private getAllFiles(): string[] {
     const files: string[] = [];
 
@@ -414,6 +468,11 @@ ${dirs.map((dir) => `    ${dir}["📁 ${dir}"]`).join('\n')}
     return files;
   }
 
+  /**
+   * Recursively retrieves all file paths within a given directory.
+   * @param dir The directory path to scan.
+   * @returns An array of absolute file paths.
+   */
   private getAllFilesInDirectory(dir: string): string[] {
     const files: string[] = [];
 

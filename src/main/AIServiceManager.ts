@@ -31,6 +31,9 @@ export interface AIMessage {
   timestamp: number;
 }
 
+/**
+ * Manages AI service configurations and conversations, including persistence to the file system.
+ */
 class AIServiceManager {
   private dataDir: string;
   private configFile: string;
@@ -52,6 +55,10 @@ class AIServiceManager {
     this.loadServices();
   }
 
+  /**
+   * Loads AI service configurations from the file system.
+   * If the configuration file does not exist or is invalid, it logs an error and initializes an empty set of services.
+   */
   private loadServices(): void {
     try {
       if (fs.existsSync(this.configFile)) {
@@ -65,6 +72,13 @@ class AIServiceManager {
     }
   }
 
+  /**
+   * Adds a new AI service configuration.
+   * @param service The type of AI service (e.g., 'chatgpt', 'claude').
+   * @param name A user-friendly name for the service.
+   * @param config Optional partial configuration to apply to the new service.
+   * @returns The newly created and saved AI service configuration.
+   */
   addService(service: AIService, name: string, config: Partial<AIServiceConfig> = {}): AIServiceConfig {
     const serviceConfig: AIServiceConfig = {
       id: Date.now().toString(),
@@ -79,18 +93,38 @@ class AIServiceManager {
     return serviceConfig;
   }
 
-  getServices(): AIServiceConfig[] {
+  /**
+   * Retrieves all registered AI service configurations.
+   * @returns An array of all AI service configurations.
+   */
+  getServices(): AIServiceConfig {
     return Array.from(this.services.values());
   }
 
+  /**
+   * Retrieves a specific AI service configuration by its ID.
+   * @param id The unique identifier of the AI service.
+   * @returns The AI service configuration if found, otherwise `undefined`.
+   */
   getService(id: string): AIServiceConfig | undefined {
     return this.services.get(id);
   }
 
-  getServicesByType(service: AIService): AIServiceConfig[] {
+  /**
+   * Retrieves AI service configurations filtered by service type.
+   * @param service The type of AI service to filter by.
+   * @returns An array of AI service configurations matching the specified type.
+   */
+  getServicesByType(service: AIService): AIServiceConfig {
     return Array.from(this.services.values()).filter((s) => s.service === service);
   }
 
+  /**
+   * Updates an existing AI service configuration.
+   * @param id The unique identifier of the AI service to update.
+   * @param updates A partial object containing the fields to update.
+   * @returns `true` if the service was updated successfully, `false` otherwise.
+   */
   updateService(id: string, updates: Partial<AIServiceConfig>): boolean {
     const service = this.services.get(id);
     if (service) {
@@ -101,6 +135,11 @@ class AIServiceManager {
     return false;
   }
 
+  /**
+   * Deletes an AI service configuration by its ID.
+   * @param id The unique identifier of the AI service to delete.
+   * @returns `true` if the service was deleted successfully, `false` otherwise.
+   */
   deleteService(id: string): boolean {
     if (this.services.delete(id)) {
       this.saveServices();
@@ -109,14 +148,30 @@ class AIServiceManager {
     return false;
   }
 
+  /**
+   * Enables an AI service.
+   * @param id The unique identifier of the AI service to enable.
+   * @returns `true` if the service was enabled successfully, `false` otherwise.
+   */
   enableService(id: string): boolean {
     return this.updateService(id, { enabled: true });
   }
 
+  /**
+   * Disables an AI service.
+   * @param id The unique identifier of the AI service to disable.
+   * @returns `true` if the service was disabled successfully, `false` otherwise.
+   */
   disableService(id: string): boolean {
     return this.updateService(id, { enabled: false });
   }
 
+  /**
+   * Creates a new AI conversation for a given service.
+   * @param serviceId The ID of the AI service this conversation belongs to.
+   * @param title An optional title for the conversation. Defaults to 'New Conversation'.
+   * @returns The newly created and saved AI conversation.
+   */
   createConversation(serviceId: string, title: string = 'New Conversation'): AIConversation {
     const conversation: AIConversation = {
       id: Date.now().toString(),
@@ -130,6 +185,11 @@ class AIServiceManager {
     return conversation;
   }
 
+  /**
+   * Retrieves a specific AI conversation by its ID.
+   * @param id The unique identifier of the conversation.
+   * @returns The AI conversation if found, otherwise `undefined`.
+   */
   getConversation(id: string): AIConversation | undefined {
     try {
       const filePath = path.join(this.conversationsDir, `${id}.json`);
@@ -142,7 +202,13 @@ class AIServiceManager {
     return undefined;
   }
 
-  getConversations(serviceId?: string): AIConversation[] {
+  /**
+   * Retrieves all AI conversations, optionally filtered by service ID.
+   * Conversations are sorted by `lastModified` in descending order.
+   * @param serviceId Optional. The ID of the AI service to filter conversations by.
+   * @returns An array of AI conversations.
+   */
+  getConversations(serviceId?: string): AIConversation {
     try {
       const files = fs.readdirSync(this.conversationsDir);
       const conversations: AIConversation[] = [];
@@ -164,6 +230,13 @@ class AIServiceManager {
     }
   }
 
+  /**
+   * Adds a new message to an existing conversation.
+   * @param conversationId The ID of the conversation to add the message to.
+   * @param role The role of the message sender ('user', 'assistant', or 'system').
+   * @param content The text content of the message.
+   * @returns The newly added message if successful, otherwise `null`.
+   */
   addMessage(conversationId: string, role: 'user' | 'assistant' | 'system', content: string): AIMessage | null {
     const conversation = this.getConversation(conversationId);
     if (!conversation) return null;
@@ -182,6 +255,12 @@ class AIServiceManager {
     return message;
   }
 
+  /**
+   * Updates the title of an existing conversation.
+   * @param id The ID of the conversation to update.
+   * @param title The new title for the conversation.
+   * @returns `true` if the title was updated successfully, `false` otherwise.
+   */
   updateConversationTitle(id: string, title: string): boolean {
     const conversation = this.getConversation(id);
     if (conversation) {
@@ -193,6 +272,11 @@ class AIServiceManager {
     return false;
   }
 
+  /**
+   * Deletes an AI conversation by its ID.
+   * @param id The unique identifier of the conversation to delete.
+   * @returns `true` if the conversation was deleted successfully, `false` otherwise.
+   */
   deleteConversation(id: string): boolean {
     try {
       const filePath = path.join(this.conversationsDir, `${id}.json`);
@@ -206,6 +290,10 @@ class AIServiceManager {
     return false;
   }
 
+  /**
+   * Saves the current state of AI service configurations to the file system.
+   * This method is called internally after any modification to the services.
+   */
   private saveServices(): void {
     try {
       fs.writeFileSync(
@@ -217,6 +305,11 @@ class AIServiceManager {
     }
   }
 
+  /**
+   * Saves a single AI conversation to its respective file.
+   * This method is called internally after any modification to a conversation.
+   * @param conversation The AI conversation object to save.
+   */
   private saveConversation(conversation: AIConversation): void {
     try {
       const filePath = path.join(this.conversationsDir, `${conversation.id}.json`);

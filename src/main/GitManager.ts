@@ -18,13 +18,26 @@ export interface GitCommit {
   message: string;
 }
 
+/**
+ * Manages Git operations for a given project path.
+ * Provides functionalities to get repository status, commit history, commit changes, push, pull,
+ * create branches, switch branches, list branches, and get file differences.
+ */
 class GitManager {
   private projectPath: string = '';
 
+  /**
+   * Sets the project path for Git operations.
+   * @param projectPath The absolute path to the Git repository.
+   */
   setProjectPath(projectPath: string): void {
     this.projectPath = projectPath;
   }
 
+  /**
+   * Retrieves the current Git status of the repository.
+   * @returns A `GitStatus` object if successful, otherwise `null`.
+   */
   getStatus(): GitStatus | null {
     if (!this.projectPath) return null;
 
@@ -77,6 +90,11 @@ class GitManager {
     }
   }
 
+  /**
+   * Retrieves a list of recent commit history.
+   * @param limit The maximum number of commits to retrieve. Defaults to 10.
+   * @returns An array of `GitCommit` objects.
+   */
   getCommitHistory(limit: number = 10): GitCommit[] {
     if (!this.projectPath) return [];
 
@@ -102,6 +120,11 @@ class GitManager {
     }
   }
 
+  /**
+   * Stages all changes and commits them with the given message.
+   * @param message The commit message.
+   * @returns `true` if the commit was successful, `false` otherwise.
+   */
   commit(message: string): boolean {
     if (!this.projectPath) return false;
 
@@ -117,6 +140,10 @@ class GitManager {
     }
   }
 
+  /**
+   * Pushes committed changes to the remote repository.
+   * @returns `true` if the push was successful, `false` otherwise.
+   */
   push(): boolean {
     if (!this.projectPath) return false;
 
@@ -129,6 +156,10 @@ class GitManager {
     }
   }
 
+  /**
+   * Pulls changes from the remote repository.
+   * @returns `true` if the pull was successful, `false` otherwise.
+   */
   pull(): boolean {
     if (!this.projectPath) return false;
 
@@ -141,6 +172,11 @@ class GitManager {
     }
   }
 
+  /**
+   * Creates a new Git branch and switches to it.
+   * @param branchName The name of the new branch.
+   * @returns `true` if the branch was created and switched to successfully, `false` otherwise.
+   */
   createBranch(branchName: string): boolean {
     if (!this.projectPath) return false;
 
@@ -153,6 +189,11 @@ class GitManager {
     }
   }
 
+  /**
+   * Switches to an existing Git branch.
+   * @param branchName The name of the branch to switch to.
+   * @returns `true` if the branch was switched to successfully, `false` otherwise.
+   */
   switchBranch(branchName: string): boolean {
     if (!this.projectPath) return false;
 
@@ -165,6 +206,10 @@ class GitManager {
     }
   }
 
+  /**
+   * Retrieves a list of all local and remote Git branches.
+   * @returns An array of branch names.
+   */
   getBranches(): string[] {
     if (!this.projectPath) return [];
 
@@ -184,6 +229,11 @@ class GitManager {
     }
   }
 
+  /**
+   * Retrieves the Git diff for the entire repository or a specific file.
+   * @param filePath Optional. The path to a specific file to get the diff for.
+   * @returns The diff as a string.
+   */
   getDiff(filePath?: string): string {
     if (!this.projectPath) return '';
 

@@ -8,8 +8,17 @@ export interface PageSummary {
   contentLength: number;
 }
 
+/**
+ * Provides web page summarization capabilities, including content extraction, summary generation,
+ * key point extraction, reading time calculation, and basic language detection.
+ */
 export class WebSummarizerService {
-  // Extract main content from HTML
+  /**
+   * Extracts the main textual content from an HTML string by removing script, style tags, and HTML tags.
+   * It also decodes HTML entities and cleans up extra whitespace.
+   * @param html The HTML content of the web page.
+   * @returns A promise that resolves to a clean text string of the main content.
+   */
   async extractContent(html: string): Promise<string> {
     // Remove script and style tags
     let content = html
@@ -28,7 +37,12 @@ export class WebSummarizerService {
     return content;
   }
 
-  // Generate summary from content
+  /**
+   * Generates a summary from a given text content by scoring sentences based on keyword frequency.
+   * @param content The text content to summarize.
+   * @param maxLength The maximum length of the generated summary. Defaults to 300 characters.
+   * @returns A promise that resolves to the summarized text.
+   */
   async generateSummary(content: string, maxLength: number = 300): Promise<string> {
     // Split into sentences
     const sentences = content.match(/[^.!?]+[.!?]+/g) || [];
@@ -64,7 +78,12 @@ export class WebSummarizerService {
     return topSentences;
   }
 
-  // Extract key points from content
+  /**
+   * Extracts key points from a given text content by identifying top-scoring sentences.
+   * @param content The text content to extract key points from.
+   * @param maxPoints The maximum number of key points to extract. Defaults to 5.
+   * @returns A promise that resolves to an array of key point strings.
+   */
   async extractKeyPoints(content: string, maxPoints: number = 5): Promise<string[]> {
     const sentences = content.match(/[^.!?]+[.!?]+/g) || [];
 
@@ -92,14 +111,24 @@ export class WebSummarizerService {
     return keyPoints;
   }
 
-  // Calculate reading time
+  /**
+   * Calculates the estimated reading time for a given text content.
+   * Assumes an average reading speed of 200 words per minute.
+   * @param content The text content to calculate reading time for.
+   * @returns The estimated reading time in minutes (rounded up).
+   */
   calculateReadingTime(content: string): number {
     const wordsPerMinute = 200;
     const wordCount = content.split(/\s+/).length;
     return Math.ceil(wordCount / wordsPerMinute);
   }
 
-  // Detect language
+  /**
+   * Performs a simple language detection based on the frequency of common words.
+   * Supports English, French, and Spanish.
+   * @param content The text content to detect the language of.
+   * @returns A promise that resolves to the detected language (‘English’, ‘French’, ‘Spanish’), or ‘Unknown’.
+   */
   async detectLanguage(content: string): Promise<string> {
     // Simple language detection based on common words
     const englishWords = [
@@ -162,7 +191,14 @@ export class WebSummarizerService {
     return 'Unknown';
   }
 
-  // Generate full page summary
+  /**
+   * Generates a comprehensive summary for a web page, including title, URL, summary text, key points,
+   * reading time, language, and content length.
+   * @param html The HTML content of the web page.
+   * @param title The title of the web page.
+   * @param url The URL of the web page.
+   * @returns A promise that resolves to a `PageSummary` object.
+   */
   async summarizePage(
     html: string,
     title: string,
@@ -185,7 +221,12 @@ export class WebSummarizerService {
     };
   }
 
-  // Helper: Calculate word frequency
+  /**
+   * Calculates the frequency of words in a given array, excluding common stop words.
+   * @param words An array of words.
+   * @returns A record where keys are words and values are their frequencies.
+   */
+  private calculateWordFrequency(words: string[]): Record<string, number> {
   private calculateWordFrequency(words: string[]): Record<string, number> {
     const freq: Record<string, number> = {};
     const stopWords = new Set([
@@ -248,7 +289,12 @@ export class WebSummarizerService {
     return freq;
   }
 
-  // Helper: Decode HTML entities
+  /**
+   * Decodes common HTML entities in a given text string.
+   * @param text The text containing HTML entities.
+   * @returns The text with HTML entities decoded.
+   */
+  private decodeHtmlEntities(text: string): string {
   private decodeHtmlEntities(text: string): string {
     const entities: Record<string, string> = {
       '&amp;': '&',

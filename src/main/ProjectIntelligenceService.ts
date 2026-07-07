@@ -27,6 +27,12 @@ interface ArchitectureNode {
   imports?: string[];
 }
 
+/**
+ * Provides services for analyzing a software project to extract key intelligence.
+ * This includes detecting programming languages and frameworks, parsing dependencies,
+ * identifying build scripts and entry points, generating an architectural map,
+ * and summarizing project characteristics.
+ */
 export class ProjectIntelligenceService {
   private projectPath: string;
 
@@ -34,6 +40,10 @@ export class ProjectIntelligenceService {
     this.projectPath = projectPath;
   }
 
+  /**
+   * Performs a comprehensive analysis of the project.
+   * @returns A promise that resolves to a `ProjectAnalysis` object containing various insights about the project.
+   */
   async analyze(): Promise<ProjectAnalysis> {
     const languages = this.detectLanguages();
     const frameworks = this.detectFrameworks();
@@ -63,6 +73,10 @@ export class ProjectIntelligenceService {
     };
   }
 
+  /**
+   * Detects the programming languages used in the project by scanning file extensions.
+   * @returns An array of strings, each representing a detected language (e.g., 'TypeScript', 'JavaScript', 'Python').
+   */
   private detectLanguages(): string[] {
     const languages = new Set<string>();
     const extensions: { [key: string]: string } = {
@@ -93,6 +107,10 @@ export class ProjectIntelligenceService {
     return Array.from(languages);
   }
 
+  /**
+   * Detects frameworks used in the project by inspecting `package.json` dependencies.
+   * @returns An array of strings, each representing a detected framework (e.g., 'React', 'Express', 'Electron').
+   */
   private detectFrameworks(): string[] {
     const frameworks = new Set<string>();
 
@@ -137,6 +155,10 @@ export class ProjectIntelligenceService {
     return Array.from(frameworks);
   }
 
+  /**
+   * Parses `package.json` to extract production and development dependencies.
+   * @returns An object containing two arrays: `dependencies` and `devDependencies`, each with `DependencyInfo` objects.
+   */
   private parseDependencies(): {
     dependencies: DependencyInfo[];
     devDependencies: DependencyInfo[];
@@ -182,6 +204,10 @@ export class ProjectIntelligenceService {
     return { dependencies, devDependencies };
   }
 
+  /**
+   * Finds build scripts defined in `package.json`.
+   * @returns An array of strings, each representing a build script name.
+   */
   private findBuildScripts(): string[] {
     const scripts: string[] = [];
 
@@ -203,6 +229,10 @@ export class ProjectIntelligenceService {
     return scripts;
   }
 
+  /**
+   * Detects the testing framework used in the project by inspecting `package.json` dependencies.
+   * @returns A string representing the detected test framework (e.g., 'Jest', 'Mocha') or `null` if none is found.
+   */
   private detectTestFramework(): string | null {
     const packageJsonPath = path.join(this.projectPath, 'package.json');
     if (fs.existsSync(packageJsonPath)) {
@@ -239,6 +269,10 @@ export class ProjectIntelligenceService {
     return null;
   }
 
+  /**
+   * Identifies common entry points for the project (e.g., `src/main.ts`, `index.js`).
+   * @returns An array of strings, each representing a detected entry point file path.
+   */
   private findEntryPoints(): string[] {
     const entryPoints: string[] = [];
 
@@ -266,6 +300,11 @@ export class ProjectIntelligenceService {
     return entryPoints;
   }
 
+  /**
+   * Generates a simplified architectural map of the project's directory structure.
+   * It recursively builds a tree of directories and relevant code files up to a certain depth.
+   * @returns An `ArchitectureNode` object representing the root of the project's architectural map.
+   */
   private generateArchitectureMap(): ArchitectureNode {
     const root: ArchitectureNode = {
       name: path.basename(this.projectPath),
@@ -279,6 +318,13 @@ export class ProjectIntelligenceService {
     return root;
   }
 
+  /**
+   * Recursively builds the architectural tree of the project.
+   * @param dirPath The current directory path to scan.
+   * @param node The current `ArchitectureNode` to add children to.
+   * @param depth The current recursion depth.
+   * @param maxDepth The maximum depth to traverse for the architecture map.
+   */
   private buildArchitectureTree(
     dirPath: string,
     node: ArchitectureNode,
@@ -334,6 +380,14 @@ export class ProjectIntelligenceService {
     }
   }
 
+  /**
+   * Generates a concise summary of the project based on detected languages, frameworks, build scripts, and test framework.
+   * @param languages An array of detected programming languages.
+   * @param frameworks An array of detected frameworks.
+   * @param buildScripts An array of detected build script names.
+   * @param testFramework The detected test framework or `null`.
+   * @returns A string summarizing the project's key characteristics.
+   */
   private generateSummary(
     languages: string[],
     frameworks: string[],
@@ -361,6 +415,12 @@ export class ProjectIntelligenceService {
     return parts.join('. ') + '.';
   }
 
+  /**
+   * Recursively walks through a directory, applying a callback function to each file.
+   * It skips common ignored directories like `node_modules` and `.git`.
+   * @param dirPath The starting directory path to walk.
+   * @param callback A function to execute for each file found, receiving the file's full path.
+   */
   private walkDirectory(dirPath: string, callback: (filePath: string) => void) {
     try {
       const entries = fs.readdirSync(dirPath);

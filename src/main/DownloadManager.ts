@@ -14,6 +14,10 @@ interface Download {
   endTime?: number;
 }
 
+/**
+ * Manages file downloads within the application, tracking their progress and status.
+ * It sets up a download directory and handles Electron's `will-download` event.
+ */
 class DownloadManager {
   private downloads: Map<string, Download> = new Map();
   private downloadDir: string;
@@ -25,6 +29,11 @@ class DownloadManager {
     }
   }
 
+  /**
+   * Sets up the download handler for a given BrowserWindow.
+   * This method listens for the `will-download` event and manages the download process.
+   * @param window The `BrowserWindow` instance to attach the download handler to.
+   */
   setupDownloadHandler(window: BrowserWindow) {
     window.webContents.session.on('will-download', (event, item, webContents) => {
       const filename = item.getFilename();
@@ -78,18 +87,33 @@ class DownloadManager {
     });
   }
 
+  /**
+   * Retrieves a list of all active and completed downloads.
+   * @returns An array of `Download` objects.
+   */
   getDownloads(): Download[] {
     return Array.from(this.downloads.values());
   }
 
+  /**
+   * Retrieves a specific download by its ID.
+   * @param id The unique identifier of the download.
+   * @returns The `Download` object if found, otherwise `undefined`.
+   */
   getDownload(id: string): Download | undefined {
     return this.downloads.get(id);
   }
 
+  /**
+   * Clears all tracked downloads from the manager.
+   */
   clearDownloads(): void {
     this.downloads.clear();
   }
 
+  /**
+   * Opens the designated downloads folder in the system's file manager.
+   */
   openDownloadsFolder(): void {
     require('electron').shell.openPath(this.downloadDir);
   }

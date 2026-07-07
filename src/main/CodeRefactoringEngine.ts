@@ -46,6 +46,11 @@ export interface TestResult {
   errors: string[];
 }
 
+/**
+ * The CodeRefactoringEngine provides functionalities for planning and executing code refactoring operations.
+ * It supports various refactoring types like renaming, extracting, inlining, moving, simplifying, and modernizing code.
+ * The engine also includes mechanisms for impact analysis, risk identification, and automatic rollback on test failures.
+ */
 export class CodeRefactoringEngine {
   private projectPath: string;
   private backupPath: string;
@@ -55,6 +60,12 @@ export class CodeRefactoringEngine {
     this.backupPath = path.join(projectPath, '.refactoring-backup');
   }
 
+  /**
+   * Plans a refactoring operation based on the given request.
+   * This method analyzes the potential changes, estimates impact, and identifies risks without modifying the code.
+   * @param request The `RefactoringRequest` object detailing the desired refactoring.
+   * @returns A promise that resolves to a `RefactoringPlan` object.
+   */
   async planRefactoring(request: RefactoringRequest): Promise<RefactoringPlan> {
     const plan: RefactoringPlan = {
       steps: [],
@@ -90,6 +101,12 @@ export class CodeRefactoringEngine {
     return plan;
   }
 
+  /**
+   * Executes a planned refactoring operation.
+   * It creates a backup, applies changes, runs tests, and rolls back if tests fail.
+   * @param request The `RefactoringRequest` object for the refactoring to execute.
+   * @returns A promise that resolves to a `RefactoringResult` object.
+   */
   async executeRefactoring(request: RefactoringRequest): Promise<RefactoringResult> {
     // Create backup
     await this.createBackup();
@@ -136,6 +153,43 @@ export class CodeRefactoringEngine {
     }
   }
 
+  /**
+   * Refactors raw code based on a goal without modifying files.
+   * Useful for quick transformations in agents.
+   */
+  async refactorCode(code: string, goal: string): Promise<string> {
+    let refactored = code;
+
+    // Apply basic transformations based on goal keywords
+    if (goal.toLowerCase().includes('simplify')) {
+      // Simplify arrow functions with single return
+      refactored = refactored.replace(
+        /const\s+(\w+)\s*=\s*\(\s*([^)]*)\s*\)\s*=>\s*{\s*return\s+([^;]+);\s*}/g,
+        'const $1 = ($2) => $3'
+      );
+      // Simplify boolean returns
+      refactored = refactored.replace(
+        /if\s*\(([^)]+)\)\s*{\s*return\s+true;\s*}\s*else\s*{\s*return\s+false;\s*}/g,
+        'return Boolean($1);'
+      );
+    }
+
+    if (goal.toLowerCase().includes('modernize')) {
+      refactored = refactored.replace(/\bvar\s+/g, 'const ');
+      refactored = refactored.replace(
+        /function\s+(\w+)\s*\(([^)]*)\)\s*{/g,
+        'const $1 = ($2) => {'
+      );
+    }
+
+    return refactored;
+  }
+
+  /**
+   * Plans a rename refactoring operation.
+   * @param request The `RefactoringRequest` for renaming.
+   * @returns A promise that resolves to a `RefactoringStep` for the rename operation.
+   */
   private async planRename(request: RefactoringRequest): Promise<RefactoringStep> {
     const { target, parameters } = request;
     const newName = parameters?.newName;
@@ -165,6 +219,11 @@ export class CodeRefactoringEngine {
     };
   }
 
+  /**
+   * Plans an extract refactoring operation (e.g., extracting code into a new function).
+   * @param request The `RefactoringRequest` for extraction.
+   * @returns A promise that resolves to a `RefactoringStep` for the extract operation.
+   */
   private async planExtract(request: RefactoringRequest): Promise<RefactoringStep> {
     const { target, parameters } = request;
     const { startLine, endLine, functionName } = parameters || {};
@@ -194,6 +253,11 @@ export class CodeRefactoringEngine {
     };
   }
 
+  /**
+   * Plans an inline refactoring operation (e.g., inlining a function call).
+   * @param request The `RefactoringRequest` for inlining.
+   * @returns A promise that resolves to a `RefactoringStep` for the inline operation.
+   */
   private async planInline(request: RefactoringRequest): Promise<RefactoringStep> {
     const { target, parameters } = request;
     const { functionName } = parameters || {};
@@ -225,6 +289,11 @@ export class CodeRefactoringEngine {
     };
   }
 
+  /**
+   * Plans a move refactoring operation (e.g., moving a file or module).
+   * @param request The `RefactoringRequest` for moving.
+   * @returns A promise that resolves to a `RefactoringStep` for the move operation.
+   */
   private async planMove(request: RefactoringRequest): Promise<RefactoringStep> {
     const { target, parameters } = request;
     const { newPath } = parameters || {};
@@ -240,6 +309,11 @@ export class CodeRefactoringEngine {
     };
   }
 
+  /**
+   * Plans a simplify refactoring operation (e.g., simplifying code structure or expressions).
+   * @param request The `RefactoringRequest` for simplification.
+   * @returns A promise that resolves to a `RefactoringStep` for the simplify operation.
+   */
   private async planSimplify(request: RefactoringRequest): Promise<RefactoringStep> {
     const { target } = request;
     const filePath = path.join(this.projectPath, target);
@@ -247,8 +321,8 @@ export class CodeRefactoringEngine {
 
     let simplified = content;
 
-    // Remove unnecessary comments
-    simplified = simplified.replace(/\/\/\s*TODO.*\n/g, '');
+    // Simplify code structure by removing excessive whitespace
+    simplified = simplified.replace(/\n\s*\n\s*\n/g, '\n\n');
 
     // Simplify arrow functions
     simplified = simplified.replace(
@@ -270,6 +344,11 @@ export class CodeRefactoringEngine {
     };
   }
 
+  /**
+   * Plans a modernize refactoring operation (e.g., updating to newer language features).
+   * @param request The `RefactoringRequest` for modernization.
+   * @returns A promise that resolves to a `RefactoringStep` for the modernize operation.
+   */
   private async planModernize(request: RefactoringRequest): Promise<RefactoringStep> {
     const { target } = request;
     const filePath = path.join(this.projectPath, target);
@@ -300,6 +379,11 @@ export class CodeRefactoringEngine {
     };
   }
 
+  /**
+   * Analyzes the potential impact of a refactoring request.
+   * @param request The `RefactoringRequest` to analyze.
+   * @returns A promise that resolves to an array of strings describing the estimated impact.
+   */
   private async analyzeImpact(request: RefactoringRequest): Promise<string[]> {
     const impact: string[] = [];
 
@@ -319,6 +403,11 @@ export class CodeRefactoringEngine {
     return impact;
   }
 
+  /**
+   * Identifies potential risks associated with a refactoring request.
+   * @param request The `RefactoringRequest` to assess for risks.
+   * @returns A promise that resolves to an array of strings describing the identified risks.
+   */
   private async identifyRisks(request: RefactoringRequest): Promise<string[]> {
     const risks: string[] = [];
 
@@ -337,11 +426,20 @@ export class CodeRefactoringEngine {
     return risks;
   }
 
+  /**
+   * Applies a single code change to a file.
+   * @param change The `CodeChange` object to apply.
+   * @returns A promise that resolves when the change is applied.
+   */
   private async applyChange(change: CodeChange): Promise<void> {
     const filePath = path.join(this.projectPath, change.file);
     fs.writeFileSync(filePath, change.after);
   }
 
+  /**
+   * Runs the project's tests to verify the correctness of refactoring changes.
+   * @returns A promise that resolves to an array of `TestResult` objects.
+   */
   private async runTests(): Promise<TestResult[]> {
     const results: TestResult[] = [];
 
@@ -373,6 +471,11 @@ export class CodeRefactoringEngine {
     return results;
   }
 
+  /**
+   * Creates a backup of the project files before applying refactoring changes.
+   * This allows for rollback in case of issues.
+   * @returns A promise that resolves when the backup is created.
+   */
   private async createBackup(): Promise<void> {
     if (!fs.existsSync(this.backupPath)) {
       fs.mkdirSync(this.backupPath, { recursive: true });
@@ -389,6 +492,11 @@ export class CodeRefactoringEngine {
     }
   }
 
+  /**
+   * Rolls back the project files to the state before the refactoring operation.
+   * This is typically called if tests fail after refactoring.
+   * @returns A promise that resolves when the rollback is complete.
+   */
   private async rollback(): Promise<void> {
     if (!fs.existsSync(this.backupPath)) {
       throw new Error('Backup not available for rollback');
@@ -409,6 +517,11 @@ export class CodeRefactoringEngine {
     fs.rmSync(this.backupPath, { recursive: true });
   }
 
+  /**
+   * Recursively gets all relevant code files within the project directory.
+   * Excludes dotfiles and `node_modules`.
+   * @returns An array of relative file paths.
+   */
   private getAllFiles(): string[] {
     const files: string[] = [];
 

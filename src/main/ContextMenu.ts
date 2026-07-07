@@ -1,6 +1,11 @@
 import { Menu, MenuItem, WebContents, clipboard } from 'electron';
 import BrowserManager from './BrowserManager';
 
+/**
+ * Sets up the context menu for a given WebContents instance.
+ * The context menu provides options for navigation, link handling, image handling, text selection, and developer tools.
+ * @param webContents The Electron `WebContents` instance to attach the context menu to.
+ */
 export function setupContextMenu(webContents: WebContents) {
   webContents.on('context-menu', (event, params) => {
     const menu = new Menu();

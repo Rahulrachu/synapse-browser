@@ -46,31 +46,40 @@ export class BrowserEngine {
     const tab = this.tabs.get(tabId);
     if (tab) {
       this.updateTab(tabId, { url, title: url });
+      const contents = this.getWebContents(tabId);
+      if (contents) {
+        contents.loadURL(url);
+      }
     }
   }
 
   goBack(tabId: string): void {
-    const tab = this.tabs.get(tabId);
-    if (tab) {
-      // In a real implementation, this would interact with the webview
-      console.log(`Going back in tab ${tabId}`);
+    const contents = this.getWebContents(tabId);
+    if (contents && contents.canGoBack()) {
+      contents.goBack();
     }
   }
 
   goForward(tabId: string): void {
-    const tab = this.tabs.get(tabId);
-    if (tab) {
-      // In a real implementation, this would interact with the webview
-      console.log(`Going forward in tab ${tabId}`);
+    const contents = this.getWebContents(tabId);
+    if (contents && contents.canGoForward()) {
+      contents.goForward();
     }
   }
 
   reload(tabId: string): void {
-    const tab = this.tabs.get(tabId);
-    if (tab) {
-      // In a real implementation, this would interact with the webview
-      console.log(`Reloading tab ${tabId}`);
+    const contents = this.getWebContents(tabId);
+    if (contents) {
+      contents.reload();
     }
+  }
+
+  private getWebContents(tabId: string): webContents | null {
+    // In an Electron app, we'd typically map tab IDs to webview guest IDs or window IDs
+    // For now, we'll try to find the focused window's webContents as a fallback
+    // In a production app, this would be more robustly linked to the UI components
+    const window = BrowserWindow.getFocusedWindow();
+    return window ? window.webContents : null;
   }
 }
 

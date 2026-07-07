@@ -28,6 +28,11 @@ export interface ProjectCreationProgress {
   error?: string;
 }
 
+/**
+ * Manages the scaffolding and creation of new projects based on predefined templates.
+ * It handles project initialization, dependency installation, and basic configuration.
+ * It also includes functionality to detect and attempt to fix common build errors.
+ */
 export class ProjectScaffoldService {
   private templates: Map<string, ProjectTemplate> = new Map();
 
@@ -35,6 +40,10 @@ export class ProjectScaffoldService {
     this.initializeTemplates();
   }
 
+  /**
+   * Initializes the available project templates.
+   * Each template defines the project type, command to create it, description, dependencies, and scripts.
+   */
   private initializeTemplates() {
     this.templates.set('next-saas', {
       name: 'Next.js SaaS',
@@ -94,6 +103,15 @@ export class ProjectScaffoldService {
     });
   }
 
+  /**
+   * Creates a new project based on the provided request and template.
+   * It goes through several stages: initializing, scaffolding, installing dependencies, and configuring.
+   * Progress updates are reported via the `onProgress` callback.
+   * @param request The `ProjectCreationRequest` object containing details for the new project.
+   * @param onProgress A callback function to report the progress of the project creation.
+   * @returns A promise that resolves to the path of the newly created project.
+   * @throws An error if the project type is unknown or creation fails at any stage.
+   */
   async createProject(
     request: ProjectCreationRequest,
     onProgress: (progress: ProjectCreationProgress) => void
@@ -162,6 +180,13 @@ export class ProjectScaffoldService {
     }
   }
 
+  /**
+   * Executes a shell command asynchronously.
+   * @param command The command string to execute (e.g., 'npm install').
+   * @param cwd The current working directory for the command.
+   * @param args An array of arguments to pass to the command.
+   * @returns A promise that resolves when the command completes successfully, or rejects if it fails.
+   */
   private async executeCommand(
     command: string,
     cwd: string,
@@ -188,6 +213,12 @@ export class ProjectScaffoldService {
     });
   }
 
+  /**
+   * Scaffolds additional project files and directories after initial creation.
+   * This includes creating common directories (src, public, docs, tests, config), README.md, .gitignore, and .env.example.
+   * @param projectPath The root path of the newly created project.
+   * @param request The `ProjectCreationRequest` object.
+   */
   private async scaffoldProject(
     projectPath: string,
     request: ProjectCreationRequest
@@ -277,6 +308,11 @@ SECRET_KEY=
     fs.writeFileSync(path.join(projectPath, '.env.example'), envContent);
   }
 
+  /**
+   * Installs production and development dependencies for the project using npm.
+   * @param projectPath The root path of the project.
+   * @param template The `ProjectTemplate` containing dependency lists.
+   */
   private async installDependencies(
     projectPath: string,
     template: ProjectTemplate
@@ -300,6 +336,13 @@ SECRET_KEY=
     }
   }
 
+  /**
+   * Configures the newly created project, including updating `package.json` scripts and description,
+   * and creating a `tsconfig.json` if TypeScript is used.
+   * @param projectPath The root path of the project.
+   * @param request The `ProjectCreationRequest` object.
+   * @param template The `ProjectTemplate` used for creation.
+   */
   private async configureProject(
     projectPath: string,
     request: ProjectCreationRequest,
@@ -349,10 +392,20 @@ SECRET_KEY=
     }
   }
 
+  /**
+   * Retrieves a list of all available project templates.
+   * @returns A promise that resolves to an array of `ProjectTemplate` objects.
+   */
   async getAvailableTemplates(): Promise<ProjectTemplate[]> {
     return Array.from(this.templates.values());
   }
 
+  /**
+   * Starts the development server for a given project.
+   * It assumes common `npm run dev` scripts and attempts to detect the port.
+   * @param projectPath The root path of the project.
+   * @returns A promise that resolves to an object containing the port number and process ID of the dev server.
+   */
   async startDevServer(projectPath: string): Promise<{ port: number; pid: number }> {
     const packageJsonPath = path.join(projectPath, 'package.json');
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
@@ -380,32 +433,54 @@ SECRET_KEY=
     });
   }
 
+  /**
+   * Automatically attempts to fix common build errors in a project.
+   */
   async autoFixBuildErrors(projectPath: string): Promise<string[]> {
-    const fixes: string[] = [];
+    const appliedFixes: string[] = [];
+    const MAX_RETRIES = 2;
+    
+    for (let i = 0; i < MAX_RETRIES; i++) {
+      try {
+        // Run build and capture errors
+        const { stdout, stderr } = await execAsync('npm run build', { cwd: projectPath });
+        if (!stderr.includes('error')) break; // Success
+      } catch (err: any) {
+        const output = err.stdout + err.stderr;
 
-    try {
-      // Run build and capture errors
-      const { stdout, stderr } = await execAsync('npm run build', { cwd: projectPath });
-      const output = stdout + stderr;
+        if (output.includes('Cannot find module')) {
+          const moduleMatch = output.match(/Cannot find module '([^']+)'/);
+          const moduleName = moduleMatch ? moduleMatch[1] : null;
+          
+          if (moduleName) {
+            appliedFixes.push(`Missing dependency detected: ${moduleName}. Installing...`);
+            await execAsync(`npm install ${moduleName}`, { cwd: projectPath });
+          } else {
+            appliedFixes.push('Missing dependencies detected. Running full npm install...');
+            await execAsync('npm install', { cwd: projectPath });
+          }
+          continue;
+        }
 
-      // Analyze common errors and apply fixes
-      if (output.includes('Cannot find module')) {
-        fixes.push('Missing dependency detected. Running npm install...');
-        await execAsync('npm install', { cwd: projectPath });
+        if (output.includes('TS2307') || output.includes('Cannot find module')) {
+           appliedFixes.push('TypeScript module resolution error. Checking @types...');
+           // Try to install missing @types
+           const typesMatch = output.match(/module '([^']+)'/);
+           if (typesMatch) {
+             await execAsync(`npm install --save-dev @types/${typesMatch[1]}`, { cwd: projectPath }).catch(() => {});
+           }
+        }
+
+        if (output.includes('Port already in use')) {
+          appliedFixes.push('Port conflict detected. Suggesting environment variable override.');
+          // Logic to update .env or suggest a new port
+        }
+        
+        // If we reach here and haven't fixed it, break to avoid loops
+        break;
       }
-
-      if (output.includes('TypeScript error')) {
-        fixes.push('TypeScript errors detected. Attempting automatic fixes...');
-        // Could implement more sophisticated TypeScript error fixing here
-      }
-
-      if (output.includes('Port already in use')) {
-        fixes.push('Port conflict detected. Will use alternate port.');
-      }
-    } catch (err) {
-      console.error('Error during auto-fix:', err);
     }
 
-    return fixes;
+    return appliedFixes;
   }
 }

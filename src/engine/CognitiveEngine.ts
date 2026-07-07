@@ -102,18 +102,36 @@ export class CognitiveEngine extends EventEmitter {
     return steps;
   }
 
+  /**
+   * Extracts actionable keywords from a goal description using natural language heuristics.
+   */
   private extractActions(description: string): string[] {
-    // Simple action extraction
-    const actionKeywords = ['create', 'build', 'test', 'deploy', 'review', 'document', 'refactor'];
-    const actions: string[] = [];
+    const actionKeywords = [
+      'create', 'build', 'implement', 'develop', 
+      'test', 'verify', 'validate', 'check',
+      'deploy', 'release', 'publish',
+      'review', 'audit', 'analyze',
+      'document', 'write', 'summarize',
+      'refactor', 'optimize', 'improve', 'fix', 'clean'
+    ];
+    
+    const words = description.toLowerCase().split(/\W+/);
+    const actions = actionKeywords.filter(keyword => words.includes(keyword));
 
-    actionKeywords.forEach((keyword) => {
-      if (description.toLowerCase().includes(keyword)) {
-        actions.push(keyword.charAt(0).toUpperCase() + keyword.slice(1));
-      }
+    // Map keywords to standard action names
+    const mappedActions = actions.map(action => {
+      if (['create', 'build', 'implement', 'develop'].includes(action)) return 'Development';
+      if (['test', 'verify', 'validate', 'check'].includes(action)) return 'Testing';
+      if (['deploy', 'release', 'publish'].includes(action)) return 'Deployment';
+      if (['review', 'audit', 'analyze'].includes(action)) return 'Analysis';
+      if (['document', 'write', 'summarize'].includes(action)) return 'Documentation';
+      if (['refactor', 'optimize', 'improve', 'fix', 'clean'].includes(action)) return 'Optimization';
+      return action.charAt(0).toUpperCase() + action.slice(1);
     });
 
-    return actions.length > 0 ? actions : ['Execute'];
+    // Remove duplicates and ensure at least one action
+    const uniqueActions = [...new Set(mappedActions)];
+    return uniqueActions.length > 0 ? uniqueActions : ['Execution'];
   }
 
   private async generateAlternativePlans(goal: Goal, mainPlan: Plan): Promise<Plan[]> {

@@ -412,12 +412,14 @@ export class AgentMarketplaceService {
   }
 
   private async getWorkflowInfo(workflowId: string): Promise<Workflow | null> {
-    // Simulate fetching workflow info
-    return null;
+    // In production, this would fetch from a remote API
+    const workflows = await this.searchWorkflows('');
+    return workflows.find(w => w.id === workflowId) || null;
   }
 
   private async getPromptInfo(promptId: string): Promise<PromptTemplate | null> {
-    // Simulate fetching prompt info
-    return null;
+    // In production, this would fetch from a remote API
+    const prompts = await this.searchPrompts('');
+    return prompts.find(p => p.id === promptId) || null;
   }
 }

@@ -7,6 +7,11 @@ export interface AutomationResult {
   data?: any;
 }
 
+/**
+ * Provides methods for automating browser interactions within a specific tab.
+ * It leverages Electron's `WebContents` to perform actions like navigation, JavaScript execution, 
+ * element clicking, text typing, screenshot capture, and cookie management.
+ */
 class BrowserAutomation {
   /**
    * Get the WebContents of the specified tab or the active tab
@@ -19,6 +24,12 @@ class BrowserAutomation {
     return view ? view.webContents : null;
   }
 
+  /**
+   * Navigates the specified browser tab to a given URL.
+   * @param url The URL to navigate to.
+   * @param tabId Optional. The ID of the tab to navigate. If not provided, the active tab is used.
+   * @returns An `AutomationResult` indicating success or failure, with an error message if applicable.
+   */
   async navigate(url: string, tabId?: string): Promise<AutomationResult> {
     try {
       const wc = this.getWebContents(tabId);
@@ -31,6 +42,12 @@ class BrowserAutomation {
     }
   }
 
+  /**
+   * Executes JavaScript code within the specified browser tab.
+   * @param code The JavaScript code to execute.
+   * @param tabId Optional. The ID of the tab to execute the JavaScript in. If not provided, the active tab is used.
+   * @returns An `AutomationResult` containing the result of the JavaScript execution or an error message.
+   */
   async executeJavaScript(code: string, tabId?: string): Promise<AutomationResult> {
     try {
       const wc = this.getWebContents(tabId);
@@ -43,6 +60,12 @@ class BrowserAutomation {
     }
   }
 
+  /**
+   * Clicks an HTML element identified by a CSS selector within the specified browser tab.
+   * @param selector The CSS selector of the element to click.
+   * @param tabId Optional. The ID of the tab. If not provided, the active tab is used.
+   * @returns An `AutomationResult` indicating success or failure.
+   */
   async clickElement(selector: string, tabId?: string): Promise<AutomationResult> {
     const code = `
       (function() {
@@ -61,6 +84,14 @@ class BrowserAutomation {
     return { success: false, message: 'Element not found or could not be clicked' };
   }
 
+  /**
+   * Types text into an input element identified by a CSS selector within the specified browser tab.
+   * Dispatches `input` and `change` events after typing.
+   * @param selector The CSS selector of the input element.
+   * @param text The text to type into the element.
+   * @param tabId Optional. The ID of the tab. If not provided, the active tab is used.
+   * @returns An `AutomationResult` indicating success or failure.
+   */
   async typeText(selector: string, text: string, tabId?: string): Promise<AutomationResult> {
     const code = `
       (function() {
@@ -81,11 +112,21 @@ class BrowserAutomation {
     return { success: false, message: 'Element not found or could not type text' };
   }
 
+  /**
+   * Retrieves the full HTML source of the current page in the specified browser tab.
+   * @param tabId Optional. The ID of the tab. If not provided, the active tab is used.
+   * @returns An `AutomationResult` containing the page source or an error message.
+   */
   async getPageSource(tabId?: string): Promise<AutomationResult> {
     const code = `document.documentElement.outerHTML`;
     return this.executeJavaScript(code, tabId);
   }
 
+  /**
+   * Captures a screenshot of the current page in the specified browser tab.
+   * @param tabId Optional. The ID of the tab. If not provided, the active tab is used.
+   * @returns An `AutomationResult` containing the screenshot as a Data URL (base64) or an error message.
+   */
   async takeScreenshot(tabId?: string): Promise<AutomationResult> {
     try {
       const wc = this.getWebContents(tabId);
@@ -98,11 +139,23 @@ class BrowserAutomation {
     }
   }
 
+  /**
+   * Scrolls the page in the specified browser tab to the given coordinates.
+   * @param x The x-coordinate to scroll to.
+   * @param y The y-coordinate to scroll to.
+   * @param tabId Optional. The ID of the tab. If not provided, the active tab is used.
+   * @returns An `AutomationResult` indicating success or failure.
+   */
   async scroll(x: number, y: number, tabId?: string): Promise<AutomationResult> {
     const code = `window.scrollTo(${x}, ${y})`;
     return this.executeJavaScript(code, tabId);
   }
 
+  /**
+   * Retrieves all cookies for the current session in the specified browser tab.
+   * @param tabId Optional. The ID of the tab. If not provided, the active tab is used.
+   * @returns An `AutomationResult` containing an array of cookie objects or an error message.
+   */
   async getCookies(tabId?: string): Promise<AutomationResult> {
     try {
       const wc = this.getWebContents(tabId);

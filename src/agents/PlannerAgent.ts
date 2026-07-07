@@ -111,7 +111,34 @@ export class PlannerAgent extends BaseAgent {
     // Logic for replanning if a critical task fails
     if (status === 'failed') {
       AgentLogger.warn(`Task ${taskId} failed. Triggering replanning...`, this.id);
-      // TODO: Implement replanning logic
+      
+      const currentPlan = PlanningEngine.getCurrentPlan();
+      if (currentPlan) {
+        // Find the failed task in the current plan
+        const failedTask = currentPlan.tasks.find(t => t.id === taskId);
+        
+        if (failedTask) {
+          AgentLogger.info(`Replanning for failed task: ${failedTask.description}`, this.id);
+          
+          // Generate a recovery plan for the failed task
+          const recoveryGoal = `Recover from failure of task: ${failedTask.description}. Original goal: ${currentPlan.goal}`;
+          const recoveryTasks = await this.generateExecutionPlan(recoveryGoal, { forceDirect: true });
+          
+          // Broadcast the recovery plan
+          await this.messageBus.publish({
+            senderId: this.id,
+            recipientId: 'broadcast',
+            type: 'plan_generated',
+            payload: { 
+              goal: recoveryGoal, 
+              plan: recoveryTasks,
+              isRecoveryPlan: true,
+              originalTaskId: taskId
+            },
+            timestamp: Date.now()
+          });
+        }
+      }
     }
   }
 

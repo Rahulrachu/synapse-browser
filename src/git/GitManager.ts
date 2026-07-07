@@ -1,3 +1,8 @@
+import { exec } from 'child_process';
+import { promisify } from 'util';
+
+const execAsync = promisify(exec);
+
 export interface GitStatus {
   branch: string;
   isDirty: boolean;
@@ -23,50 +28,89 @@ export class GitManager {
     return this.repositoryPath;
   }
 
-  // Mock implementation - in a real app, this would use child_process to run git commands
+  private async runGitCommand(command: string): Promise<string> {
+    if (!this.repositoryPath) {
+      throw new Error('Repository path not set');
+    }
+    const { stdout } = await execAsync(`git -C ${this.repositoryPath} ${command}`);
+    return stdout.trim();
+  }
+
   async getStatus(): Promise<GitStatus> {
-    return {
-      branch: 'main',
-      isDirty: false,
-      uncommittedChanges: 0,
-      unstagedChanges: 0,
-    };
+    try {
+      const branch = await this.runGitCommand('rev-parse --abbrev-ref HEAD');
+      const status = await this.runGitCommand('status --porcelain');
+      const changes = status ? status.split('\n').length : 0;
+      
+      return {
+        branch,
+        isDirty: changes > 0,
+        uncommittedChanges: changes,
+        unstagedChanges: changes, // Simplified for now
+      };
+    } catch (error) {
+      return {
+        branch: 'unknown',
+        isDirty: false,
+        uncommittedChanges: 0,
+        unstagedChanges: 0,
+      };
+    }
   }
 
   async getCommitHistory(limit: number = 10): Promise<GitCommit[]> {
-    return [];
+    try {
+      const log = await this.runGitCommand(`log -n ${limit} --pretty=format:"%H|%an|%s|%ct"`);
+      return log.split('\n').map(line => {
+        const [hash, author, message, date] = line.split('|');
+        return {
+          hash,
+          author,
+          message,
+          date: parseInt(date) * 1000,
+        };
+      });
+    } catch (error) {
+      return [];
+    }
   }
 
   async getBranches(): Promise<string[]> {
-    return ['main', 'develop', 'feature/ai-workspace'];
+    try {
+      const branches = await this.runGitCommand('branch --format="%(refname:short)"');
+      return branches.split('\n');
+    } catch (error) {
+      return [];
+    }
   }
 
   async switchBranch(branchName: string): Promise<void> {
-    console.log(`Switching to branch: ${branchName}`);
+    await this.runGitCommand(`checkout ${branchName}`);
   }
 
   async createBranch(branchName: string): Promise<void> {
-    console.log(`Creating branch: ${branchName}`);
+    await this.runGitCommand(`checkout -b ${branchName}`);
   }
 
   async commit(message: string): Promise<void> {
-    console.log(`Committing with message: ${message}`);
+    await this.runGitCommand('add .');
+    await this.runGitCommand(`commit -m "${message.replace(/"/g, '\\"')}"`);
   }
 
   async push(): Promise<void> {
-    console.log('Pushing changes...');
+    await this.runGitCommand('push');
   }
 
   async pull(): Promise<void> {
-    console.log('Pulling changes...');
+    await this.runGitCommand('pull');
   }
 
   async stash(): Promise<void> {
-    console.log('Stashing changes...');
+    await this.runGitCommand('stash');
   }
 
   async unstash(): Promise<void> {
-    console.log('Unstashing changes...');
+    await this.runGitCommand('stash pop');
   }
 }
 

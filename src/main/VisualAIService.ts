@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import AgentLogger from '../agents/AgentLogger';
 
 export interface UIComponent {
   id: string;
@@ -58,7 +59,18 @@ export interface FigmaStyle {
   value: any;
 }
 
+/**
+ * Provides advanced visual AI capabilities, including screenshot analysis, Figma file inspection,
+ * code generation from Figma designs, optical character recognition (OCR), and visual debugging.
+ * It helps in understanding and interacting with visual elements of web applications.
+ */
 export class VisualAIService {
+  /**
+   * Analyzes a given screenshot to detect UI components, determine layout, check accessibility,
+   * and generate design suggestions.
+   * @param imagePath The file path to the screenshot image.
+   * @returns A promise that resolves to a `ScreenshotAnalysis` object.
+   */
   async analyzeScreenshot(imagePath: string): Promise<ScreenshotAnalysis> {
     const analysis: ScreenshotAnalysis = {
       components: [],
@@ -86,6 +98,13 @@ export class VisualAIService {
     return analysis;
   }
 
+  /**
+   * Inspects a Figma design file to extract frames, components, and styles.
+   * Requires a Figma file URL and an access token for API access.
+   * @param fileUrl The URL of the Figma design file.
+   * @param accessToken The Figma API access token.
+   * @returns A promise that resolves to a `FigmaInspection` object.
+   */
   async inspectFigmaFile(fileUrl: string, accessToken: string): Promise<FigmaInspection> {
     const inspection: FigmaInspection = {
       frames: [],
@@ -115,6 +134,12 @@ export class VisualAIService {
     return inspection;
   }
 
+  /**
+   * Generates code (e.g., React components) from a Figma inspection result.
+   * This method translates Figma design elements into structured code.
+   * @param figmaInspection The `FigmaInspection` object containing Figma design data.
+   * @returns A promise that resolves to a string containing the generated code.
+   */
   async generateCodeFromFigma(figmaInspection: FigmaInspection): Promise<string> {
     let code = `// Auto-generated from Figma design\n\nimport React from 'react';\n\n`;
 
@@ -126,13 +151,22 @@ export class VisualAIService {
     return code;
   }
 
+  /**
+   * Performs Optical Character Recognition (OCR) on an image to extract text.
+   * Currently, this is a mock implementation that returns a placeholder string.
+   * @param imagePath The file path to the image for OCR.
+   * @returns A promise that resolves to the extracted text as a string.
+   */
   async performOCR(imagePath: string): Promise<string> {
-    // Placeholder for OCR implementation
-    // In production, would use Tesseract.js or similar
+    /**
+     * In a production environment, this would integrate with an OCR engine 
+     * like Tesseract.js, AWS Rekognition, or Google Cloud Vision.
+     */
     try {
       if (fs.existsSync(imagePath)) {
-        // Simulate OCR
-        return 'Extracted text from image';
+        // Mocking the OCR result for now, but keeping the structure for future integration
+        AgentLogger.info(`Performing OCR on ${imagePath}...`);
+        return 'Extracted text from image: Synapse Browser UI';
       }
     } catch (err) {
       console.error('Error performing OCR:', err);
@@ -141,6 +175,12 @@ export class VisualAIService {
     return '';
   }
 
+  /**
+   * Performs visual debugging on a UI component, analyzing its preview URL for issues and performance.
+   * @param componentPath The path to the UI component being debugged.
+   * @param previewUrl The URL where the component can be previewed.
+   * @returns A promise that resolves to a record containing debug information, issues, metrics, and suggestions.
+   */
   async visualDebug(componentPath: string, previewUrl: string): Promise<Record<string, any>> {
     const debugInfo = {
       componentPath,
@@ -166,6 +206,12 @@ export class VisualAIService {
     return debugInfo;
   }
 
+  /**
+   * Detects and extracts UI components from a screenshot image.
+   * This is a simulated implementation that returns predefined UI components.
+   * @param imagePath The file path to the screenshot image.
+   * @returns A promise that resolves to an array of `UIComponent` objects.
+   */
   private async detectUIComponents(imagePath: string): Promise<UIComponent[]> {
     const components: UIComponent[] = [];
 
@@ -198,6 +244,11 @@ export class VisualAIService {
     return components;
   }
 
+  /**
+   * Analyzes the layout of UI components to determine the overall page structure.
+   * @param components An array of `UIComponent` objects detected in the screenshot.
+   * @returns A string describing the detected layout (e.g., 'standard-layout', 'three-column-layout').
+   */
   private analyzeLayout(components: UIComponent[]): string {
     if (components.length === 0) return 'unknown';
 
@@ -217,6 +268,12 @@ export class VisualAIService {
     return 'custom-layout';
   }
 
+  /**
+   * Checks for common accessibility issues in the UI components, such as color contrast and missing alt text.
+   * @param imagePath The file path to the screenshot image.
+   * @param components An array of `UIComponent` objects detected in the screenshot.
+   * @returns A promise that resolves to an array of `AccessibilityIssue` objects.
+   */
   private async checkAccessibility(
     imagePath: string,
     components: UIComponent[]
@@ -252,6 +309,11 @@ export class VisualAIService {
     return issues;
   }
 
+  /**
+   * Generates design improvement suggestions based on the screenshot analysis.
+   * @param analysis The `ScreenshotAnalysis` object containing detected components, layout, and accessibility issues.
+   * @returns An array of `DesignSuggestion` objects.
+   */
   private generateDesignSuggestions(analysis: ScreenshotAnalysis): DesignSuggestion[] {
     const suggestions: DesignSuggestion[] = [];
 
@@ -276,12 +338,24 @@ export class VisualAIService {
     return suggestions;
   }
 
+  /**
+   * Extracts the file ID from a Figma file URL.
+   * @param fileUrl The URL of the Figma file.
+   * @returns The extracted Figma file ID as a string.
+   */
   private extractFigmaFileId(fileUrl: string): string {
     // Extract file ID from Figma URL
     const match = fileUrl.match(/file\/([a-zA-Z0-9]+)/);
     return match ? match[1] : '';
   }
 
+  /**
+   * Fetches Figma design data using the Figma API.
+   * This is a placeholder for actual API integration.
+   * @param fileId The ID of the Figma file.
+   * @param accessToken The Figma API access token.
+   * @returns A promise that resolves to a record containing the Figma design data.
+   */
   private async fetchFigmaData(fileId: string, accessToken: string): Promise<Record<string, any>> {
     // Placeholder for Figma API call
     return {
@@ -291,6 +365,11 @@ export class VisualAIService {
     };
   }
 
+  /**
+   * Extracts frames (pages/artboards) from the raw Figma design data.
+   * @param figmaData The raw data obtained from the Figma API.
+   * @returns An array of `FigmaFrame` objects.
+   */
   private extractFrames(figmaData: Record<string, any>): FigmaFrame[] {
     const frames: FigmaFrame[] = [];
 
@@ -312,6 +391,11 @@ export class VisualAIService {
     return frames;
   }
 
+  /**
+   * Extracts components from the raw Figma design data.
+   * @param figmaData The raw data obtained from the Figma API.
+   * @returns An array of `FigmaComponent` objects.
+   */
   private extractComponents(figmaData: Record<string, any>): FigmaComponent[] {
     const components: FigmaComponent[] = [];
 
@@ -330,6 +414,11 @@ export class VisualAIService {
     return components;
   }
 
+  /**
+   * Extracts styles (colors, typography, effects) from the raw Figma design data.
+   * @param figmaData The raw data obtained from the Figma API.
+   * @returns An array of `FigmaStyle` objects.
+   */
   private extractStyles(figmaData: Record<string, any>): FigmaStyle[] {
     const styles: FigmaStyle[] = [];
 
@@ -348,6 +437,12 @@ export class VisualAIService {
     return styles;
   }
 
+  /**
+   * Generates a code component (e.g., React) from a single Figma frame.
+   * This is a simplified implementation for demonstration.
+   * @param frame The `FigmaFrame` object to generate code from.
+   * @returns A string containing the generated code for the component.
+   */
   private generateComponentFromFrame(frame: FigmaFrame): string {
     return `
 export function ${this.toPascalCase(frame.name)}() {
@@ -360,6 +455,12 @@ export function ${this.toPascalCase(frame.name)}() {
 `;
   }
 
+  /**
+   * Detects common UI issues by analyzing a preview URL.
+   * This is a simulated implementation.
+   * @param previewUrl The URL of the UI to analyze.
+   * @returns A promise that resolves to an array of strings describing detected issues.
+   */
   private async detectUIIssues(previewUrl: string): Promise<string[]> {
     const issues: string[] = [];
 
@@ -370,6 +471,12 @@ export function ${this.toPascalCase(frame.name)}() {
     return issues;
   }
 
+  /**
+   * Measures performance metrics for a given UI preview URL.
+   * This is a simulated implementation.
+   * @param previewUrl The URL of the UI to measure.
+   * @returns A promise that resolves to a record containing performance metrics.
+   */
   private async measurePerformance(previewUrl: string): Promise<Record<string, number>> {
     return {
       renderTime: 245,
@@ -378,10 +485,20 @@ export function ${this.toPascalCase(frame.name)}() {
     };
   }
 
+  /**
+   * Generates improvement suggestions based on a list of detected issues.
+   * @param issues An array of strings describing detected issues.
+   * @returns An array of strings, each suggesting an improvement.
+   */
   private generateImprovementSuggestions(issues: string[]): string[] {
     return issues.map((issue) => `Fix: ${issue}`);
   }
 
+  /**
+   * Converts a string to PascalCase.
+   * @param str The input string.
+   * @returns The PascalCase version of the string.
+   */
   private toPascalCase(str: string): string {
     return str
       .split('-')

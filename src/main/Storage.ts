@@ -17,6 +17,10 @@ interface HistoryEntry {
   visitCount: number;
 }
 
+/**
+ * Manages persistent storage for user data such as bookmarks and browsing history.
+ * Data is stored in JSON files within the application's user data directory.
+ */
 class Storage {
   private dataDir: string;
   private bookmarksFile: string;
@@ -42,6 +46,10 @@ class Storage {
   }
 
   // Bookmarks
+  /**
+   * Retrieves all saved bookmarks.
+   * @returns An array of `Bookmark` objects.
+   */
   getBookmarks(): Bookmark[] {
     try {
       const data = fs.readFileSync(this.bookmarksFile, 'utf-8');
@@ -52,6 +60,12 @@ class Storage {
     }
   }
 
+  /**
+   * Adds a new bookmark.
+   * @param title The title of the bookmark.
+   * @param url The URL of the bookmark.
+   * @returns The newly created `Bookmark` object.
+   */
   addBookmark(title: string, url: string): Bookmark {
     const bookmarks = this.getBookmarks();
     const bookmark: Bookmark = {
@@ -65,6 +79,11 @@ class Storage {
     return bookmark;
   }
 
+  /**
+   * Removes a bookmark by its ID.
+   * @param id The unique identifier of the bookmark to remove.
+   * @returns `true` if the bookmark was removed successfully, `false` otherwise.
+   */
   removeBookmark(id: string): boolean {
     const bookmarks = this.getBookmarks();
     const filtered = bookmarks.filter((b) => b.id !== id);
@@ -75,6 +94,11 @@ class Storage {
     return false;
   }
 
+  /**
+   * Persists the current list of bookmarks to the bookmarks JSON file.
+   * This method is called internally after any modification to the bookmarks.
+   * @param bookmarks The array of `Bookmark` objects to save.
+   */
   private saveBookmarks(bookmarks: Bookmark[]): void {
     try {
       fs.writeFileSync(this.bookmarksFile, JSON.stringify(bookmarks, null, 2));
@@ -84,6 +108,11 @@ class Storage {
   }
 
   // History
+  /**
+   * Retrieves a limited number of recent browsing history entries.
+   * @param limit The maximum number of history entries to retrieve. Defaults to 100.
+   * @returns An array of `HistoryEntry` objects, sorted by `visitedAt` in descending order.
+   */
   getHistory(limit: number = 100): HistoryEntry[] {
     try {
       const data = fs.readFileSync(this.historyFile, 'utf-8');
@@ -95,6 +124,13 @@ class Storage {
     }
   }
 
+  /**
+   * Adds a new entry to the browsing history or updates an existing one.
+   * If an entry with the same URL exists, its `visitedAt` timestamp and `visitCount` are updated.
+   * @param url The URL of the visited page.
+   * @param title The title of the visited page.
+   * @returns The `HistoryEntry` object that was added or updated.
+   */
   addToHistory(url: string, title: string): HistoryEntry {
     const history = this.getAllHistory();
     const existing = history.find((h) => h.url === url);
@@ -118,10 +154,17 @@ class Storage {
     return existing || history[history.length - 1];
   }
 
+  /**
+   * Clears all browsing history entries.
+   */
   clearHistory(): void {
     this.saveHistory([]);
   }
 
+  /**
+   * Retrieves all browsing history entries without any limit or sorting.
+   * @returns An array of `HistoryEntry` objects.
+   */
   private getAllHistory(): HistoryEntry[] {
     try {
       const data = fs.readFileSync(this.historyFile, 'utf-8');
@@ -131,6 +174,11 @@ class Storage {
     }
   }
 
+  /**
+   * Persists the current list of history entries to the history JSON file.
+   * This method is called internally after any modification to the history.
+   * @param history The array of `HistoryEntry` objects to save.
+   */
   private saveHistory(history: HistoryEntry[]): void {
     try {
       fs.writeFileSync(this.historyFile, JSON.stringify(history, null, 2));

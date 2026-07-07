@@ -13,6 +13,7 @@ import { CodingAgent } from './CodingAgent';
 import { ReviewerAgent } from './ReviewerAgent';
 import { WriterAgent } from './WriterAgent';
 import { OrchestratorAgent } from './OrchestratorAgent';
+import { BrowserAgent } from './BrowserAgent';
 
 class AgentRuntime {
   private registry: AgentRegistry;
@@ -23,8 +24,11 @@ class AgentRuntime {
     this.registry = new AgentRegistry();
     this.messageBus = new AgentMessageBus();
     
+    const sharedData = new Map();
+    sharedData.set('projectPath', process.cwd());
+
     const initialContext: AgentContext = {
-      sharedData: new Map(),
+      sharedData,
       contextEngineState: ContextEngine.getContext(),
       memorySystemState: MemorySystem.getRecentMemories(),
       planningEngineState: PlanningEngine.getCurrentPlan(),

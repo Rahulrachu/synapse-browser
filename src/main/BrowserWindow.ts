@@ -6,6 +6,11 @@ import DownloadManager from './DownloadManager';
 
 let mainWindow: BrowserWindow | null = null;
 
+/**
+ * Creates the main Electron browser window and initializes its properties.
+ * Sets up IPC handlers, context menu, and download manager.
+ * @returns The created BrowserWindow instance.
+ */
 export function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1600,
@@ -42,6 +47,10 @@ export function createWindow() {
   return mainWindow;
 }
 
+/**
+ * Sets up Inter-Process Communication (IPC) handlers for various browser actions.
+ * This allows the renderer process to communicate with the main process.
+ */
 function setupIPC() {
   if (!mainWindow) return;
 
@@ -108,6 +117,9 @@ ipcMain.handle('clear-downloads', async () => {
   });
 }
 
+/**
+ * Sets up the application's context menu (right-click menu).
+ */
 function setupContextMenu() {
   Menu.setApplicationMenu(
     Menu.buildFromTemplate([
@@ -146,6 +158,10 @@ function setupContextMenu() {
   );
 }
 
+/**
+ * Retrieves the main BrowserWindow instance.
+ * @returns The main BrowserWindow instance or null if it hasn't been created yet.
+ */
 export function getMainWindow() {
   return mainWindow;
 }

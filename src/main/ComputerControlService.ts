@@ -36,6 +36,13 @@ export interface WindowInfo {
   focused: boolean;
 }
 
+/**
+ * Provides a comprehensive set of functionalities for controlling the computer system.
+ * This includes mouse and keyboard automation, clipboard management, window manipulation,
+ * file system operations, terminal command execution, VS Code integration, browser automation,
+ * screenshot capture, OCR, screen recording, and system information retrieval.
+ * It primarily uses `xdotool`, `xclip`, `wmctrl`, `xdg-open`, `tesseract`, and `ffmpeg` for its operations.
+ */
 export class ComputerControlService {
   private clipboardContent: string = '';
   private screenshotPath: string;
@@ -52,7 +59,10 @@ export class ComputerControlService {
   }
 
   /**
-   * Performs mouse automation
+   * Performs a mouse action such as move, click, double-click, or drag.
+   * Utilizes `xdotool` for simulating mouse events.
+   * @param action The `MouseAction` object describing the action to perform.
+   * @returns A promise that resolves when the action is completed.
    */
   async performMouseAction(action: MouseAction): Promise<void> {
     // Use xdotool for Linux systems
@@ -70,7 +80,10 @@ export class ComputerControlService {
   }
 
   /**
-   * Performs keyboard automation
+   * Performs a keyboard action such as pressing a key, releasing a key, or typing text.
+   * Utilizes `xdotool` for simulating keyboard events.
+   * @param action The `KeyboardAction` object describing the action to perform.
+   * @returns A promise that resolves when the action is completed.
    */
   async performKeyboardAction(action: KeyboardAction): Promise<void> {
     if (action.type === 'type' && action.text) {
@@ -86,7 +99,9 @@ export class ComputerControlService {
   }
 
   /**
-   * Manages clipboard operations
+   * Retrieves the current content of the clipboard.
+   * Utilizes `xclip` for clipboard access.
+   * @returns A promise that resolves to the clipboard content as a string.
    */
   async getClipboard(): Promise<string> {
     try {
@@ -98,6 +113,12 @@ export class ComputerControlService {
     }
   }
 
+  /**
+   * Sets the content of the clipboard.
+   * Utilizes `xclip` for clipboard access.
+   * @param content The string content to set in the clipboard.
+   * @returns A promise that resolves when the clipboard content is set.
+   */
   async setClipboard(content: string): Promise<void> {
     const escapedContent = content.replace(/'/g, "'\\''");
     await execAsync(`echo '${escapedContent}' | xclip -selection clipboard`);
@@ -105,7 +126,9 @@ export class ComputerControlService {
   }
 
   /**
-   * Manages windows
+   * Retrieves information about the currently active window.
+   * Utilizes `xdotool` for window information.
+   * @returns A promise that resolves to a `WindowInfo` object or `null` if no active window is found.
    */
   async getActiveWindow(): Promise<WindowInfo | null> {
     try {
@@ -133,6 +156,11 @@ export class ComputerControlService {
     }
   }
 
+  /**
+   * Lists all open windows with their basic information.
+   * Utilizes `wmctrl` for listing windows.
+   * @returns A promise that resolves to an array of `WindowInfo` objects.
+   */
   async listWindows(): Promise<WindowInfo[]> {
     try {
       const { stdout } = await execAsync('wmctrl -l');
@@ -159,26 +187,57 @@ export class ComputerControlService {
     }
   }
 
+  /**
+   * Focuses a specific window by its ID.
+   * Utilizes `xdotool` for focusing windows.
+   * @param windowId The ID of the window to focus.
+   * @returns A promise that resolves when the window is focused.
+   */
   async focusWindow(windowId: string): Promise<void> {
     await execAsync(`xdotool windowactivate ${windowId}`);
   }
 
+  /**
+   * Moves a specific window to the given coordinates.
+   * Utilizes `xdotool` for moving windows.
+   * @param windowId The ID of the window to move.
+   * @param x The new X-coordinate for the window.
+   * @param y The new Y-coordinate for the window.
+   * @returns A promise that resolves when the window is moved.
+   */
   async moveWindow(windowId: string, x: number, y: number): Promise<void> {
     await execAsync(`xdotool windowmove ${windowId} ${x} ${y}`);
   }
 
+  /**
+   * Resizes a specific window to the given dimensions.
+   * Utilizes `xdotool` for resizing windows.
+   * @param windowId The ID of the window to resize.
+   * @param width The new width for the window.
+   * @param height The new height for the window.
+   * @returns A promise that resolves when the window is resized.
+   */
   async resizeWindow(windowId: string, width: number, height: number): Promise<void> {
     await execAsync(`xdotool windowsize ${windowId} ${width} ${height}`);
   }
 
   /**
-   * File manager operations
+   * Opens the file manager at a specified path or the user's home directory.
+   * Utilizes `xdg-open` for opening the file manager.
+   * @param path Optional. The path to open in the file manager. Defaults to the user's home directory.
+   * @returns A promise that resolves when the file manager is opened.
    */
   async openFileManager(path?: string): Promise<void> {
     const targetPath = path || process.env.HOME || '/home/ubuntu';
     await execAsync(`xdg-open "${targetPath}"`);
   }
 
+  /**
+   * Lists files and directories in a given path.
+   * Utilizes `ls -la` for listing files.
+   * @param dirPath The path of the directory to list.
+   * @returns A promise that resolves to an array of strings, each representing a file or directory entry.
+   */
   async listFiles(dirPath: string): Promise<string[]> {
     try {
       const { stdout } = await execAsync(`ls -la "${dirPath}"`);
@@ -189,7 +248,9 @@ export class ComputerControlService {
   }
 
   /**
-   * Terminal automation
+   * Executes a command in the terminal.
+   * @param command The command string to execute.
+   * @returns A promise that resolves to an object containing `stdout` and `stderr`.
    */
   async executeTerminalCommand(command: string): Promise<{ stdout: string; stderr: string }> {
     try {
@@ -201,23 +262,37 @@ export class ComputerControlService {
     }
   }
 
+  /**
+   * Opens a new terminal window.
+   * @returns A promise that resolves when the terminal is opened.
+   */
   async openTerminal(): Promise<void> {
     await execAsync('x-terminal-emulator &');
   }
 
   /**
-   * VS Code integration
+   * Opens a file or directory in VS Code.
+   * @param filePath The path to the file or directory to open.
+   * @returns A promise that resolves when VS Code is opened.
    */
   async openInVSCode(filePath: string): Promise<void> {
     await execAsync(`code "${filePath}"`);
   }
 
+  /**
+   * Executes a VS Code command.
+   * @param command The VS Code command string to execute.
+   * @returns A promise that resolves when the command is executed.
+   */
   async executeVSCodeCommand(command: string): Promise<void> {
     await execAsync(`code --command "${command}"`);
   }
 
   /**
-   * Browser automation (enhanced)
+   * Navigates the default browser to a specified URL.
+   * Utilizes `xdg-open` for opening URLs in the default browser.
+   * @param url The URL to navigate to.
+   * @returns A promise that resolves when the browser is opened and navigated.
    */
   async navigateBrowser(url: string): Promise<void> {
     // This would integrate with the existing browser automation
@@ -225,7 +300,10 @@ export class ComputerControlService {
   }
 
   /**
-   * Screenshot capture
+   * Captures a screenshot of the entire screen or a specified region.
+   * Utilizes `import` (ImageMagick) for screenshot capture.
+   * @param options Optional. `ScreenshotOptions` to specify format, quality, and region.
+   * @returns A promise that resolves to the path of the saved screenshot file.
    */
   async captureScreenshot(options?: ScreenshotOptions): Promise<string> {
     const timestamp = Date.now();
@@ -250,7 +328,10 @@ export class ComputerControlService {
   }
 
   /**
-   * OCR (Optical Character Recognition)
+   * Performs Optical Character Recognition (OCR) on a given image file.
+   * Utilizes `tesseract` for OCR.
+   * @param imagePath The path to the image file.
+   * @returns A promise that resolves to the extracted text content from the image.
    */
   async performOCR(imagePath: string): Promise<string> {
     try {
@@ -263,7 +344,10 @@ export class ComputerControlService {
   }
 
   /**
-   * Screen recording
+   * Starts recording the screen to a specified output path.
+   * Utilizes `ffmpeg` for screen recording.
+   * @param outputPath The path to save the screen recording file.
+   * @returns A promise that resolves when the recording starts.
    */
   async startScreenRecording(outputPath: string): Promise<void> {
     // Use ffmpeg for screen recording
@@ -272,12 +356,19 @@ export class ComputerControlService {
     );
   }
 
+  /**
+   * Stops the ongoing screen recording.
+   * Utilizes `killall ffmpeg` to terminate the recording process.
+   * @returns A promise that resolves when the recording is stopped.
+   */
   async stopScreenRecording(): Promise<void> {
     await execAsync('killall ffmpeg');
   }
 
   /**
-   * System information
+   * Retrieves various system information such as OS, memory, and CPU cores.
+   * Utilizes `uname`, `free`, and `nproc` commands.
+   * @returns A promise that resolves to an object containing system information.
    */
   async getSystemInfo(): Promise<Record<string, any>> {
     try {
@@ -296,7 +387,9 @@ export class ComputerControlService {
   }
 
   /**
-   * Display management
+   * Retrieves information about connected displays.
+   * Utilizes `xrandr` for display information.
+   * @returns A promise that resolves to an object containing display information.
    */
   async getDisplayInfo(): Promise<Record<string, any>> {
     try {

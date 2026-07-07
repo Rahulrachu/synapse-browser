@@ -13,6 +13,12 @@ export interface DocumentationSet {
   setupGuide: string;
 }
 
+/**
+ * The DocumentationGeneratorService is responsible for generating various types of documentation
+ * for a project, including READMEs, API documentation, architecture overviews, changelogs,
+ * and setup guides. It extracts information from `package.json`, analyzes code structure,
+ * and can integrate with Git for commit history.
+ */
 export class DocumentationGeneratorService {
   private projectPath: string;
 
@@ -20,7 +26,25 @@ export class DocumentationGeneratorService {
     this.projectPath = projectPath;
   }
 
-  async generateDocumentation(): Promise<DocumentationSet> {
+  /**
+   * Generates a comprehensive set of documentation or a specific type of document based on options.
+   * @param options Optional parameters to specify the type of documentation to generate, a custom title, or specific sections for a report.
+   * @returns A promise that resolves to the generated documentation content (string or object).
+   */
+  async generateDocumentation(options?: { type?: string; title?: string; sections?: string[] }): Promise<any> {
+    if (options?.type) {
+      switch (options.type) {
+        case 'report':
+          return this.generateProjectReport(options.title, options.sections);
+        case 'technical':
+          return this.generateArchitectureDocs();
+        case 'changelog':
+          return this.generateChangelog();
+        default:
+          return this.generateReadme();
+      }
+    }
+
     const [readme, apiDocs, architectureDocs, changelog, setupGuide] =
       await Promise.all([
         this.generateReadme(),
@@ -39,6 +63,13 @@ export class DocumentationGeneratorService {
     };
   }
 
+  /**
+   * Generates a README.md file for the project.
+   * It extracts project name, description, and dependencies from `package.json`,
+   * and includes sections for overview, features, getting started, project structure, API reference,
+   * architecture, contributing guidelines, license, and support information.
+   * @returns A promise that resolves to the Markdown content of the README.
+   */
   private async generateReadme(): Promise<string> {
     const packageJsonPath = path.join(this.projectPath, 'package.json');
     const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
@@ -141,6 +172,32 @@ For issues and questions, please open an issue on GitHub.
     return readme;
   }
 
+  /**
+   * Generates a project analysis report with customizable title and sections.
+   * This method provides a template for reports, indicating where analysis results would be inserted.
+   * @param title Optional. The title of the project report. Defaults to 'Project Analysis Report'.
+   * @param sections Optional. An array of section titles to include in the report. Defaults to ['Overview', 'Current Status', 'Key Metrics', 'Recommendations'].
+   * @returns A promise that resolves to the Markdown content of the project report.
+   */
+  private async generateProjectReport(title?: string, sections?: string[]): Promise<string> {
+    const reportTitle = title || 'Project Analysis Report';
+    let report = `# ${reportTitle}\n\n`;
+    
+    const defaultSections = sections || ['Overview', 'Current Status', 'Key Metrics', 'Recommendations'];
+    
+    for (const section of defaultSections) {
+      report += `## ${section}\n\n`;
+      report += `Analysis for ${section} section of ${reportTitle} is being prepared based on the latest repository state.\n\n`;
+    }
+    
+    return report;
+  }
+
+  /**
+   * Generates API documentation by scanning for API routes within the project's `src/api` directory.
+   * It extracts HTTP methods and paths to create a basic API reference.
+   * @returns A promise that resolves to the Markdown content of the API documentation.
+   */
   private async generateAPIDocs(): Promise<string> {
     let apiDocs = `# API Documentation
 
@@ -150,14 +207,6 @@ This document describes all available API endpoints.
 
 \`\`\`
 http://localhost:3000/api
-\`\`\`
-
-## Authentication
-
-API requests require authentication via Bearer token in the Authorization header:
-
-\`\`\`
-Authorization: Bearer YOUR_API_KEY
 \`\`\`
 
 ## Endpoints
@@ -183,18 +232,25 @@ Authorization: Bearer YOUR_API_KEY
 
             apiDocs += `\n### ${method} ${path}\n\n`;
             apiDocs += `**File:** \`${file}\`\n\n`;
-            apiDocs += `**Description:** [Add description]\n\n`;
-            apiDocs += `**Request Body:**\n\`\`\`json\n{}\n\`\`\`\n\n`;
-            apiDocs += `**Response:**\n\`\`\`json\n{}\n\`\`\`\n\n`;
-            apiDocs += `**Status Codes:**\n- 200: Success\n- 400: Bad Request\n- 401: Unauthorized\n- 500: Server Error\n\n`;
+            apiDocs += `**Method:** \`${method}\`\n\n`;
+            apiDocs += `**Endpoint:** \`${path}\`\n\n`;
           }
         });
       }
     }
 
+    if (apiDocs.trim() === '# API Documentation\n\nThis document describes all available API endpoints.\n\n## Base URL\n\n```\nhttp://localhost:3000/api\n```\n\n## Endpoints') {
+      apiDocs += '\n\nNo API endpoints discovered in `src/api`.';
+    }
+
     return apiDocs;
   }
 
+  /**
+   * Generates architecture documentation, providing an overview of the system's high-level design.
+   * Includes sections for frontend, backend components, data flow, key modules, deployment architecture, security, and performance optimization.
+   * @returns A promise that resolves to the Markdown content of the architecture documentation.
+   */
   private async generateArchitectureDocs(): Promise<string> {
     const architectureDocs = `# Architecture Documentation
 
@@ -271,6 +327,11 @@ Helper functions and utilities.
     return architectureDocs;
   }
 
+  /**
+   * Generates a changelog for the project, including recent commits from Git history if available.
+   * It provides a structured overview of added, changed, and fixed features.
+   * @returns A promise that resolves to the Markdown content of the changelog.
+   */
   private async generateChangelog(): Promise<string> {
     let changelog = `# Changelog
 
@@ -320,6 +381,11 @@ All notable changes to this project will be documented in this file.
     return changelog;
   }
 
+  /**
+   * Generates a setup guide for the project, detailing prerequisites, installation steps, environment setup,
+   * database configuration, development workflow, and troubleshooting tips.
+   * @returns A promise that resolves to the Markdown content of the setup guide.
+   */
   private async generateSetupGuide(): Promise<string> {
     const setupGuide = `# Setup Guide
 
@@ -434,6 +500,10 @@ Ensure your DATABASE_URL is correct and the database server is running.
     return setupGuide;
   }
 
+  /**
+   * Generates a text-based directory tree of the project, excluding dotfiles and `node_modules`.
+   * @returns A string representing the directory tree.
+   */
   private generateDirectoryTree(): string {
     let tree = '';
     const dirs = fs.readdirSync(this.projectPath, { withFileTypes: true });
@@ -451,6 +521,11 @@ Ensure your DATABASE_URL is correct and the database server is running.
     return tree;
   }
 
+  /**
+   * Recursively retrieves all file paths within a given directory.
+   * @param dir The directory path to scan.
+   * @returns An array of absolute file paths.
+   */
   private getAllFilesInDirectory(dir: string): string[] {
     const files: string[] = [];
 
@@ -471,6 +546,11 @@ Ensure your DATABASE_URL is correct and the database server is running.
     return files;
   }
 
+  /**
+   * Saves the generated documentation to files within a 'docs' directory in the project path.
+   * @param docs The `DocumentationSet` object containing all generated documentation content.
+   * @returns A promise that resolves when all documentation files are saved.
+   */
   async saveDocumentation(docs: DocumentationSet): Promise<void> {
     const docsDir = path.join(this.projectPath, 'docs');
 

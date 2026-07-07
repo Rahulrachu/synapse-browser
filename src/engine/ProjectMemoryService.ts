@@ -58,15 +58,15 @@ export class ProjectMemoryService {
     this.projectMemories.set(memory.projectId, memory);
 
     // Store in memory system
-    await this.memorySystem.addMemory({
-      type: 'project_memory',
-      content: JSON.stringify(memory),
-      metadata: {
+    await this.memorySystem.addMemory(
+      'project',
+      JSON.stringify(memory),
+      {
         projectId: memory.projectId,
         projectName: memory.projectName,
         category: 'project',
-      },
-    });
+      }
+    );
   }
 
   // Get project memory
@@ -76,7 +76,7 @@ export class ProjectMemoryService {
     }
 
     // Try to retrieve from memory system
-    const memories = await this.memorySystem.search(projectId, 'semantic');
+    const memories = await this.memorySystem.searchMemories(projectId, 5);
     if (memories.length > 0) {
       try {
         const memory = JSON.parse(memories[0].content);
@@ -333,10 +333,6 @@ export class ProjectMemoryService {
   // Clear project memory
   async clearProjectMemory(projectId: string): Promise<void> {
     this.projectMemories.delete(projectId);
-    // Also clear from memory system
-    const memories = await this.memorySystem.search(projectId, 'semantic');
-    for (const memory of memories) {
-      // Note: MemorySystem doesn't have a delete method, so we'll just clear locally
-    }
+    // Note: MemorySystem doesn't have a delete method, so we'll just clear locally
   }
 }

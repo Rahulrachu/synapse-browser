@@ -41,6 +41,12 @@ export interface CodeReviewSuggestion {
   suggestion: string;
 }
 
+/**
+ * Provides services for interacting with Git repositories to extract intelligence.
+ * This includes fetching commit information, analyzing branches, detecting merge conflicts,
+ * generating code review suggestions, retrieving repository statistics, generating release notes,
+ * and analyzing code changes.
+ */
 export class GitIntelligenceService {
   private projectPath: string;
 
@@ -48,7 +54,11 @@ export class GitIntelligenceService {
     this.projectPath = projectPath;
   }
 
-  // Get commit summary
+  /**
+   * Retrieves the full commit message for a given commit hash.
+   * @param hash The full or short hash of the commit.
+   * @returns A promise that resolves to the commit message as a string.
+   */
   async getCommitSummary(hash: string): Promise<string> {
     try {
       const { stdout } = await execAsync(
@@ -62,7 +72,11 @@ export class GitIntelligenceService {
     }
   }
 
-  // Get recent commits
+  /**
+   * Retrieves a list of recent commits.
+   * @param count The number of recent commits to retrieve. Defaults to 10.
+   * @returns A promise that resolves to an array of `CommitInfo` objects.
+   */
   async getRecentCommits(count: number = 10): Promise<CommitInfo[]> {
     try {
       const { stdout } = await execAsync(
@@ -89,7 +103,11 @@ export class GitIntelligenceService {
     }
   }
 
-  // Analyze branch
+  /**
+   * Analyzes a specific Git branch, providing information on its divergence from the remote (ahead/behind).
+   * @param branchName The name of the branch to analyze.
+   * @returns A promise that resolves to a `BranchAnalysis` object.
+   */
   async analyzeBranch(branchName: string): Promise<BranchAnalysis> {
     try {
       const { stdout: aheadBehind } = await execAsync(
@@ -128,7 +146,12 @@ export class GitIntelligenceService {
     }
   }
 
-  // Detect merge conflicts
+  /**
+   * Detects potential merge conflicts between the current branch and a specified branch.
+   * It performs a dry-run merge and then aborts it to avoid modifying the repository state.
+   * @param branchName The name of the branch to check for conflicts against.
+   * @returns A promise that resolves to an array of file paths that would have conflicts.
+   */
   async detectMergeConflicts(branchName: string): Promise<string[]> {
     try {
       // Try to merge and check for conflicts
@@ -158,7 +181,12 @@ export class GitIntelligenceService {
     }
   }
 
-  // Generate code review suggestions
+  /**
+   * Generates basic code review suggestions for a given file.
+   * This includes checks for `console.log`, placeholder comments (TODO/FIXME/HACK/BUG), long lines, and high nesting levels.
+   * @param filePath The path to the file to review.
+   * @returns A promise that resolves to an array of `CodeReviewSuggestion` objects.
+   */
   async generateCodeReviewSuggestions(
     filePath: string
   ): Promise<CodeReviewSuggestion[]> {
@@ -186,14 +214,15 @@ export class GitIntelligenceService {
           });
         }
 
-        // Check for TODO comments
-        if (line.includes('TODO') || line.includes('FIXME')) {
+        // Check for placeholder comments
+        const placeholderMatch = line.match(/\/\/\s*(TODO|FIXME|HACK|BUG):?\s*(.*)/i);
+        if (placeholderMatch) {
           suggestions.push({
             file: filePath,
             line: lineNumber,
-            severity: 'info',
-            message: 'TODO/FIXME comment found',
-            suggestion: 'Consider creating an issue for this task',
+            severity: placeholderMatch[1].toUpperCase() === 'BUG' ? 'warning' : 'info',
+            message: `${placeholderMatch[1]} comment found`,
+            suggestion: `Resolve this ${placeholderMatch[1]} or track it in the project management system.`,
           });
         }
 
@@ -227,7 +256,10 @@ export class GitIntelligenceService {
     return suggestions;
   }
 
-  // Get repository statistics
+  /**
+   * Retrieves various statistics about the Git repository, such as total commits, contributors, current branch, and total files.
+   * @returns A promise that resolves to a record containing repository statistics.
+   */
   async getRepositoryStats(): Promise<Record<string, any>> {
     try {
       const { stdout: totalCommits } = await execAsync(
@@ -262,7 +294,12 @@ export class GitIntelligenceService {
     }
   }
 
-  // Generate release notes
+  /**
+   * Generates release notes by summarizing commit messages between two Git tags or a tag and HEAD.
+   * @param fromTag The starting Git tag (or commit hash) for the release notes.
+   * @param toTag The ending Git tag (or commit hash) for the release notes. Defaults to 'HEAD'.
+   * @returns A promise that resolves to the Markdown content of the release notes.
+   */
   async generateReleaseNotes(
     fromTag: string,
     toTag: string = 'HEAD'
@@ -293,7 +330,14 @@ export class GitIntelligenceService {
     }
   }
 
-  // Analyze code changes
+  /**
+   * Analyzes code changes for a specific file between two commits.
+   * It provides the number of additions, deletions, and the full diff.
+   * @param filePath The path to the file to analyze.
+   * @param fromCommit The starting commit hash for the comparison.
+   * @param toCommit The ending commit hash for the comparison. Defaults to 'HEAD'.
+   * @returns A promise that resolves to a record containing code change analysis.
+   */
   async analyzeCodeChanges(
     filePath: string,
     fromCommit: string,
@@ -321,7 +365,12 @@ export class GitIntelligenceService {
     }
   }
 
-  // Get blame information
+  /**
+   * Retrieves Git blame information for a specific line in a file.
+   * @param filePath The path to the file.
+   * @param lineNumber The 1-indexed line number to get blame information for.
+   * @returns A promise that resolves to a record containing blame information (commit, author, date).
+   */
   async getBlameInfo(filePath: string, lineNumber: number): Promise<Record<string, any>> {
     try {
       const { stdout } = await execAsync(

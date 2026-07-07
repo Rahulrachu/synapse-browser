@@ -168,8 +168,17 @@ export class AutonomousSoftwareEngineer extends EventEmitter {
     status.phase = 'scaffolding';
     this.emit('phase-start', { phase: 'scaffolding' });
 
-    // Use the project scaffold service to create the project structure
-    // This would integrate with ProjectScaffoldService
+    const { ProjectScaffoldService } = require('../main/ProjectScaffoldService');
+    const scaffoldService = new ProjectScaffoldService();
+    
+    await scaffoldService.createProject({
+      name: request.id,
+      type: 'react-app', // Defaulting for now, could be inferred from description
+      description: request.description,
+      outputPath: process.cwd()
+    }, (progress: any) => {
+      this.emit('phase-progress', { phase: 'scaffolding', progress: progress.progress });
+    });
 
     status.progress = 30;
     this.emit('phase-progress', { phase: 'scaffolding', progress: status.progress });
@@ -224,8 +233,10 @@ export class AutonomousSoftwareEngineer extends EventEmitter {
     status.phase = 'documentation';
     this.emit('phase-start', { phase: 'documentation' });
 
-    // Generate documentation
-    // This would use the documentation generator
+    const { DocumentationGeneratorService } = require('../main/DocumentationGeneratorService');
+    const docService = new DocumentationGeneratorService(process.cwd());
+    const docs = await docService.generateDocumentation();
+    await docService.saveDocumentation(docs);
 
     status.progress = 85;
     this.emit('phase-progress', { phase: 'documentation', progress: status.progress });

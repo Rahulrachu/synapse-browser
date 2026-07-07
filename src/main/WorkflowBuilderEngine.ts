@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { DeploymentConfig, DeploymentTarget } from './DeploymentService';
 
 export interface WorkflowNode {
   id: string;
@@ -282,25 +283,63 @@ export class WorkflowBuilderEngine {
       level: 'info',
     });
 
-    // Simulate different actions
-    switch (action) {
-      case 'run-tests':
-        execution.variables.testResults = { passed: 42, failed: 0 };
-        break;
-      case 'build':
-        execution.variables.buildStatus = 'success';
-        break;
-      case 'deploy':
-        execution.variables.deploymentUrl = 'https://example.com';
-        break;
-      case 'notify':
-        execution.logs.push({
-          timestamp: Date.now(),
-          nodeId: node.id,
-          message: `Notification sent: ${node.config.message}`,
-          level: 'info',
-        });
-        break;
+    // Real service integration
+    try {
+      switch (action) {
+        case 'run-tests': {
+          const { exec } = require('child_process');
+          const { promisify } = require('util');
+          const execAsync = promisify(exec);
+          const { stdout, stderr } = await execAsync('npm test', { cwd: process.cwd() }).catch(e => e);
+          execution.variables.testResults = { output: stdout + stderr, success: !stderr.includes('FAIL') };
+          break;
+        }
+        case 'build': {
+          const { exec } = require('child_process');
+          const { promisify } = require('util');
+          const execAsync = promisify(exec);
+          const { stdout, stderr } = await execAsync('npm run build', { cwd: process.cwd() }).catch(e => e);
+          execution.variables.buildStatus = stderr.includes('error') ? 'failed' : 'success';
+          break;
+        }
+        case 'deploy': {
+          const { DeploymentService } = require(\'./DeploymentService\');
+          const { DeploymentTarget } = require(\'./DeploymentService\');
+          const deployService = new DeploymentService(process.cwd());
+          const deploymentConfig = {
+            target: node.config.target as DeploymentTarget || 'vercel',
+            projectName: node.config.projectName || execution.variables.projectName || 'default-project',
+            // Add other relevant properties from node.config to deploymentConfig
+          };
+          const result = await deployService.deploy(deploymentConfig);
+          execution.variables.deploymentUrl = result.url;
+          break;
+        }
+        case 'notify':
+          // In production, would call a notification service (Slack, Email, etc.)
+          execution.logs.push({
+            timestamp: Date.now(),
+            nodeId: node.id,
+            message: `Notification sent: ${node.config.message}`,
+            level: 'info',
+          });
+          break;
+        default:
+          execution.logs.push({
+            timestamp: Date.now(),
+            nodeId: node.id,
+            message: `Unknown action: ${action}`,
+            level: 'warning',
+          });
+      }
+    } catch (err: any) {
+      execution.logs.push({
+        timestamp: Date.now(),
+        nodeId: node.id,
+        message: `Action ${action} failed: ${err.message}`,
+        level: 'error',
+      });
+      throw err;
     }
   }
 

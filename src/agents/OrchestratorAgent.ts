@@ -162,7 +162,7 @@ export class OrchestratorAgent extends BaseAgent {
         }
       }
 
-      // 2. Aggregate results (placeholder)
+      // 2. Aggregate results
       const finalOutput = this.aggregateResults(task.goal, results);
 
       const agentResult: AgentResult = {

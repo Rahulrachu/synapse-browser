@@ -24,6 +24,10 @@ export interface DeploymentResult {
   logs: string[];
 }
 
+/**
+ * Manages the deployment of projects to various platforms like Vercel, Netlify, GitHub Pages, Docker, Railway, and Cloudflare.
+ * It handles project validation, building, and platform-specific deployment configurations.
+ */
 export class DeploymentService {
   private projectPath: string;
 
@@ -31,6 +35,12 @@ export class DeploymentService {
     this.projectPath = projectPath;
   }
 
+  /**
+   * Initiates the deployment process for a project to a specified target.
+   * Performs project validation, builds the project, and then calls the appropriate platform-specific deployment method.
+   * @param config The `DeploymentConfig` object containing deployment target and other configurations.
+   * @returns A promise that resolves to a `DeploymentResult` object detailing the outcome of the deployment.
+   */
   async deploy(config: DeploymentConfig): Promise<DeploymentResult> {
     const result: DeploymentResult = {
       success: false,
@@ -72,6 +82,10 @@ export class DeploymentService {
     }
   }
 
+  /**
+   * Validates the project structure, ensuring essential files like `package.json` exist.
+   * @returns A promise that resolves if validation passes, or rejects with an error if it fails.
+   */
   private async validateProject(): Promise<void> {
     const packageJsonPath = path.join(this.projectPath, 'package.json');
 
@@ -86,12 +100,24 @@ export class DeploymentService {
     }
   }
 
+  /**
+   * Builds the project using the specified build command or a default (`npm run build`).
+   * @param config The `DeploymentConfig` object, used to retrieve the build command.
+   * @returns A promise that resolves when the project build is complete.
+   */
   private async buildProject(config: DeploymentConfig): Promise<void> {
     const buildCommand = config.buildCommand || 'npm run build';
 
     await execAsync(buildCommand, { cwd: this.projectPath });
   }
 
+  /**
+   * Deploys the project to Vercel.
+   * Installs Vercel CLI if not present and uses it for deployment.
+   * @param config The `DeploymentConfig` object.
+   * @param result The `DeploymentResult` object to update with Vercel-specific logs and status.
+   * @returns A promise that resolves to the updated `DeploymentResult` object.
+   */
   private async deployToVercel(
     config: DeploymentConfig,
     result: DeploymentResult
@@ -121,6 +147,13 @@ export class DeploymentService {
     return result;
   }
 
+  /**
+   * Deploys the project to Netlify.
+   * Installs Netlify CLI if not present and uses it for deployment.
+   * @param config The `DeploymentConfig` object.
+   * @param result The `DeploymentResult` object to update with Netlify-specific logs and status.
+   * @returns A promise that resolves to the updated `DeploymentResult` object.
+   */
   private async deployToNetlify(
     config: DeploymentConfig,
     result: DeploymentResult
@@ -149,6 +182,12 @@ export class DeploymentService {
     return result;
   }
 
+  /**
+   * Configures GitHub Pages deployment by creating a GitHub Actions workflow file.
+   * @param config The `DeploymentConfig` object.
+   * @param result The `DeploymentResult` object to update with GitHub-specific logs and status.
+   * @returns A promise that resolves to the updated `DeploymentResult` object.
+   */
   private async deployToGitHub(
     config: DeploymentConfig,
     result: DeploymentResult
@@ -190,6 +229,12 @@ jobs:
     return result;
   }
 
+  /**
+   * Configures Docker deployment by creating `Dockerfile` and `docker-compose.yml`.
+   * @param config The `DeploymentConfig` object.
+   * @param result The `DeploymentResult` object to update with Docker-specific logs and status.
+   * @returns A promise that resolves to the updated `DeploymentResult` object.
+   */
   private async deployToDocker(
     config: DeploymentConfig,
     result: DeploymentResult
@@ -237,6 +282,12 @@ services:
     return result;
   }
 
+  /**
+   * Configures Railway deployment by creating a `railway.json` file.
+   * @param config The `DeploymentConfig` object.
+   * @param result The `DeploymentResult` object to update with Railway-specific logs and status.
+   * @returns A promise that resolves to the updated `DeploymentResult` object.
+   */
   private async deployToRailway(
     config: DeploymentConfig,
     result: DeploymentResult
@@ -268,6 +319,12 @@ services:
     return result;
   }
 
+  /**
+   * Configures Cloudflare Workers deployment by creating a `wrangler.toml` file.
+   * @param config The `DeploymentConfig` object.
+   * @param result The `DeploymentResult` object to update with Cloudflare-specific logs and status.
+   * @returns A promise that resolves to the updated `DeploymentResult` object.
+   */
   private async deployToCloudflare(
     config: DeploymentConfig,
     result: DeploymentResult
@@ -294,6 +351,13 @@ routes = [
     return result;
   }
 
+  /**
+   * Retrieves the status of a specific deployment.
+   * (Note: This is a placeholder and would require integration with each platform's API for a real implementation).
+   * @param target The `DeploymentTarget` of the deployment.
+   * @param deploymentId The unique ID of the deployment.
+   * @returns A promise that resolves to a record containing deployment status information.
+   */
   async getDeploymentStatus(target: DeploymentTarget, deploymentId: string): Promise<Record<string, any>> {
     // Implementation would depend on each platform's API
     return {
@@ -304,6 +368,13 @@ routes = [
     };
   }
 
+  /**
+   * Rolls back a specific deployment.
+   * (Note: This is a placeholder and would require integration with each platform's API for a real implementation).
+   * @param target The `DeploymentTarget` of the deployment to roll back.
+   * @param deploymentId The unique ID of the deployment to roll back.
+   * @returns A promise that resolves to `true` if the rollback was successful, `false` otherwise.
+   */
   async rollbackDeployment(target: DeploymentTarget, deploymentId: string): Promise<boolean> {
     // Implementation would depend on each platform's API
     console.log(`Rolling back ${target} deployment ${deploymentId}`);
