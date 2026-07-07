@@ -7,6 +7,7 @@ import ContextEngine from '../engine/ContextEngine';
 import MemorySystem from '../engine/MemorySystem';
 import PlanningEngine from '../engine/PlanningEngine';
 import ToolRuntime from '../tools/ToolRuntime';
+import { PlannerAgent } from './PlannerAgent';
 
 class AgentRuntime {
   private registry: AgentRegistry;
@@ -27,6 +28,10 @@ class AgentRuntime {
     };
 
     this.manager = new AgentManager(this.registry, this.messageBus, initialContext);
+
+    // Register Planner Agent
+    const plannerAgent = new PlannerAgent('planner-agent', this.messageBus, initialContext);
+    this.registry.registerAgent(plannerAgent);
   }
 
   public getRegistry(): AgentRegistry {

@@ -88,7 +88,7 @@ This document outlines the architecture of Synapse Browser, an AI-first develope
 - **Extensible Architecture**: Easy addition of new tools without core modifications
 - **Observability**: Structured logging and execution history for all tool invocations
 
-### Phase H: Multi-Agent Runtime Foundation 🛠️
+### Phase H: Multi-Agent Runtime Foundation ✅
 - **BaseAgent**: Abstract class/interface for agents
 - **AgentRegistry**: Manages agent registration and discovery
 - **AgentManager**: Handles agent lifecycle, task assignment, and execution
@@ -105,6 +105,15 @@ This document outlines the architecture of Synapse Browser, an AI-first develope
 - **Execution Queue**: Manages the order and execution of agent tasks
 - **Event System**: For agent-related events and notifications
 - **Logging and Diagnostics**: Comprehensive logging for agent activities
+
+### Phase H.1: Planner Agent 🛠️
+- **PlannerAgent**: Specialized agent for goal decomposition and task planning
+- **Goal Analysis**: Transforms high-level user goals into structured requirements
+- **Task Decomposition**: Breaks complex goals into hierarchical, executable subtasks
+- **Dependency Graph**: Builds and manages task dependency structures
+- **Prioritization Engine**: Automatically assigns task priorities and execution order
+- **Replanning Mechanism**: Dynamic adjustment of plans based on task outcomes
+- **Message Bus Integration**: Publishes generated plans and task updates to the agent network
 
 ## 2. Folder Structure
 
@@ -155,6 +164,7 @@ This document outlines the architecture of Synapse Browser, an AI-first develope
 │   │   ├── AgentMessageBus.ts
 │   │   ├── AgentRuntime.ts
 │   │   ├── AgentLogger.ts
+│   │   ├── PlannerAgent.ts
 │   │   └── types.ts
 │   ├── browser/
 │   │   ├── BrowserEngine.ts

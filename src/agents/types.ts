@@ -19,6 +19,10 @@ export interface AgentTask {
   startedAt?: number;
   completedAt?: number;
   result?: AgentResult;
+  parentId?: string;
+  dependencies?: string[]; // IDs of tasks that must be completed before this one
+  priority?: number;
+  estimatedDuration?: number;
 }
 
 export interface AgentResult {
