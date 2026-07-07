@@ -9,6 +9,7 @@ import PlanningEngine from '../engine/PlanningEngine';
 import ToolRuntime from '../tools/ToolRuntime';
 import { PlannerAgent } from './PlannerAgent';
 import { BrowserAgent } from './BrowserAgent';
+import { ResearchAgent } from './ResearchAgent';
 
 class AgentRuntime {
   private registry: AgentRegistry;
@@ -37,6 +38,10 @@ class AgentRuntime {
     // Register Browser Agent
     const browserAgent = new BrowserAgent('browser-agent', this.messageBus, initialContext);
     this.registry.registerAgent(browserAgent);
+
+    // Register Research Agent
+    const researchAgent = new ResearchAgent('research-agent', this.messageBus, initialContext);
+    this.registry.registerAgent(researchAgent);
   }
 
   public getRegistry(): AgentRegistry {

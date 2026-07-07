@@ -115,7 +115,7 @@ This document outlines the architecture of Synapse Browser, an AI-first develope
 - **Replanning Mechanism**: Dynamic adjustment of plans based on task outcomes
 - **Message Bus Integration**: Publishes generated plans and task updates to the agent network
 
-### Phase H.2: Browser Agent 🛠️
+### Phase H.2: Browser Agent ✅
 - **BrowserAgent**: Autonomous agent for web interaction and data extraction
 - **Task Execution**: Receives and processes browser-specific tasks from the Planner Agent
 - **Automation Integration**: Leverages `BrowserAutomation` service for DOM interactions
@@ -124,6 +124,16 @@ This document outlines the architecture of Synapse Browser, an AI-first develope
 - **Data Extraction**: Captures screenshots and extracts structured information from web pages
 - **Result Reporting**: Communicates task status and data back through the Agent Message Bus
 - **Error Handling**: Implements retries and failure reporting for robust web automation
+
+### Phase H.3: Research Agent 🛠️
+- **ResearchAgent**: Specialized agent for multi-source information gathering and synthesis
+- **Task Coordination**: Orchestrates research goals by assigning subtasks to the Browser Agent
+- **Information Gathering**: Collects and aggregates data from multiple web resources
+- **Structured Summarization**: Distills research findings into organized JSON summaries
+- **Source Tracking**: Maintains explicit links between findings and their original sources
+- **Duplicate Detection**: Filters redundant information to ensure unique and valuable insights
+- **Progress Reporting**: Broadcasts research milestones and final results to the agent network
+- **System Integration**: Connects with Context Engine and Memory System for persistent knowledge storage
 
 ## 2. Folder Structure
 
@@ -176,6 +186,7 @@ This document outlines the architecture of Synapse Browser, an AI-first develope
 │   │   ├── AgentLogger.ts
 │   │   ├── PlannerAgent.ts
 │   │   ├── BrowserAgent.ts
+│   │   ├── ResearchAgent.ts
 │   │   └── types.ts
 │   ├── browser/
 │   │   ├── BrowserEngine.ts
