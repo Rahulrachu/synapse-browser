@@ -106,7 +106,7 @@ This document outlines the architecture of Synapse Browser, an AI-first develope
 - **Event System**: For agent-related events and notifications
 - **Logging and Diagnostics**: Comprehensive logging for agent activities
 
-### Phase H.1: Planner Agent 🛠️
+### Phase H.1: Planner Agent ✅
 - **PlannerAgent**: Specialized agent for goal decomposition and task planning
 - **Goal Analysis**: Transforms high-level user goals into structured requirements
 - **Task Decomposition**: Breaks complex goals into hierarchical, executable subtasks
@@ -114,6 +114,16 @@ This document outlines the architecture of Synapse Browser, an AI-first develope
 - **Prioritization Engine**: Automatically assigns task priorities and execution order
 - **Replanning Mechanism**: Dynamic adjustment of plans based on task outcomes
 - **Message Bus Integration**: Publishes generated plans and task updates to the agent network
+
+### Phase H.2: Browser Agent 🛠️
+- **BrowserAgent**: Autonomous agent for web interaction and data extraction
+- **Task Execution**: Receives and processes browser-specific tasks from the Planner Agent
+- **Automation Integration**: Leverages `BrowserAutomation` service for DOM interactions
+- **Navigation Management**: Handles URL navigation and tab lifecycle within the agent context
+- **Interaction Capabilities**: Supports clicking, typing, scrolling, and form submission
+- **Data Extraction**: Captures screenshots and extracts structured information from web pages
+- **Result Reporting**: Communicates task status and data back through the Agent Message Bus
+- **Error Handling**: Implements retries and failure reporting for robust web automation
 
 ## 2. Folder Structure
 
@@ -165,6 +175,7 @@ This document outlines the architecture of Synapse Browser, an AI-first develope
 │   │   ├── AgentRuntime.ts
 │   │   ├── AgentLogger.ts
 │   │   ├── PlannerAgent.ts
+│   │   ├── BrowserAgent.ts
 │   │   └── types.ts
 │   ├── browser/
 │   │   ├── BrowserEngine.ts

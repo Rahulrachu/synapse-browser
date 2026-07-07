@@ -8,6 +8,7 @@ import MemorySystem from '../engine/MemorySystem';
 import PlanningEngine from '../engine/PlanningEngine';
 import ToolRuntime from '../tools/ToolRuntime';
 import { PlannerAgent } from './PlannerAgent';
+import { BrowserAgent } from './BrowserAgent';
 
 class AgentRuntime {
   private registry: AgentRegistry;
@@ -32,6 +33,10 @@ class AgentRuntime {
     // Register Planner Agent
     const plannerAgent = new PlannerAgent('planner-agent', this.messageBus, initialContext);
     this.registry.registerAgent(plannerAgent);
+
+    // Register Browser Agent
+    const browserAgent = new BrowserAgent('browser-agent', this.messageBus, initialContext);
+    this.registry.registerAgent(browserAgent);
   }
 
   public getRegistry(): AgentRegistry {
