@@ -1,6 +1,6 @@
 # Synapse Browser Architecture
 
-## Project Status: Phases 2-7 Complete (Phase C, D, E, F, G In Progress)
+## Project Status: Phases 2-7 Complete, Phase H In Progress
 
 This document outlines the architecture of Synapse Browser, an AI-first developer workspace combining browser, IDE, and productivity tools in one unified interface.
 
@@ -80,13 +80,31 @@ This document outlines the architecture of Synapse Browser, an AI-first develope
 - **Environment Management**: Access to cookies, localStorage, and JavaScript execution
 - **IPC Integration**: Exposes automation capabilities to the AI system via IPC handlers
 
-### Phase G: Tool Runtime 🛠️
+### Phase G: Tool Runtime ✅
 - **Centralized Registry**: Secure discovery and management of all AI tools
 - **Unified Interface**: Common interface for all tools with structured input/output
 - **Secure Execution**: Permission validation and timeout/cancellation support
 - **Built-in Tools**: Initial set of tools for Browser, Terminal, File System, Git, HTTP, and more
 - **Extensible Architecture**: Easy addition of new tools without core modifications
 - **Observability**: Structured logging and execution history for all tool invocations
+
+### Phase H: Multi-Agent Runtime Foundation 🛠️
+- **BaseAgent**: Abstract class/interface for agents
+- **AgentRegistry**: Manages agent registration and discovery
+- **AgentManager**: Handles agent lifecycle, task assignment, and execution
+- **AgentContext**: Shared context for agents, integrating with existing systems
+- **AgentMessageBus**: System for inter-agent communication
+- **AgentTask**: Standardized task definition for agents
+- **AgentResult**: Standardized result format for agent tasks
+- **AgentCapability**: Definitions for agent capabilities
+- **Agent Lifecycle Management**: Initialize, start, pause, resume, stop
+- **Agent State Management**: Mechanisms for agents to manage their internal state
+- **Agent Communication System**: Facilitates message exchange between agents
+- **Shared Context between Agents**: Centralized context accessible by all agents
+- **Task Assignment Interface**: For assigning tasks to agents
+- **Execution Queue**: Manages the order and execution of agent tasks
+- **Event System**: For agent-related events and notifications
+- **Logging and Diagnostics**: Comprehensive logging for agent activities
 
 ## 2. Folder Structure
 
@@ -130,6 +148,14 @@ This document outlines the architecture of Synapse Browser, an AI-first develope
 │   │   └── index.tsx
 │   ├── common/
 │   │   └── utils.ts       # Shared types (TabData, Session, etc.)
+│   ├── agents/
+│   │   ├── BaseAgent.ts
+│   │   ├── AgentRegistry.ts
+│   │   ├── AgentManager.ts
+│   │   ├── AgentMessageBus.ts
+│   │   ├── AgentRuntime.ts
+│   │   ├── AgentLogger.ts
+│   │   └── types.ts
 │   ├── browser/
 │   │   ├── BrowserEngine.ts
 │   │   ├── BookmarkManager.ts
@@ -278,13 +304,13 @@ App.tsx
 
 ## 11. Next Phases (Future)
 
-### Phase 8: Performance & Optimization
+### Phase I: Performance & Optimization
 - Memory profiling and optimization
 - GPU rendering for smooth animations
 - Background indexing for search
 - Crash recovery and auto-save
 
-### Phase 9: Production
+### Phase J: Production
 - Windows/Mac/Linux installers
 - Auto-updater
 - Plugin API and extension SDK
@@ -315,6 +341,6 @@ npm run dist         # Create installers
 
 ---
 
-**Last Updated**: Phase 7 Complete
+**Last Updated**: Phase H In Progress
 **Maintainer**: Rahul S R
 **License**: MIT

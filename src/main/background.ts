@@ -13,6 +13,8 @@ import MemorySystem from '../engine/MemorySystem';
 import PlanningEngine from '../engine/PlanningEngine';
 import BrowserAutomation from './BrowserAutomation';
 import { ToolRegistry, initializeTools } from '../tools';
+import AgentRuntime from '../agents/AgentRuntime';
+import AgentLogger from '../agents/AgentLogger';
 
 let mainWindow: any = null;
 
@@ -489,4 +491,37 @@ ipcMain.handle('tool-invoke', async (event, id: string, input: any, options?: an
 
 ipcMain.handle('tool-history', async () => {
   return ToolRegistry.getHistory();
+});
+
+// Agent Runtime handlers
+ipcMain.handle('agent-list', async () => {
+  return AgentRuntime.getRegistry().getAllAgents().map(a => ({
+    id: a.id,
+    name: a.name,
+    capabilities: a.getCapabilities()
+  }));
+});
+
+ipcMain.handle('agent-initialize', async (event, agentId: string) => {
+  return AgentRuntime.getManager().initializeAgent(agentId);
+});
+
+ipcMain.handle('agent-start', async (event, agentId: string) => {
+  return AgentRuntime.getManager().startAgent(agentId);
+});
+
+ipcMain.handle('agent-stop', async (event, agentId: string) => {
+  return AgentRuntime.getManager().stopAgent(agentId);
+});
+
+ipcMain.handle('agent-assign-task', async (event, task: any) => {
+  return AgentRuntime.getManager().assignTask(task);
+});
+
+ipcMain.handle('agent-get-logs', async (event, filter?: any) => {
+  return AgentLogger.getLogs(filter);
+});
+
+ipcMain.handle('agent-sync-context', async () => {
+  return AgentRuntime.syncContext();
 });
