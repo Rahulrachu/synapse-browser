@@ -1,14 +1,16 @@
 
 import { BaseAgent } from './BaseAgent';
-import { 
-  AgentId, 
-  AgentName, 
-  AgentCapability, 
-  AgentTask, 
-  AgentResult, 
-  AgentContext, 
-  AgentMessage 
+import {
+  AgentId,
+  AgentName,
+  AgentCapability,
+  AgentTask,
+  AgentResult,
+  AgentContext,
+  AgentMessage
 } from './types';
+import { WriterAgent } from './WriterAgent'; // Import WriterAgent for capability checking
+import { OrchestratorAgent } from './OrchestratorAgent'; // Import OrchestratorAgent for capability checking
 import { AgentMessageBus } from './AgentMessageBus';
 import AgentLogger from './AgentLogger';
 import PlanningEngine from '../engine/PlanningEngine';
@@ -139,41 +141,125 @@ export class PlannerAgent extends BaseAgent {
 
   private analyzeGoal(goal: string): any {
     // This would typically involve an LLM call
+    // This would typically involve an LLM call to determine required capabilities
+    // For now, we'll use a simple keyword-based approach
+    const requiredCapabilities: AgentCapability['name'][] = [];
+
+    if (goal.toLowerCase().includes('report') || goal.toLowerCase().includes('document') || goal.toLowerCase().includes('summarize') || goal.toLowerCase().includes('changelog') || goal.toLowerCase().includes('blog')) {
+      requiredCapabilities.push('report_generation'); // Example capability from WriterAgent
+    }
+    if (goal.toLowerCase().includes('research') || goal.toLowerCase().includes('information')) {
+      requiredCapabilities.push('information_gathering'); // Example capability from ResearchAgent
+    }
+    if (goal.toLowerCase().includes('build') || goal.toLowerCase().includes('code') || goal.toLowerCase().includes('implement')) {
+      requiredCapabilities.push('code_generation'); // Example capability from CodingAgent
+    }
+    if (goal.toLowerCase().includes('review') || goal.toLowerCase().includes('audit')) {
+      requiredCapabilities.push('code_review'); // Example capability from ReviewerAgent
+    }
+
+    // If multiple capabilities are needed, or the task is complex, suggest Orchestrator
+    let category = 'general';
+    let complexity = 'medium';
+    if (requiredCapabilities.length > 1 || goal.split(' ').length > 10) {
+      category = 'orchestration';
+      complexity = 'high';
+    }
+
     return {
-      category: 'general',
-      complexity: 'medium',
-      requiredCapabilities: ['browser', 'research']
+      category,
+      complexity,
+      requiredCapabilities
     };
   }
 
   private decomposeGoal(goal: string, analysis: any): AgentTask[] {
-    // Mock decomposition logic
-    const tasks: AgentTask[] = [
-      {
-        id: `task-${Date.now()}-1`,
-        goal: `Research requirements for: ${goal}`,
-        instructions: ['Search online for documentation', 'Identify key components'],
+    const tasks: AgentTask[] = [];
+
+    if (analysis.category === 'orchestration') {
+      // If orchestration is needed, assign the main goal to the OrchestratorAgent
+      tasks.push({
+        id: `task-${Date.now()}-orchestrate`,
+        agentId: 'orchestrator-agent',
+        goal: `Orchestrate the execution of: ${goal}`,
+        instructions: ['Break down into subtasks', 'Assign to appropriate agents', 'Manage execution'],
         status: 'pending',
         createdAt: Date.now(),
         priority: 1
-      },
-      {
-        id: `task-${Date.now()}-2`,
-        goal: `Execute core actions for: ${goal}`,
-        instructions: ['Perform the identified actions'],
+      });
+    } else if (analysis.requiredCapabilities.includes('report_generation')) {
+      // If writing is the primary capability, assign to WriterAgent
+      tasks.push({
+        id: `task-${Date.now()}-write`,
+        agentId: 'writer-agent',
+        goal: `Generate content for: ${goal}`,
+        instructions: ['Produce polished output', 'Collaborate with other agents if needed'],
         status: 'pending',
         createdAt: Date.now(),
-        priority: 2
-      },
-      {
-        id: `task-${Date.now()}-3`,
-        goal: `Verify results for: ${goal}`,
-        instructions: ['Check if the goal was achieved'],
+        priority: 1
+      });
+    } else if (analysis.requiredCapabilities.includes('information_gathering')) {
+      // If research is the primary capability, assign to ResearchAgent
+      tasks.push({
+        id: `task-${Date.now()}-research`,
+        agentId: 'research-agent',
+        goal: `Research information for: ${goal}`,
+        instructions: ['Gather data from various sources', 'Summarize findings'],
         status: 'pending',
         createdAt: Date.now(),
-        priority: 3
-      }
-    ];
+        priority: 1
+      });
+    } else if (analysis.requiredCapabilities.includes('code_generation')) {
+      // If coding is the primary capability, assign to CodingAgent
+      tasks.push({
+        id: `task-${Date.now()}-code`,
+        agentId: 'coding-agent',
+        goal: `Generate code for: ${goal}`,
+        instructions: ['Write code based on requirements', 'Ensure functionality'],
+        status: 'pending',
+        createdAt: Date.now(),
+        priority: 1
+      });
+    } else if (analysis.requiredCapabilities.includes('code_review')) {
+      // If review is the primary capability, assign to ReviewerAgent
+      tasks.push({
+        id: `task-${Date.now()}-review`,
+        agentId: 'reviewer-agent',
+        goal: `Review content for: ${goal}`,
+        instructions: ['Perform quality checks', 'Provide feedback'],
+        status: 'pending',
+        createdAt: Date.now(),
+        priority: 1
+      });
+    } else {
+      // Default decomposition for general tasks
+      tasks.push(
+        {
+          id: `task-${Date.now()}-1`,
+          goal: `Understand requirements for: ${goal}`,
+          instructions: ['Analyze the goal', 'Identify necessary steps'],
+          status: 'pending',
+          createdAt: Date.now(),
+          priority: 1
+        },
+        {
+          id: `task-${Date.now()}-2`,
+          goal: `Execute primary action for: ${goal}`,
+          instructions: ['Perform the main task'],
+          status: 'pending',
+          createdAt: Date.now(),
+          priority: 2
+        },
+        {
+          id: `task-${Date.now()}-3`,
+          goal: `Verify and finalize for: ${goal}`,
+          instructions: ['Check results', 'Prepare final output'],
+          status: 'pending',
+          createdAt: Date.now(),
+          priority: 3
+        }
+      );
+    }
     return tasks;
   }
 

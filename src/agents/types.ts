@@ -14,7 +14,7 @@ export interface AgentTask {
   goal: string;
   instructions: string[];
   context?: any; // Context relevant to the task
-  status: 'pending' | 'in-progress' | 'completed' | 'failed' | 'cancelled';
+  status: 'pending' | 'in-progress' | 'completed' | 'failed' | 'cancelled' | 'paused';
   createdAt: number;
   startedAt?: number;
   completedAt?: number;
@@ -23,6 +23,11 @@ export interface AgentTask {
   dependencies?: string[]; // IDs of tasks that must be completed before this one
   priority?: number;
   estimatedDuration?: number;
+  checkpoints?: any[]; // Array to store progress checkpoints
+  retryCount?: number; // Number of times the task has been retried
+  maxRetries?: number; // Maximum number of retries allowed
+  isBackground?: boolean; // Indicates if the task can run as a background job
+  allowPause?: boolean; // Indicates if the task can be paused and resumed
 }
 
 export interface AgentResult {

@@ -8,10 +8,11 @@ import MemorySystem from '../engine/MemorySystem';
 import PlanningEngine from '../engine/PlanningEngine';
 import ToolRuntime from '../tools/ToolRuntime';
 import { PlannerAgent } from './PlannerAgent';
-import { BrowserAgent } from './BrowserAgent';
 import { ResearchAgent } from './ResearchAgent';
 import { CodingAgent } from './CodingAgent';
 import { ReviewerAgent } from './ReviewerAgent';
+import { WriterAgent } from './WriterAgent';
+import { OrchestratorAgent } from './OrchestratorAgent';
 
 class AgentRuntime {
   private registry: AgentRegistry;
@@ -31,7 +32,7 @@ class AgentRuntime {
       toolRuntimeState: ToolRuntime.getAllTools()
     };
 
-    this.manager = new AgentManager(this.registry, this.messageBus, initialContext);
+    this.manager = new AgentManager(this.registry, this.messageBus, initialContext, ToolRuntime);
 
     // Register Planner Agent
     const plannerAgent = new PlannerAgent('planner-agent', this.messageBus, initialContext);
@@ -52,6 +53,14 @@ class AgentRuntime {
     // Register Reviewer Agent
     const reviewerAgent = new ReviewerAgent('reviewer-agent', this.messageBus, initialContext);
     this.registry.registerAgent(reviewerAgent);
+
+    // Register Writer Agent
+    const writerAgent = new WriterAgent('writer-agent', this.messageBus, initialContext);
+    this.registry.registerAgent(writerAgent);
+
+    // Register Orchestrator Agent
+    const orchestratorAgent = new OrchestratorAgent('orchestrator-agent', this.messageBus, initialContext, this.manager, plannerAgent);
+    this.registry.registerAgent(orchestratorAgent);
   }
 
   public getRegistry(): AgentRegistry {

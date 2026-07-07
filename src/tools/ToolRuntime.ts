@@ -3,6 +3,7 @@ export interface ToolDefinition {
   name: string;
   description: string;
   permissions: string[];
+  capabilities: string[]; // New field: what the tool can achieve (e.g., 'web_browsing', 'file_editing')
   inputSchema: any;
   outputSchema: any;
 }
@@ -40,6 +41,12 @@ class ToolRegistry {
 
   getAllTools(): ToolDefinition[] {
     return Array.from(this.tools.values()).map(t => t.definition);
+  }
+
+  findToolsByCapability(capability: string): ToolDefinition[] {
+    return Array.from(this.tools.values())
+      .filter(tool => tool.definition.capabilities.includes(capability))
+      .map(tool => tool.definition);
   }
 
   async invoke(id: string, input: any, options: ToolExecutionOptions = {}): Promise<ToolResult> {
