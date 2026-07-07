@@ -11,6 +11,7 @@ import { PlannerAgent } from './PlannerAgent';
 import { BrowserAgent } from './BrowserAgent';
 import { ResearchAgent } from './ResearchAgent';
 import { CodingAgent } from './CodingAgent';
+import { ReviewerAgent } from './ReviewerAgent';
 
 class AgentRuntime {
   private registry: AgentRegistry;
@@ -47,6 +48,10 @@ class AgentRuntime {
     // Register Coding Agent
     const codingAgent = new CodingAgent('coding-agent', this.messageBus, initialContext);
     this.registry.registerAgent(codingAgent);
+
+    // Register Reviewer Agent
+    const reviewerAgent = new ReviewerAgent('reviewer-agent', this.messageBus, initialContext);
+    this.registry.registerAgent(reviewerAgent);
   }
 
   public getRegistry(): AgentRegistry {
