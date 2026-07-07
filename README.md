@@ -236,7 +236,7 @@ MIT License - see LICENSE file for details
 
 ## Author
 
-**Rahul S R**
+Rahul S R
 
 ## Support
 
