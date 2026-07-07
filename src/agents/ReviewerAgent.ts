@@ -110,16 +110,15 @@ export class ReviewerAgent extends BaseAgent {
       let output;
       const goal = task.goal.toLowerCase();
 
-      if (goal.includes('review code') || goal.includes('perform review')) {
-        output = await this.reviewCode(task.context?.code || '', task.context);
-      } else if (goal.includes('security') || goal.includes('audit')) {
+      if (goal.includes('security') || goal.includes('audit')) {
         output = await this.performSecurityAudit(task.context?.code || '', task.context);
       } else if (goal.includes('quality') || goal.includes('check')) {
         output = await this.checkQuality(task.context?.code || '', task.context);
       } else if (goal.includes('documentation') || goal.includes('docs')) {
         output = await this.reviewDocumentation(task.context?.code || '', task.context);
       } else {
-        throw new Error(`Unsupported review action: ${task.goal}`);
+        // Default to general review if no specific type is mentioned
+        output = await this.reviewCode(task.context?.code || '', task.context);
       }
 
       const agentResult: AgentResult = {

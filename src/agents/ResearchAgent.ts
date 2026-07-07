@@ -96,7 +96,8 @@ export class ResearchAgent extends BaseAgent {
       const urls = task.context?.urls || [];
       
       if (urls.length === 0) {
-        throw new Error('No URLs provided for research');
+        AgentLogger.warn('No URLs provided for research, using default search.', this.id);
+        urls.push(`https://www.google.com/search?q=${encodeURIComponent(topic)}`);
       }
 
       // 1. Coordinate with Browser Agent to visit URLs

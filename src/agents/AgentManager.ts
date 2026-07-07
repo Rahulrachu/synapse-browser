@@ -99,7 +99,9 @@ export class AgentManager extends EventEmitter {
       this.executionQueue.push(task);
     }
     this.emit('taskAssigned', task.id);
-    this.processQueue();
+    
+    // Use setImmediate or process.nextTick to avoid deep recursion if assignTask is called within a task
+    setImmediate(() => this.processQueue());
   }
 
   private async processQueue(): Promise<void> {
@@ -109,6 +111,7 @@ export class AgentManager extends EventEmitter {
     this.isProcessingQueue = true;
 
     while (this.executionQueue.length > 0) {
+      AgentLogger.debug(`AgentManager processing queue. Remaining tasks: ${this.executionQueue.length}`, undefined);
       const task = this.executionQueue.shift();
       if (!task) continue;
 

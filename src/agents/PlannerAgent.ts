@@ -118,11 +118,15 @@ export class PlannerAgent extends BaseAgent {
   /**
    * Generates a structured execution plan from a high-level goal.
    */
-  public async generateExecutionPlan(goal: string): Promise<AgentTask[]> {
+  public async generateExecutionPlan(goal: string, options: { forceDirect?: boolean } = {}): Promise<AgentTask[]> {
     AgentLogger.info(`Generating execution plan for: ${goal}`, this.id);
     
     // 1. Analyze goal (Placeholder for LLM-based analysis)
     const analysis = this.analyzeGoal(goal);
+
+    if (options.forceDirect) {
+      analysis.category = 'direct';
+    }
     
     // 2. Decompose into tasks
     const tasks = this.decomposeGoal(goal, analysis);
@@ -161,7 +165,7 @@ export class PlannerAgent extends BaseAgent {
     // If multiple capabilities are needed, or the task is complex, suggest Orchestrator
     let category = 'general';
     let complexity = 'medium';
-    if (requiredCapabilities.length > 1 || goal.split(' ').length > 10) {
+    if (requiredCapabilities.length > 1 || goal.split(' ').length > 10 || goal.toLowerCase().includes('break this down')) {
       category = 'orchestration';
       complexity = 'high';
     }
@@ -176,8 +180,14 @@ export class PlannerAgent extends BaseAgent {
   private decomposeGoal(goal: string, analysis: any): AgentTask[] {
     const tasks: AgentTask[] = [];
 
-    if (analysis.category === 'orchestration') {
-      // If orchestration is needed, assign the main goal to the OrchestratorAgent
+    // Check if the goal is already an orchestration task to avoid recursion
+    const lowerGoal = goal.toLowerCase();
+    const isOrchestrationTask = lowerGoal.startsWith('orchestrate the execution of') || 
+                               lowerGoal.startsWith('orchestrate the coding project') ||
+                               lowerGoal.startsWith('orchestrate ');
+
+    if (analysis.category === 'orchestration' && !isOrchestrationTask) {
+      // For high-level complex goals, return a single orchestration task
       tasks.push({
         id: `task-${Date.now()}-orchestrate`,
         agentId: 'orchestrator-agent',
@@ -187,78 +197,83 @@ export class PlannerAgent extends BaseAgent {
         createdAt: Date.now(),
         priority: 1
       });
-    } else if (analysis.requiredCapabilities.includes('report_generation')) {
-      // If writing is the primary capability, assign to WriterAgent
-      tasks.push({
-        id: `task-${Date.now()}-write`,
-        agentId: 'writer-agent',
-        goal: `Generate content for: ${goal}`,
-        instructions: ['Produce polished output', 'Collaborate with other agents if needed'],
-        status: 'pending',
-        createdAt: Date.now(),
-        priority: 1
-      });
-    } else if (analysis.requiredCapabilities.includes('information_gathering')) {
-      // If research is the primary capability, assign to ResearchAgent
-      tasks.push({
-        id: `task-${Date.now()}-research`,
-        agentId: 'research-agent',
-        goal: `Research information for: ${goal}`,
-        instructions: ['Gather data from various sources', 'Summarize findings'],
-        status: 'pending',
-        createdAt: Date.now(),
-        priority: 1
-      });
-    } else if (analysis.requiredCapabilities.includes('code_generation')) {
-      // If coding is the primary capability, assign to CodingAgent
-      tasks.push({
-        id: `task-${Date.now()}-code`,
-        agentId: 'coding-agent',
-        goal: `Generate code for: ${goal}`,
-        instructions: ['Write code based on requirements', 'Ensure functionality'],
-        status: 'pending',
-        createdAt: Date.now(),
-        priority: 1
-      });
-    } else if (analysis.requiredCapabilities.includes('code_review')) {
-      // If review is the primary capability, assign to ReviewerAgent
-      tasks.push({
-        id: `task-${Date.now()}-review`,
-        agentId: 'reviewer-agent',
-        goal: `Review content for: ${goal}`,
-        instructions: ['Perform quality checks', 'Provide feedback'],
-        status: 'pending',
-        createdAt: Date.now(),
-        priority: 1
-      });
     } else {
-      // Default decomposition for general tasks
-      tasks.push(
-        {
-          id: `task-${Date.now()}-1`,
-          goal: `Understand requirements for: ${goal}`,
-          instructions: ['Analyze the goal', 'Identify necessary steps'],
+      // For subtasks or simpler goals, return the actual steps
+      const lowerGoal = goal.toLowerCase();
+      const hasResearch = lowerGoal.includes('research') || analysis.requiredCapabilities.includes('information_gathering');
+      const hasWriting = lowerGoal.includes('report') || lowerGoal.includes('write') || analysis.requiredCapabilities.includes('report_generation');
+
+      if (hasResearch) {
+        tasks.push({
+          id: `task-${Date.now()}-research`,
+          agentId: 'research-agent',
+          goal: `Research information for: ${goal}`,
+          instructions: ['Gather data from various sources', 'Summarize findings'],
           status: 'pending',
           createdAt: Date.now(),
           priority: 1
-        },
-        {
-          id: `task-${Date.now()}-2`,
-          goal: `Execute primary action for: ${goal}`,
-          instructions: ['Perform the main task'],
+        });
+      }
+
+      if (lowerGoal.includes('navigate') || lowerGoal.includes('search') || lowerGoal.includes('browser')) {
+        tasks.push({
+          id: `task-${Date.now()}-browser`,
+          agentId: 'browser-agent',
+          goal: `Browser automation for: ${goal}`,
+          instructions: ['Perform browser actions', 'Interact with web elements'],
+          status: 'pending',
+          createdAt: Date.now(),
+          priority: 1
+        });
+      }
+      
+      if (hasWriting) {
+        tasks.push({
+          id: `task-${Date.now()}-write`,
+          agentId: 'writer-agent',
+          goal: `Generate content for: ${goal}`,
+          instructions: ['Produce polished output', 'Use research findings if available'],
           status: 'pending',
           createdAt: Date.now(),
           priority: 2
-        },
-        {
-          id: `task-${Date.now()}-3`,
-          goal: `Verify and finalize for: ${goal}`,
-          instructions: ['Check results', 'Prepare final output'],
+        });
+      }
+
+      if (goal.toLowerCase().includes('review') || analysis.requiredCapabilities.includes('code_review')) {
+        tasks.push({
+          id: `task-${Date.now()}-review`,
+          agentId: 'reviewer-agent',
+          goal: `Review content for: ${goal}`,
+          instructions: ['Perform quality checks', 'Provide feedback'],
           status: 'pending',
           createdAt: Date.now(),
           priority: 3
-        }
-      );
+        });
+      }
+
+      if (goal.toLowerCase().includes('code') || goal.toLowerCase().includes('build') || analysis.requiredCapabilities.includes('code_generation')) {
+        tasks.push({
+          id: `task-${Date.now()}-code`,
+          agentId: 'coding-agent',
+          goal: `Generate code for: ${goal}`,
+          instructions: ['Write code based on requirements', 'Ensure functionality'],
+          status: 'pending',
+          createdAt: Date.now(),
+          priority: 2
+        });
+      }
+
+      // If no specific tasks were added, provide a default set
+      if (tasks.length === 0) {
+        tasks.push({
+          id: `task-${Date.now()}-general`,
+          goal: `Execute: ${goal}`,
+          instructions: ['Perform the requested action'],
+          status: 'pending',
+          createdAt: Date.now(),
+          priority: 1
+        });
+      }
     }
     return tasks;
   }

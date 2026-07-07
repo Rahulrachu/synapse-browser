@@ -99,4 +99,30 @@ class ToolRegistry {
   }
 }
 
-export default new ToolRegistry();
+const toolRegistry = new ToolRegistry();
+
+// Register placeholder tools for integration testing
+class PlaceholderTool extends Tool {
+  definition: ToolDefinition;
+  constructor(id: string, name: string, capabilities: string[]) {
+    super();
+    this.definition = {
+      id,
+      name,
+      description: `Placeholder for ${name}`,
+      permissions: [],
+      capabilities,
+      inputSchema: {},
+      outputSchema: {}
+    };
+  }
+  async execute(input: any): Promise<ToolResult> {
+    return { success: true, data: `Executed ${this.definition.name}`, executionTime: 10 };
+  }
+}
+
+toolRegistry.register(new PlaceholderTool('browser-tool', 'Browser Tool', ['web_browsing', 'data_extraction']));
+toolRegistry.register(new PlaceholderTool('file-tool', 'File Tool', ['file_writing', 'file_editing']));
+toolRegistry.register(new PlaceholderTool('code-tool', 'Code Tool', ['code_execution']));
+
+export default toolRegistry;

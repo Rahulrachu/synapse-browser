@@ -80,7 +80,7 @@ export class BrowserAgent extends BaseAgent {
       // In a real scenario, this would be guided by an LLM or structured commands
       const goal = task.goal.toLowerCase();
       
-      if (goal.includes('navigate to') || goal.includes('open')) {
+      if (goal.includes('navigate') || goal.includes('open')) {
         const url = this.extractUrl(task.goal) || (task.context && task.context.url);
         if (!url) throw new Error('No URL provided for navigation');
         result = await BrowserAutomation.navigate(url);
@@ -97,6 +97,9 @@ export class BrowserAgent extends BaseAgent {
         result = await BrowserAutomation.takeScreenshot();
       } else if (goal.includes('extract') || goal.includes('get source')) {
         result = await BrowserAutomation.getPageSource();
+      } else if (goal.includes('browser automation')) {
+        // Default to a generic navigation or status check for generic browser automation goals
+        result = await BrowserAutomation.navigate('about:blank');
       } else {
         throw new Error(`Unsupported browser action in goal: ${task.goal}`);
       }

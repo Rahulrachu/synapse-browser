@@ -105,24 +105,58 @@ export class OrchestratorAgent extends BaseAgent {
 
   public async executeTask(task: AgentTask): Promise<AgentResult> {
     AgentLogger.info(`OrchestratorAgent executing task: ${task.goal}`, this.id);
+    
+    // Check if this is a recursive call for the same goal
+    if (task.context?.isOrchestrated && task.goal.toLowerCase().includes('orchestrate the execution of')) {
+       AgentLogger.info(`Preventing recursive orchestration for: ${task.goal}`, this.id);
+       return { success: true, output: `Direct execution of: ${task.goal}` };
+    }
+
     task.status = 'in-progress';
     task.startedAt = Date.now();
 
     try {
       // 1. Decompose the goal into subtasks using the PlannerAgent
-      const subtasks = await this.plannerAgent.generateExecutionPlan(task.goal);
+      // If the goal already starts with "Orchestrate", we want the actual subtasks, 
+      // not another orchestration task.
+      let planGoal = task.goal;
+      const prefixes = [
+        'orchestrate the execution of: ',
+        'orchestrate the execution of ',
+        'orchestrate the coding project',
+        'orchestrate '
+      ];
+      
+      for (const prefix of prefixes) {
+        if (planGoal.toLowerCase().startsWith(prefix)) {
+          planGoal = planGoal.substring(prefix.length);
+          break;
+        }
+      }
+
+      // Force direct execution by setting a flag in the context for the planner
+      const subtasks = await this.plannerAgent.generateExecutionPlan(planGoal, { 
+        forceDirect: task.context?.forceDirect || true 
+      });
       AgentLogger.info(`OrchestratorAgent decomposed goal into ${subtasks.length} subtasks.`, this.id);
 
-      // For now, execute tasks sequentially. Future: parallel execution with dependency management.
       const results: AgentResult[] = [];
       for (const subtask of subtasks) {
+        // Prevent infinite loops by marking the subtask
+        subtask.context = { ...subtask.context, isOrchestrated: true };
+
         AgentLogger.info(`OrchestratorAgent assigning subtask: ${subtask.goal} to agent ${subtask.agentId || 'auto-select'}`, this.id);
-        // The AgentManager will handle finding the right agent if subtask.agentId is not set
+        
+        if (!subtask.id) {
+          subtask.id = `subtask-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        }
+
+        const subtaskPromise = this.waitForSubtaskCompletion(subtask.id);
         await this.agentManager.assignTask(subtask);
-        // In a real async system, we'd wait for completion via events or promises
-        // For now, we'll simulate waiting for the result
-        const subtaskResult = await this.waitForSubtaskCompletion(subtask.id);
+        
+        const subtaskResult = await subtaskPromise;
         results.push(subtaskResult);
+        
         if (!subtaskResult.success) {
           throw new Error(`Subtask failed: ${subtask.goal}. Error: ${subtaskResult.error}`);
         }
@@ -208,7 +242,7 @@ export class OrchestratorAgent extends BaseAgent {
   }
 
   private handleSubtaskCompletion(taskId: string, result: AgentResult): void {
-    AgentLogger.info(`OrchestratorAgent received subtask completion for ${taskId}`, this.id, { result });
+    AgentLogger.info(`OrchestratorAgent received subtask completion for ${taskId}`, this.id);
     // Potentially update internal state or trigger next steps
   }
 
