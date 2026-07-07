@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import ResizablePanel from './ResizablePanel';
-import BrowserPanel from './BrowserPanel';
-import WorkspacePanel from './WorkspacePanel';
+import PanelRouter from './PanelRouter';
+import { usePanelStore } from '../store/panelStore';
 
 interface MultiPanelLayoutProps {
   panelCount: 2 | 3 | 4;
@@ -11,6 +11,7 @@ export default function MultiPanelLayout({ panelCount }: MultiPanelLayoutProps) 
   const [panelSizes, setPanelSizes] = useState<number[]>(
     Array(panelCount).fill(100 / panelCount)
   );
+  const splitPanels = usePanelStore((state) => state.splitPanels);
 
   const handleResize = (panelIndex: number, newSize: number) => {
     const newSizes = [...panelSizes];
@@ -18,15 +19,24 @@ export default function MultiPanelLayout({ panelCount }: MultiPanelLayoutProps) 
     setPanelSizes(newSizes);
   };
 
-  const renderPanel = (index: number) => {
-    switch (index % 2) {
-      case 0:
-        return <BrowserPanel key={index} />;
-      case 1:
-        return <WorkspacePanel key={index} />;
-      default:
-        return <BrowserPanel key={index} />;
+  const getPanelForSlot = (index: number): string | null => {
+    if (panelCount === 2) {
+      return index === 0 ? splitPanels.left : splitPanels.right;
+    } else if (panelCount === 3) {
+      if (index === 0) return splitPanels.left;
+      if (index === 1) return splitPanels.right;
+      return splitPanels.top;
+    } else {
+      if (index === 0) return splitPanels.left;
+      if (index === 1) return splitPanels.right;
+      if (index === 2) return splitPanels.top;
+      return splitPanels.bottom;
     }
+  };
+
+  const renderPanel = (index: number) => {
+    const panelId = getPanelForSlot(index);
+    return <PanelRouter key={index} panelId={panelId} />;
   };
 
   return (
