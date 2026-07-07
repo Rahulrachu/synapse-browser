@@ -1,6 +1,6 @@
 # Synapse Browser Architecture
 
-## Project Status: Phases 2-7 Complete
+## Project Status: Phases 2-7 Complete (Phase C, D, E In Progress)
 
 This document outlines the architecture of Synapse Browser, an AI-first developer workspace combining browser, IDE, and productivity tools in one unified interface.
 
@@ -57,6 +57,21 @@ This document outlines the architecture of Synapse Browser, an AI-first develope
 - **Enhanced SettingsPanel**: comprehensive app configuration
 - **Settings categories**: Appearance, Editor, Features, Browser
 - **Persistent settings** via localStorage
+
+### Phase C: Context Engine 🛠️
+- **Context Management**: Centralized state for browser, workspace, and project context
+- **Context Summarization**: Generates human-readable context for AI consumption
+- **Real-time Updates**: Tracks active tabs, open files, and recent user actions
+
+### Phase D: Memory System 🛠️
+- **Persistent Memory**: Stores facts, preferences, and history in `memory.json`
+- **Memory Retrieval**: Search and retrieval of relevant memories for AI context
+- **Categorized Storage**: Supports facts, preferences, history, and project-specific memories
+
+### Phase E: Planning Engine 🛠️
+- **Goal-oriented Planning**: Breaks down complex goals into manageable tasks
+- **Task Tracking**: Manages status and results for multi-step plans
+- **Nested Subtasks**: Support for hierarchical task structures
 
 ## 2. Folder Structure
 

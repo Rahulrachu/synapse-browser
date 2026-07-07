@@ -8,6 +8,9 @@ import PanelManager from './PanelManager';
 import AIServiceManager from './AIServiceManager';
 import ProjectManager from './ProjectManager';
 import GitManager from './GitManager';
+import ContextEngine from '../engine/ContextEngine';
+import MemorySystem from '../engine/MemorySystem';
+import PlanningEngine from '../engine/PlanningEngine';
 
 let mainWindow: any = null;
 
@@ -396,4 +399,43 @@ ipcMain.handle('git-get-branches', async () => {
 
 ipcMain.handle('git-get-diff', async (event, filePath?: string) => {
   return GitManager.getDiff(filePath);
+});
+
+// Context Engine handlers
+ipcMain.handle('update-context', async (event, updates: any) => {
+  return ContextEngine.updateContext(updates);
+});
+
+ipcMain.handle('get-context', async () => {
+  return ContextEngine.getContext();
+});
+
+ipcMain.handle('get-context-summary', async () => {
+  return ContextEngine.getContextSummary();
+});
+
+// Memory System handlers
+ipcMain.handle('add-memory', async (event, type: any, content: string, metadata: any) => {
+  return MemorySystem.addMemory(type, content, metadata);
+});
+
+ipcMain.handle('search-memories', async (event, query: string) => {
+  return MemorySystem.searchMemories(query);
+});
+
+ipcMain.handle('get-recent-memories', async (event, limit?: number) => {
+  return MemorySystem.getRecentMemories(limit);
+});
+
+// Planning Engine handlers
+ipcMain.handle('create-plan', async (event, goal: string, tasks: string[]) => {
+  return PlanningEngine.createPlan(goal, tasks);
+});
+
+ipcMain.handle('update-plan-task', async (event, taskId: string, status: any, result?: any) => {
+  return PlanningEngine.updateTaskStatus(taskId, status, result);
+});
+
+ipcMain.handle('get-current-plan', async () => {
+  return PlanningEngine.getCurrentPlan();
 });
