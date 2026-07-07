@@ -316,5 +316,5 @@ npm run dist         # Create installers
 ---
 
 **Last Updated**: Phase 7 Complete
-**Maintainer**: Manus AI
+**Maintainer**: Rahul S R
 **License**: MIT

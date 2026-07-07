@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "main": "out/main/background.js",
   "description": "AI-First Productivity Browser",
-  "author": "Manus AI",
+  "author": "Rahul S R",
   "license": "MIT",
   "scripts": {
     "dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",

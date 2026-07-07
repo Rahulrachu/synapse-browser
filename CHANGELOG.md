@@ -141,7 +141,7 @@ npm run dist
 
 ## Contributors
 
-- **Manus AI** - Initial development and architecture
+- **Rahul S R** - Initial development and architecture
 
 ## License
 

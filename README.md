@@ -236,7 +236,7 @@ MIT License - see LICENSE file for details
 
 ## Author
 
-**Manus AI** - AI-powered development assistant
+**Rahul S R**
 
 ## Support
 
