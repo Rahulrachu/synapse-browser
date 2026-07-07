@@ -11,6 +11,7 @@ import GitManager from './GitManager';
 import ContextEngine from '../engine/ContextEngine';
 import MemorySystem from '../engine/MemorySystem';
 import PlanningEngine from '../engine/PlanningEngine';
+import BrowserAutomation from './BrowserAutomation';
 
 let mainWindow: any = null;
 
@@ -438,4 +439,37 @@ ipcMain.handle('update-plan-task', async (event, taskId: string, status: any, re
 
 ipcMain.handle('get-current-plan', async () => {
   return PlanningEngine.getCurrentPlan();
+});
+
+// Browser Automation handlers
+ipcMain.handle('automation-navigate', async (event, url: string, tabId?: string) => {
+  return BrowserAutomation.navigate(url, tabId);
+});
+
+ipcMain.handle('automation-click', async (event, selector: string, tabId?: string) => {
+  return BrowserAutomation.clickElement(selector, tabId);
+});
+
+ipcMain.handle('automation-type', async (event, selector: string, text: string, tabId?: string) => {
+  return BrowserAutomation.typeText(selector, text, tabId);
+});
+
+ipcMain.handle('automation-execute-js', async (event, code: string, tabId?: string) => {
+  return BrowserAutomation.executeJavaScript(code, tabId);
+});
+
+ipcMain.handle('automation-get-source', async (event, tabId?: string) => {
+  return BrowserAutomation.getPageSource(tabId);
+});
+
+ipcMain.handle('automation-screenshot', async (event, tabId?: string) => {
+  return BrowserAutomation.takeScreenshot(tabId);
+});
+
+ipcMain.handle('automation-scroll', async (event, x: number, y: number, tabId?: string) => {
+  return BrowserAutomation.scroll(x, y, tabId);
+});
+
+ipcMain.handle('automation-get-cookies', async (event, tabId?: string) => {
+  return BrowserAutomation.getCookies(tabId);
 });

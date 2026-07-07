@@ -1,6 +1,6 @@
 # Synapse Browser Architecture
 
-## Project Status: Phases 2-7 Complete (Phase C, D, E In Progress)
+## Project Status: Phases 2-7 Complete (Phase C, D, E, F In Progress)
 
 This document outlines the architecture of Synapse Browser, an AI-first developer workspace combining browser, IDE, and productivity tools in one unified interface.
 
@@ -72,6 +72,13 @@ This document outlines the architecture of Synapse Browser, an AI-first develope
 - **Goal-oriented Planning**: Breaks down complex goals into manageable tasks
 - **Task Tracking**: Manages status and results for multi-step plans
 - **Nested Subtasks**: Support for hierarchical task structures
+
+### Phase F: Browser Automation 🛠️
+- **Programmatic Interaction**: Automates clicks, typing, and navigation
+- **DOM Inspection**: Ability to query elements and extract page source
+- **Visual Feedback**: Captures screenshots of the current browser state
+- **Environment Management**: Access to cookies, localStorage, and JavaScript execution
+- **IPC Integration**: Exposes automation capabilities to the AI system via IPC handlers
 
 ## 2. Folder Structure
 
@@ -177,6 +184,10 @@ All communication between main and renderer processes is handled via IPC handler
 ### Git IPC
 - `set-git-project-path`, `get-git-status`, `get-git-commit-history`
 - `git-commit`, `git-push`, `git-pull`, `git-create-branch`, `git-switch-branch`
+
+### Browser Automation IPC
+- `automation-navigate`, `automation-click`, `automation-type`, `automation-execute-js`
+- `automation-get-source`, `automation-screenshot`, `automation-scroll`, `automation-get-cookies`
 
 ## 5. Data Persistence
 

@@ -145,6 +145,10 @@ class BrowserManager {
     return this.tabs.get(tabId);
   }
 
+  getWebContents(tabId: string): WebContentsView | undefined {
+    return this.tabViews.get(tabId);
+  }
+
   getAllTabs(): TabInfo[] {
     return Array.from(this.tabs.values());
   }
