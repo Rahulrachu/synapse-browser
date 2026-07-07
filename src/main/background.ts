@@ -12,11 +12,15 @@ import ContextEngine from '../engine/ContextEngine';
 import MemorySystem from '../engine/MemorySystem';
 import PlanningEngine from '../engine/PlanningEngine';
 import BrowserAutomation from './BrowserAutomation';
+import { ToolRegistry, initializeTools } from '../tools';
 
 let mainWindow: any = null;
 
 app.on('ready', () => {
   mainWindow = createWindow();
+
+  // Initialize Tool Runtime
+  initializeTools();
 
   // Create initial tab
   BrowserManager.createTab('https://www.google.com');
@@ -472,4 +476,17 @@ ipcMain.handle('automation-scroll', async (event, x: number, y: number, tabId?: 
 
 ipcMain.handle('automation-get-cookies', async (event, tabId?: string) => {
   return BrowserAutomation.getCookies(tabId);
+});
+
+// Tool Runtime handlers
+ipcMain.handle('tool-list', async () => {
+  return ToolRegistry.getAllTools();
+});
+
+ipcMain.handle('tool-invoke', async (event, id: string, input: any, options?: any) => {
+  return ToolRegistry.invoke(id, input, options);
+});
+
+ipcMain.handle('tool-history', async () => {
+  return ToolRegistry.getHistory();
 });

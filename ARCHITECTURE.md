@@ -1,6 +1,6 @@
 # Synapse Browser Architecture
 
-## Project Status: Phases 2-7 Complete (Phase C, D, E, F In Progress)
+## Project Status: Phases 2-7 Complete (Phase C, D, E, F, G In Progress)
 
 This document outlines the architecture of Synapse Browser, an AI-first developer workspace combining browser, IDE, and productivity tools in one unified interface.
 
@@ -79,6 +79,14 @@ This document outlines the architecture of Synapse Browser, an AI-first develope
 - **Visual Feedback**: Captures screenshots of the current browser state
 - **Environment Management**: Access to cookies, localStorage, and JavaScript execution
 - **IPC Integration**: Exposes automation capabilities to the AI system via IPC handlers
+
+### Phase G: Tool Runtime 🛠️
+- **Centralized Registry**: Secure discovery and management of all AI tools
+- **Unified Interface**: Common interface for all tools with structured input/output
+- **Secure Execution**: Permission validation and timeout/cancellation support
+- **Built-in Tools**: Initial set of tools for Browser, Terminal, File System, Git, HTTP, and more
+- **Extensible Architecture**: Easy addition of new tools without core modifications
+- **Observability**: Structured logging and execution history for all tool invocations
 
 ## 2. Folder Structure
 
@@ -188,6 +196,11 @@ All communication between main and renderer processes is handled via IPC handler
 ### Browser Automation IPC
 - `automation-navigate`, `automation-click`, `automation-type`, `automation-execute-js`
 - `automation-get-source`, `automation-screenshot`, `automation-scroll`, `automation-get-cookies`
+
+### Tool Runtime IPC
+- `tool-list`: Get definitions of all registered tools
+- `tool-invoke`: Execute a specific tool with parameters
+- `tool-history`: Retrieve the history of tool executions
 
 ## 5. Data Persistence
 
