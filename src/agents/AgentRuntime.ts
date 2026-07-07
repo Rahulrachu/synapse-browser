@@ -10,6 +10,7 @@ import ToolRuntime from '../tools/ToolRuntime';
 import { PlannerAgent } from './PlannerAgent';
 import { BrowserAgent } from './BrowserAgent';
 import { ResearchAgent } from './ResearchAgent';
+import { CodingAgent } from './CodingAgent';
 
 class AgentRuntime {
   private registry: AgentRegistry;
@@ -42,6 +43,10 @@ class AgentRuntime {
     // Register Research Agent
     const researchAgent = new ResearchAgent('research-agent', this.messageBus, initialContext);
     this.registry.registerAgent(researchAgent);
+
+    // Register Coding Agent
+    const codingAgent = new CodingAgent('coding-agent', this.messageBus, initialContext);
+    this.registry.registerAgent(codingAgent);
   }
 
   public getRegistry(): AgentRegistry {
