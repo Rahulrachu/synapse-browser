@@ -28,6 +28,11 @@ const SettingsPanel = lazy(() => import('../components/SettingsPanel'));
 const ProductivityPanel = lazy(() => import('../components/ProductivityPanel'));
 const Terminal = lazy(() => import('../components/Terminal'));
 const GitPanel = lazy(() => import('../components/GitPanel'));
+const AIChatPanel = lazy(() => import('../components/AIChatPanel'));
+const ProjectExplorerPanel = lazy(() => import('../components/ProjectExplorerPanel'));
+const LivePreviewPanel = lazy(() => import('../components/LivePreviewPanel'));
+const TerminalPanel = lazy(() => import('../components/TerminalPanel'));
+const NotesPanel = lazy(() => import('../components/NotesPanel'));
 
 class PanelRegistry {
   private panels: Map<string, PanelRegistryEntry> = new Map();
@@ -166,6 +171,66 @@ class PanelRegistry {
       permissions: ['storage'],
       defaultLayout: 'full',
       shortcuts: { key: ',', ctrlKey: true },
+      lazy: true,
+    });
+
+    // AI Chat Panel
+    this.register({
+      id: 'ai-chat',
+      title: 'AI Chat',
+      icon: Zap,
+      component: AIChatPanel,
+      permissions: ['network', 'storage'],
+      defaultLayout: 'split',
+      shortcuts: { key: 'c', ctrlKey: true, shiftKey: true },
+      lazy: true,
+    });
+
+    // Project Explorer Panel
+    this.register({
+      id: 'project-explorer',
+      title: 'Project Explorer',
+      icon: FileText,
+      component: ProjectExplorerPanel,
+      permissions: ['filesystem'],
+      defaultLayout: 'split',
+      shortcuts: { key: 'e', ctrlKey: true, shiftKey: true },
+      lazy: true,
+    });
+
+    // Live Preview Panel
+    this.register({
+      id: 'live-preview',
+      title: 'Live Preview',
+      icon: Globe,
+      component: LivePreviewPanel,
+      permissions: ['filesystem'],
+      defaultLayout: 'split',
+      shortcuts: { key: 'l', ctrlKey: true, shiftKey: true },
+      lazy: true,
+    });
+
+    // Terminal Panel
+    this.register({
+      id: 'terminal-panel',
+      title: 'Terminal',
+      icon: Terminal,
+      component: TerminalPanel,
+      permissions: ['process', 'filesystem'],
+      defaultLayout: 'split',
+      shortcuts: { key: '`', ctrlKey: true },
+      lazy: true,
+    });
+
+    // Notes Panel
+    this.register({
+      id: 'notes-panel',
+      title: 'Notes',
+      icon: FileText,
+      component: NotesPanel,
+      permissions: ['storage'],
+      defaultLayout: 'split',
+      shortcuts: { key: 'n', ctrlKey: true, shiftKey: true },
       lazy: true,
     });
   }
