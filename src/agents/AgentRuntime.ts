@@ -14,11 +14,13 @@ import { ReviewerAgent } from './ReviewerAgent';
 import { WriterAgent } from './WriterAgent';
 import { OrchestratorAgent } from './OrchestratorAgent';
 import { BrowserAgent } from './BrowserAgent';
+import { AgentOrchestrator } from './AgentOrchestrator';
 
 class AgentRuntime {
   private registry: AgentRegistry;
   private messageBus: AgentMessageBus;
   private manager: AgentManager;
+  private orchestrator: AgentOrchestrator;
 
   constructor() {
     this.registry = new AgentRegistry();
@@ -65,6 +67,9 @@ class AgentRuntime {
     // Register Orchestrator Agent
     const orchestratorAgent = new OrchestratorAgent('orchestrator-agent', this.messageBus, initialContext, this.manager, plannerAgent);
     this.registry.registerAgent(orchestratorAgent);
+
+    // Initialize Orchestrator Service
+    this.orchestrator = new AgentOrchestrator(this.manager);
   }
 
   public getRegistry(): AgentRegistry {
@@ -77,6 +82,10 @@ class AgentRuntime {
 
   public getManager(): AgentManager {
     return this.manager;
+  }
+
+  public getOrchestrator(): AgentOrchestrator {
+    return this.orchestrator;
   }
 
   /**

@@ -12,6 +12,7 @@ import Sidebar from './components/Sidebar';
 import WorkspacePanel from './components/WorkspacePanel';
 import MultiPanelLayout from './components/MultiPanelLayout';
 import FadeIn from './components/FadeIn';
+import GlobalSearchModal from './components/GlobalSearchModal';
 
 export default function App() {
   const isDarkMode = useWorkspaceStore((state) => state.isDarkMode);
@@ -23,7 +24,7 @@ export default function App() {
   const { restorePanelState, setPanelLayout: setStorePanelLayout, setActivePanel } = usePanelStore();
   const unreadCount = useNotificationStore((state) => state.unreadCount);
   const activeDownloadCount = useDownloadStore((state) => state.activeCount);
-
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   // Load default template on startup
   useEffect(() => {
     if (defaultTemplateId) {
@@ -66,6 +67,12 @@ export default function App() {
     {
       ...SHORTCUTS.TOGGLE_THEME,
       handler: toggleDarkMode,
+    },
+    {
+      key: 'f',
+      ctrl: true,
+      shift: true,
+      handler: () => setIsSearchOpen(true),
     },
   ]);
 
@@ -149,6 +156,10 @@ export default function App() {
           <StatusBar />
         </div>
       </div>
+      <GlobalSearchModal 
+        isOpen={isSearchOpen} 
+        onClose={() => setIsSearchOpen(false)} 
+      />
     </FadeIn>
   );
 }

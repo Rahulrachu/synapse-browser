@@ -22,6 +22,7 @@ import {
   Play,
   Cpu,
   Lock,
+  Clock,
 } from 'lucide-react';
 
 // Eager imports for frequently used panels
@@ -57,6 +58,8 @@ const EventInspectorPanel = lazy(() => import('../components/EventInspectorPanel
 const PermissionManagerPanel = lazy(() => import('../components/PermissionManagerPanel'));
 const KnowledgeManagerPanel = lazy(() => import('../components/KnowledgeManagerPanel'));
 const TaskQueuePanel = lazy(() => import('../components/TaskQueuePanel'));
+const SearchCenterPanel = lazy(() => import('../components/SearchCenterPanel'));
+const AgentMonitorPanel = lazy(() => import('../components/AgentMonitorPanel'));
 
 class PanelRegistry {
   private panels: Map<string, PanelRegistryEntry> = new Map();
@@ -423,6 +426,30 @@ class PanelRegistry {
       permissions: ['storage', 'process'],
       defaultLayout: 'split',
       shortcuts: { key: 'q', ctrlKey: true, altKey: true },
+      lazy: true,
+    });
+
+    // Search Center Panel
+    this.register({
+      id: 'search',
+      title: 'Search',
+      icon: Search,
+      component: SearchCenterPanel,
+      permissions: ['storage'],
+      defaultLayout: 'split',
+      shortcuts: { key: 'f', ctrlKey: true, shiftKey: true },
+      lazy: true,
+    });
+
+    // Agent Monitor Panel
+    this.register({
+      id: 'agents',
+      title: 'Agents',
+      icon: Activity,
+      component: AgentMonitorPanel,
+      permissions: ['storage', 'process'],
+      defaultLayout: 'split',
+      shortcuts: { key: 'o', ctrlKey: true, shiftKey: true },
       lazy: true,
     });
   }

@@ -40,9 +40,10 @@ export interface AgentResult {
 export interface AgentMessage {
   senderId: AgentId;
   recipientId: AgentId | 'broadcast';
-  type: string; // e.g., 'task_assigned', 'status_update', 'data_exchange'
+  type: string; // e.g., 'task_assigned', 'status_update', 'data_exchange', 'help_request', 'delegation'
   payload: any;
   timestamp: number;
+  correlationId?: string; // To track request-response pairs
 }
 
 export interface AgentContext {

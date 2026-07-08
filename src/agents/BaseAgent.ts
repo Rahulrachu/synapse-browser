@@ -1,6 +1,7 @@
 
 import { AgentId, AgentName, AgentCapability, AgentTask, AgentResult, AgentContext, AgentMessage } from './types';
 import { AgentMessageBus } from './AgentMessageBus';
+import AgentLogger from './AgentLogger';
 
 export abstract class BaseAgent {
   public readonly id: AgentId;
@@ -25,6 +26,58 @@ export abstract class BaseAgent {
 
   public updateContext(newContext: Partial<AgentContext>) {
     this.context = { ...this.context, ...newContext };
+  }
+
+  protected async requestHelp(recipientId: AgentId, goal: string, context?: any): Promise<AgentResult> {
+    const correlationId = `help-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    AgentLogger.info(`Agent ${this.id} requesting help from ${recipientId}: ${goal}`, this.id);
+
+    return new Promise((resolve) => {
+      const handler = async (message: AgentMessage) => {
+        if (message.correlationId === correlationId && message.type === 'help_response') {
+          this.messageBus.unsubscribe(this.id, handler);
+          resolve(message.payload.result);
+        }
+      };
+
+      this.messageBus.subscribe(this.id, handler);
+
+      this.messageBus.publish({
+        senderId: this.id,
+        recipientId,
+        type: 'help_request',
+        payload: { goal, context },
+        timestamp: Date.now(),
+        correlationId
+      });
+    });
+  }
+
+  protected async delegate(recipientId: AgentId, task: AgentTask): Promise<AgentResult> {
+    AgentLogger.info(`Agent ${this.id} delegating task to ${recipientId}: ${task.goal}`, this.id);
+    task.parentId = this.context.currentTask?.id;
+    
+    const correlationId = `delegate-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
+    return new Promise((resolve) => {
+      const handler = async (message: AgentMessage) => {
+        if (message.correlationId === correlationId && message.type === 'delegation_result') {
+          this.messageBus.unsubscribe(this.id, handler);
+          resolve(message.payload.result);
+        }
+      };
+
+      this.messageBus.subscribe(this.id, handler);
+
+      this.messageBus.publish({
+        senderId: this.id,
+        recipientId,
+        type: 'delegation',
+        payload: { task },
+        timestamp: Date.now(),
+        correlationId
+      });
+    });
   }
 
   protected abstract handleMessage(message: AgentMessage): Promise<void>;

@@ -19,6 +19,18 @@ import MemoryManager from '../engine/MemoryManager';
 import TaskQueueManager from './TaskQueueManager';
 import NotificationService from './NotificationService';
 import EventBus from './EventBus';
+import SearchEngine from './SearchEngine';
+import { 
+  BrowserTabProvider, 
+  NoteProvider, 
+  ProjectProvider, 
+  WorkflowProvider, 
+  SkillProvider, 
+  PluginProvider, 
+  MarketplaceProvider, 
+  DownloadProvider, 
+  MemoryProvider 
+} from './SearchProviders';
 import PlanningEngine from '../engine/PlanningEngine';
 import BrowserAutomation from './BrowserAutomation';
 import { ToolRegistry, initializeTools } from '../tools';
@@ -47,6 +59,17 @@ app.on('ready', () => {
 
   // Discover and load plugins
   PluginManager.discoverPlugins();
+
+  // Initialize Search Engine
+  SearchEngine.registerProvider(new BrowserTabProvider());
+  SearchEngine.registerProvider(new NoteProvider());
+  SearchEngine.registerProvider(new ProjectProvider());
+  SearchEngine.registerProvider(new WorkflowProvider());
+  SearchEngine.registerProvider(new SkillProvider());
+  SearchEngine.registerProvider(new PluginProvider());
+  SearchEngine.registerProvider(new MarketplaceProvider());
+  SearchEngine.registerProvider(new DownloadProvider());
+  SearchEngine.registerProvider(new MemoryProvider());
 
   // Setup IPC handlers for browser manager
   ipcMain.handle('create-tab', async (event, url: string = 'about:blank') => {
@@ -602,6 +625,18 @@ ipcMain.handle('agent-stop', async (event, agentId: string) => {
   return AgentRuntime.getManager().stopAgent(agentId);
 });
 
+ipcMain.handle('agent-pause', async (event, agentId: string) => {
+  const agent = AgentRuntime.getRegistry().getAgent(agentId);
+  if (agent) await agent.pause();
+  return true;
+});
+
+ipcMain.handle('agent-resume', async (event, agentId: string) => {
+  const agent = AgentRuntime.getRegistry().getAgent(agentId);
+  if (agent) await agent.resume();
+  return true;
+});
+
 ipcMain.handle('agent-assign-task', async (event, task: any) => {
   return AgentRuntime.getManager().assignTask(task);
 });
@@ -613,3 +648,6 @@ ipcMain.handle('agent-get-logs', async (event, filter?: any) => {
 ipcMain.handle('agent-sync-context', async () => {
   return AgentRuntime.syncContext();
 });
+
+// Orchestrator handlers are already registered in AgentOrchestrator.ts constructor
+// which is called by AgentRuntime.ts constructor.

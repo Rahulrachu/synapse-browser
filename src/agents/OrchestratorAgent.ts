@@ -80,6 +80,35 @@ export class OrchestratorAgent extends BaseAgent {
           await this.executeTask(message.payload.task);
         }
         break;
+      case 'help_request':
+        const result = await this.executeTask({
+          id: `help-task-${Date.now()}`,
+          goal: message.payload.goal,
+          instructions: ['Handle help request'],
+          status: 'pending',
+          createdAt: Date.now(),
+          context: message.payload.context
+        });
+        await this.messageBus.publish({
+          senderId: this.id,
+          recipientId: message.senderId,
+          type: 'help_response',
+          payload: { result },
+          timestamp: Date.now(),
+          correlationId: message.correlationId
+        });
+        break;
+      case 'delegation':
+        const delegationResult = await this.executeTask(message.payload.task);
+        await this.messageBus.publish({
+          senderId: this.id,
+          recipientId: message.senderId,
+          type: 'delegation_result',
+          payload: { result: delegationResult },
+          timestamp: Date.now(),
+          correlationId: message.correlationId
+        });
+        break;
     }
   }
 
