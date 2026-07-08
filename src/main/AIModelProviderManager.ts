@@ -12,6 +12,7 @@ import {
 } from '../common/types/ai';
 import EventBus from './EventBus';
 import AIServiceManager from './AIServiceManager';
+import PromptManager from './PromptManager';
 
 export abstract class BaseAIProvider {
   public abstract readonly type: AIProviderType;
@@ -63,6 +64,26 @@ class AIModelProviderManager {
       return null;
     });
     ipcMain.handle('ai:get-usage', () => Array.from(this.usageStats.values()));
+    ipcMain.handle('ai:chat-with-prompt', async (_, providerId: string, promptId: string, variables: Record<string, string>, options?: AIChatOptions) => {
+      return this.chatWithPrompt(providerId, promptId, variables, options);
+    });
+  }
+
+  public async chatWithPrompt(providerId: string, promptId: string, variables: Record<string, string>, options?: AIChatOptions): Promise<AIChatResponse> {
+    // Use the public method of PromptManager
+    const prompt = (PromptManager as any).getPromptById(promptId);
+    if (!prompt) throw new Error(`Prompt ${promptId} not found`);
+
+    let content = prompt.content;
+    for (const [key, value] of Object.entries(variables)) {
+      content = content.replace(new RegExp(`{{${key}}}`, 'g'), value);
+    }
+
+    const messages: AIChatMessage[] = [
+      { role: prompt.type === 'system' ? 'system' : 'user', content }
+    ];
+
+    return this.chat(providerId, messages, options);
   }
 
   public registerProvider(provider: BaseAIProvider) {

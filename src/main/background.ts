@@ -35,6 +35,7 @@ import PlanningEngine from '../engine/PlanningEngine';
 import AIModelProviderManager from './AIModelProviderManager';
 import { OpenAIProvider } from './providers/OpenAIProvider';
 import { OllamaProvider } from './providers/OllamaProvider';
+import PromptManager from './PromptManager';
 import BrowserAutomation from './BrowserAutomation';
 import { ToolRegistry, initializeTools } from '../tools';
 import AgentRuntime from '../agents/AgentRuntime';
@@ -53,6 +54,10 @@ app.on('ready', () => {
 
   // Initialize Task Queue Manager
   TaskQueueManager.initialize();
+
+  // Initialize Prompt Manager
+  // (Instance is created and handlers setup on import)
+  console.log('[Main] PromptManager initialized');
 
   // Set main window for NotificationService
   NotificationService.setMainWindow(mainWindow);

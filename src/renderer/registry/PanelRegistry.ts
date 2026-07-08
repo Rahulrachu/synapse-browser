@@ -61,6 +61,7 @@ const TaskQueuePanel = lazy(() => import('../components/TaskQueuePanel'));
 const SearchCenterPanel = lazy(() => import('../components/SearchCenterPanel'));
 const AgentMonitorPanel = lazy(() => import('../components/AgentMonitorPanel'));
 const ModelSelectionPanel = lazy(() => import('../components/ModelSelectionPanel'));
+const PromptLibraryPanel = lazy(() => import('../components/PromptLibraryPanel'));
 
 class PanelRegistry {
   private panels: Map<string, PanelRegistryEntry> = new Map();
@@ -463,6 +464,18 @@ class PanelRegistry {
       permissions: ['storage', 'network'],
       defaultLayout: 'split',
       shortcuts: { key: 'm', ctrlKey: true, altKey: true },
+      lazy: true,
+    });
+
+    // Prompt Library Panel
+    this.register({
+      id: 'prompts',
+      title: 'Prompt Library',
+      icon: FileText,
+      component: PromptLibraryPanel,
+      permissions: ['storage'],
+      defaultLayout: 'split',
+      shortcuts: { key: 'p', ctrlKey: true, altKey: true },
       lazy: true,
     });
   }
