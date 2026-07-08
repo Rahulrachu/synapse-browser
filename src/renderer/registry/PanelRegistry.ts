@@ -18,6 +18,7 @@ import {
   Download,
   Activity,
   TrendingUp,
+  Play,
 } from 'lucide-react';
 
 // Eager imports for frequently used panels
@@ -47,6 +48,7 @@ const RecentManager = lazy(() => import('../components/RecentManager'));
 const HealthDashboard = lazy(() => import('../components/HealthDashboard'));
 const PluginManagerPanel = lazy(() => import('../components/PluginManagerPanel'));
 const ExtensionMarketplacePanel = lazy(() => import('../components/ExtensionMarketplacePanel'));
+const WorkflowManagerPanel = lazy(() => import('../components/WorkflowManagerPanel'));
 
 class PanelRegistry {
   private panels: Map<string, PanelRegistryEntry> = new Map();
@@ -341,6 +343,18 @@ class PanelRegistry {
       permissions: ['network', 'storage'],
       defaultLayout: 'split',
       shortcuts: { key: 'm', ctrlKey: true, shiftKey: true },
+      lazy: true,
+    });
+    
+    // Workflow Manager Panel
+    this.register({
+      id: 'workflows',
+      title: 'Workflows',
+      icon: Play,
+      component: WorkflowManagerPanel,
+      permissions: ['storage', 'process'],
+      defaultLayout: 'split',
+      shortcuts: { key: 'w', ctrlKey: true, shiftKey: true },
       lazy: true,
     });
   }

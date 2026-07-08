@@ -14,6 +14,13 @@ export class PluginAPI implements IPluginAPI {
     this.commandCallbacks.set(id, callback);
   }
 
+  async executeWorkflowAction(id: string, params: any): Promise<void> {
+    const callback = this.commandCallbacks.get(id);
+    if (callback) {
+      await callback();
+    }
+  }
+
   async executeCommand(id: string, ...args: any[]): Promise<any> {
     const callback = this.commandCallbacks.get(id);
     if (callback) {

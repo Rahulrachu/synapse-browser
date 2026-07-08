@@ -10,6 +10,7 @@ import ProjectManager from './ProjectManager';
 import GitManager from './GitManager';
 import PluginManager from './PluginManager';
 import ExtensionRepositoryService from './ExtensionRepositoryService';
+import WorkflowManager from './WorkflowManager';
 import ContextEngine from '../engine/ContextEngine';
 import MemorySystem from '../engine/MemorySystem';
 import PlanningEngine from '../engine/PlanningEngine';
