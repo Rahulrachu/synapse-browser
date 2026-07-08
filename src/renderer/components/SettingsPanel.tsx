@@ -1,9 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useWorkspaceStore } from '../store/workspaceStore';
+import AboutDialog from './AboutDialog';
+import { Info } from 'lucide-react';
 
 export default function SettingsPanel() {
   const isDarkMode = useWorkspaceStore((state) => state.isDarkMode);
   const toggleDarkMode = useWorkspaceStore((state) => state.toggleDarkMode);
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
 
   return (
     <div className={`flex flex-col h-full ${isDarkMode ? 'bg-synapse-darker' : 'bg-white'}`}>
@@ -30,7 +33,19 @@ export default function SettingsPanel() {
             <option>French</option>
           </select>
         </div>
+
+        <div className={`p-4 rounded ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+          <button
+            onClick={() => setIsAboutOpen(true)}
+            className="flex items-center gap-2 w-full text-left"
+          >
+            <Info size={18} />
+            <span>About Synapse Browser</span>
+          </button>
+        </div>
       </div>
+
+      <AboutDialog isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
     </div>
   );
 }
