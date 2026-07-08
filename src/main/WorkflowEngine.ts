@@ -1,6 +1,7 @@
 import { Workflow, WorkflowAction, WorkflowExecutionResult } from '../common/types/workflow';
 import BrowserManager from './BrowserManager';
 import PluginManager from './PluginManager';
+import EventBus from './EventBus';
 
 class WorkflowEngine {
   async executeWorkflow(workflow: Workflow): Promise<WorkflowExecutionResult> {
@@ -54,6 +55,19 @@ class WorkflowEngine {
         const { title, message } = action.params;
         console.log(`Notification: ${title} - ${message}`);
         // Integration with notification system
+        break;
+
+      case 'trigger-event':
+        const { type, payload, category } = action.params;
+        EventBus.publish({
+          id: `evt-${Date.now()}`,
+          type,
+          category: category || 'workflow',
+          source: 'workflow-engine',
+          payload,
+          timestamp: Date.now(),
+          priority: 0
+        });
         break;
 
       default:

@@ -51,6 +51,7 @@ const PluginManagerPanel = lazy(() => import('../components/PluginManagerPanel')
 const ExtensionMarketplacePanel = lazy(() => import('../components/ExtensionMarketplacePanel'));
 const WorkflowManagerPanel = lazy(() => import('../components/WorkflowManagerPanel'));
 const SkillManagerPanel = lazy(() => import('../components/SkillManagerPanel'));
+const EventInspectorPanel = lazy(() => import('../components/EventInspectorPanel'));
 
 class PanelRegistry {
   private panels: Map<string, PanelRegistryEntry> = new Map();
@@ -369,6 +370,18 @@ class PanelRegistry {
       permissions: ['storage', 'process'],
       defaultLayout: 'split',
       shortcuts: { key: 'k', ctrlKey: true, shiftKey: true },
+      lazy: true,
+    });
+    
+    // Event Inspector Panel
+    this.register({
+      id: 'events',
+      title: 'Events',
+      icon: Activity,
+      component: EventInspectorPanel,
+      permissions: ['storage', 'process'],
+      defaultLayout: 'split',
+      shortcuts: { key: 'e', ctrlKey: true, shiftKey: true },
       lazy: true,
     });
   }

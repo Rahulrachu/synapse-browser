@@ -1,8 +1,10 @@
 import { IPluginAPI } from '../common/types/plugin';
 import { Skill } from '../common/types/skill';
+import { SynapseEvent, SubscriptionOptions, EventCallback } from '../common/types/event';
 import BrowserManager from './BrowserManager';
 import Storage from './Storage';
 import SkillRegistry from './SkillRegistry';
+import EventBus from './EventBus';
 
 export class PluginAPI implements IPluginAPI {
   private pluginId: string;
@@ -32,6 +34,23 @@ export class PluginAPI implements IPluginAPI {
       enabled: true
     } as Skill);
   }
+
+  events = {
+    publish: (type: string, payload: any, category: any = 'plugin') => {
+      EventBus.publish({
+        id: `evt-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        type,
+        category,
+        source: `plugin:${this.pluginId}`,
+        payload,
+        timestamp: Date.now(),
+        priority: 0
+      });
+    },
+    subscribe: (type: string, callback: EventCallback, options?: SubscriptionOptions) => {
+      return EventBus.subscribe(type, callback, options);
+    }
+  };
 
   async executeCommand(id: string, ...args: any[]): Promise<any> {
     const callback = this.commandCallbacks.get(id);
