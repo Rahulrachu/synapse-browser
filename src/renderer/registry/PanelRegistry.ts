@@ -17,6 +17,7 @@ import {
   Bell,
   Download,
   History,
+  Activity,
 } from 'lucide-react';
 
 // Eager imports for frequently used panels
@@ -43,6 +44,7 @@ const WorkspaceSnapshotManager = lazy(() => import('../components/WorkspaceSnaps
 const NotificationCenter = lazy(() => import('../components/NotificationCenter'));
 const DownloadManager = lazy(() => import('../components/DownloadManager'));
 const RecentManager = lazy(() => import('../components/RecentManager'));
+const HealthDashboard = lazy(() => import('../components/HealthDashboard'));
 
 class PanelRegistry {
   private panels: Map<string, PanelRegistryEntry> = new Map();
@@ -301,6 +303,18 @@ class PanelRegistry {
       permissions: ['storage', 'filesystem'],
       defaultLayout: 'split',
       shortcuts: { key: 'r', ctrlKey: true, shiftKey: true },
+      lazy: true,
+    });
+
+    // Health Dashboard
+    this.register({
+      id: 'health',
+      title: 'Health',
+      icon: Activity,
+      component: HealthDashboard,
+      permissions: ['storage', 'process'],
+      defaultLayout: 'split',
+      shortcuts: { key: 'h', ctrlKey: true, shiftKey: true },
       lazy: true,
     });
   }
