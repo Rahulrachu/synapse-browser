@@ -8,6 +8,7 @@ import PanelManager from './PanelManager';
 import AIServiceManager from './AIServiceManager';
 import ProjectManager from './ProjectManager';
 import GitManager from './GitManager';
+import PluginManager from './PluginManager';
 import ContextEngine from '../engine/ContextEngine';
 import MemorySystem from '../engine/MemorySystem';
 import PlanningEngine from '../engine/PlanningEngine';
@@ -26,6 +27,9 @@ app.on('ready', () => {
 
   // Create initial tab
   BrowserManager.createTab('https://www.google.com');
+
+  // Discover and load plugins
+  PluginManager.discoverPlugins();
 
   // Setup IPC handlers for browser manager
   ipcMain.handle('create-tab', async (event, url: string = 'about:blank') => {

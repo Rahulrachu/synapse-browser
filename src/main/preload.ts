@@ -4,7 +4,9 @@ contextBridge.exposeInMainWorld('electron', {
   ipcRenderer: {
     invoke: (channel: string, ...args: any[]) => ipcRenderer.invoke(channel, ...args),
     on: (channel: string, func: (...args: any[]) => void) => {
-      ipcRenderer.on(channel, (event, ...args) => func(...args));
+      const subscription = (event: any, ...args: any[]) => func(...args);
+      ipcRenderer.on(channel, subscription);
+      return () => ipcRenderer.removeListener(channel, subscription);
     },
     once: (channel: string, func: (...args: any[]) => void) => {
       ipcRenderer.once(channel, (event, ...args) => func(...args));

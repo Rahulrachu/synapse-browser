@@ -3,7 +3,7 @@ export interface ToolDefinition {
   name: string;
   description: string;
   permissions: string[];
-  capabilities: string[]; // New field: what the tool can achieve (e.g., 'web_browsing', 'file_editing')
+  capabilities?: string[]; // New field: what the tool can achieve (e.g., 'web_browsing', 'file_editing')
   inputSchema: any;
   outputSchema: any;
 }
@@ -45,7 +45,7 @@ class ToolRegistry {
 
   findToolsByCapability(capability: string): ToolDefinition[] {
     return Array.from(this.tools.values())
-      .filter(tool => tool.definition.capabilities.includes(capability))
+      .filter(tool => tool.definition.capabilities?.includes(capability))
       .map(tool => tool.definition);
   }
 

@@ -186,6 +186,36 @@ class Storage {
       console.error('Failed to save history:', error);
     }
   }
+
+  // Generic KV Storage for Plugins/Framework
+  private getSettingsFile(): string {
+    return path.join(this.dataDir, 'settings.json');
+  }
+
+  private getAllSettings(): Record<string, any> {
+    const file = this.getSettingsFile();
+    if (!fs.existsSync(file)) return {};
+    try {
+      return JSON.parse(fs.readFileSync(file, 'utf-8'));
+    } catch {
+      return {};
+    }
+  }
+
+  async get(key: string): Promise<any> {
+    const settings = this.getAllSettings();
+    return settings[key];
+  }
+
+  async set(key: string, value: any): Promise<void> {
+    const settings = this.getAllSettings();
+    settings[key] = value;
+    try {
+      fs.writeFileSync(this.getSettingsFile(), JSON.stringify(settings, null, 2));
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+    }
+  }
 }
 
 export default new Storage();

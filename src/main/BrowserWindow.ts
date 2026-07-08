@@ -121,20 +121,19 @@ ipcMain.handle('clear-downloads', async () => {
  * Sets up the application's context menu (right-click menu).
  */
 function setupContextMenu() {
-  Menu.setApplicationMenu(
-    Menu.buildFromTemplate([
-      {
-        label: 'File',
-        submenu: [
-          {
-            label: 'Exit',
-            accelerator: 'CmdOrCtrl+Q',
-            click: () => {
-              app.quit();
-            },
+  const template: any[] = [
+    {
+      label: 'File',
+      submenu: [
+        {
+          label: 'Exit',
+          accelerator: 'CmdOrCtrl+Q',
+          click: () => {
+            app.quit();
           },
-        ],
-      },
+        },
+      ],
+    },
       {
         label: 'Edit',
         submenu: [
@@ -154,8 +153,12 @@ function setupContextMenu() {
           { label: 'Toggle Dev Tools', accelerator: 'F12', role: 'toggleDevTools' },
         ],
       },
-    ])
-  );
+    ];
+
+  // Add plugin menu items here if needed
+  // PluginManager.getMenuContributions().forEach(...)
+
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 }
 
 /**

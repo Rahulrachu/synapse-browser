@@ -16,7 +16,6 @@ import {
   Camera,
   Bell,
   Download,
-  History,
   Activity,
 } from 'lucide-react';
 
@@ -45,6 +44,7 @@ const NotificationCenter = lazy(() => import('../components/NotificationCenter')
 const DownloadManager = lazy(() => import('../components/DownloadManager'));
 const RecentManager = lazy(() => import('../components/RecentManager'));
 const HealthDashboard = lazy(() => import('../components/HealthDashboard'));
+const PluginManagerPanel = lazy(() => import('../components/PluginManagerPanel'));
 
 class PanelRegistry {
   private panels: Map<string, PanelRegistryEntry> = new Map();
@@ -317,10 +317,24 @@ class PanelRegistry {
       shortcuts: { key: 'h', ctrlKey: true, shiftKey: true },
       lazy: true,
     });
+    
+    // Plugin Manager Panel
+    this.register({
+      id: 'plugins',
+      title: 'Plugins',
+      icon: Zap,
+      component: PluginManagerPanel,
+      permissions: ['storage', 'filesystem'],
+      defaultLayout: 'split',
+      shortcuts: { key: 'u', ctrlKey: true, shiftKey: true },
+      lazy: true,
+    });
   }
 
   register(entry: PanelRegistryEntry) {
     this.panels.set(entry.id, entry);
+    // Notify main process or other listeners if needed
+    window.dispatchEvent(new CustomEvent('panel-registered', { detail: entry }));
   }
 
   unregister(panelId: string) {
