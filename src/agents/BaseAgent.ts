@@ -2,6 +2,8 @@
 import { AgentId, AgentName, AgentCapability, AgentTask, AgentResult, AgentContext, AgentMessage } from './types';
 import { AgentMessageBus } from './AgentMessageBus';
 import AgentLogger from './AgentLogger';
+import AIModelProviderManager from '../main/AIModelProviderManager';
+import { AIChatMessage, AIChatOptions, AIChatResponse } from '../common/types/ai';
 
 export abstract class BaseAgent {
   public readonly id: AgentId;
@@ -78,6 +80,12 @@ export abstract class BaseAgent {
         correlationId
       });
     });
+  }
+
+  protected async callAI(messages: AIChatMessage[], options?: AIChatOptions): Promise<AIChatResponse> {
+    const providerId = this.context.preferredProvider || 'openai-default';
+    AgentLogger.debug(`Agent ${this.id} calling AI via ${providerId}`, this.id);
+    return await AIModelProviderManager.chat(providerId, messages, options);
   }
 
   protected abstract handleMessage(message: AgentMessage): Promise<void>;

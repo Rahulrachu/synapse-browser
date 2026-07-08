@@ -32,6 +32,9 @@ import {
   MemoryProvider 
 } from './SearchProviders';
 import PlanningEngine from '../engine/PlanningEngine';
+import AIModelProviderManager from './AIModelProviderManager';
+import { OpenAIProvider } from './providers/OpenAIProvider';
+import { OllamaProvider } from './providers/OllamaProvider';
 import BrowserAutomation from './BrowserAutomation';
 import { ToolRegistry, initializeTools } from '../tools';
 import AgentRuntime from '../agents/AgentRuntime';
@@ -70,6 +73,27 @@ app.on('ready', () => {
   SearchEngine.registerProvider(new MarketplaceProvider());
   SearchEngine.registerProvider(new DownloadProvider());
   SearchEngine.registerProvider(new MemoryProvider());
+
+  // Initialize AI Providers
+  const openAIConfig = {
+    id: 'openai-default',
+    type: 'openai' as const,
+    name: 'OpenAI',
+    apiKey: process.env.OPENAI_API_KEY,
+    enabled: true,
+    models: []
+  };
+  AIModelProviderManager.registerProvider(new OpenAIProvider(openAIConfig));
+
+  const ollamaConfig = {
+    id: 'ollama-local',
+    type: 'ollama' as const,
+    name: 'Ollama (Local)',
+    baseUrl: 'http://localhost:11434',
+    enabled: true,
+    models: []
+  };
+  AIModelProviderManager.registerProvider(new OllamaProvider(ollamaConfig));
 
   // Setup IPC handlers for browser manager
   ipcMain.handle('create-tab', async (event, url: string = 'about:blank') => {

@@ -60,6 +60,7 @@ const KnowledgeManagerPanel = lazy(() => import('../components/KnowledgeManagerP
 const TaskQueuePanel = lazy(() => import('../components/TaskQueuePanel'));
 const SearchCenterPanel = lazy(() => import('../components/SearchCenterPanel'));
 const AgentMonitorPanel = lazy(() => import('../components/AgentMonitorPanel'));
+const ModelSelectionPanel = lazy(() => import('../components/ModelSelectionPanel'));
 
 class PanelRegistry {
   private panels: Map<string, PanelRegistryEntry> = new Map();
@@ -450,6 +451,18 @@ class PanelRegistry {
       permissions: ['storage', 'process'],
       defaultLayout: 'split',
       shortcuts: { key: 'o', ctrlKey: true, shiftKey: true },
+      lazy: true,
+    });
+
+    // Model Selection Panel
+    this.register({
+      id: 'models',
+      title: 'AI Models',
+      icon: Cpu,
+      component: ModelSelectionPanel,
+      permissions: ['storage', 'network'],
+      defaultLayout: 'split',
+      shortcuts: { key: 'm', ctrlKey: true, altKey: true },
       lazy: true,
     });
   }

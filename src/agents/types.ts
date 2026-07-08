@@ -49,6 +49,7 @@ export interface AgentMessage {
 export interface AgentContext {
   currentTask?: AgentTask;
   sharedData: Map<string, any>;
+  preferredProvider?: string;
   // References to existing systems
   contextEngineState: import("../engine/ContextEngine").ContextState; // From ContextEngine.ts
   memorySystemState: import("../engine/MemorySystem").MemoryEntry[]; // From MemorySystem.ts
