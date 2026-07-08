@@ -2,6 +2,7 @@ import { ipcMain } from 'electron';
 import { Workflow } from '../common/types/workflow';
 import Storage from './Storage';
 import WorkflowEngine from './WorkflowEngine';
+import SkillRegistry from './SkillRegistry';
 
 class WorkflowManager {
   private STORAGE_KEY = 'workflows';
@@ -35,6 +36,21 @@ class WorkflowManager {
     }
 
     await Storage.set(this.STORAGE_KEY, workflows);
+
+    // Register as a skill
+    SkillRegistry.registerSkill({
+      id: workflow.id,
+      name: workflow.name,
+      description: workflow.description || `Automated workflow: ${workflow.name}`,
+      category: 'Workflow',
+      version: '1.0.0',
+      author: 'User',
+      enabled: true,
+      parameters: {},
+      permissions: [],
+      capabilities: ['automation'],
+      source: 'workflow'
+    });
   }
 
   async deleteWorkflow(id: string): Promise<void> {

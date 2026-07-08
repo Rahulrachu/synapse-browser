@@ -1,6 +1,8 @@
 import { IPluginAPI } from '../common/types/plugin';
+import { Skill } from '../common/types/skill';
 import BrowserManager from './BrowserManager';
 import Storage from './Storage';
+import SkillRegistry from './SkillRegistry';
 
 export class PluginAPI implements IPluginAPI {
   private pluginId: string;
@@ -19,6 +21,16 @@ export class PluginAPI implements IPluginAPI {
     if (callback) {
       await callback();
     }
+  }
+
+  registerSkill(skill: Omit<Skill, 'source' | 'author' | 'version'>): void {
+    SkillRegistry.registerSkill({
+      ...skill,
+      author: `Plugin: ${this.pluginId}`,
+      version: '1.0.0',
+      source: 'plugin',
+      enabled: true
+    } as Skill);
   }
 
   async executeCommand(id: string, ...args: any[]): Promise<any> {

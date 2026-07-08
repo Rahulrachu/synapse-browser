@@ -19,6 +19,7 @@ import {
   Activity,
   TrendingUp,
   Play,
+  Cpu,
 } from 'lucide-react';
 
 // Eager imports for frequently used panels
@@ -49,6 +50,7 @@ const HealthDashboard = lazy(() => import('../components/HealthDashboard'));
 const PluginManagerPanel = lazy(() => import('../components/PluginManagerPanel'));
 const ExtensionMarketplacePanel = lazy(() => import('../components/ExtensionMarketplacePanel'));
 const WorkflowManagerPanel = lazy(() => import('../components/WorkflowManagerPanel'));
+const SkillManagerPanel = lazy(() => import('../components/SkillManagerPanel'));
 
 class PanelRegistry {
   private panels: Map<string, PanelRegistryEntry> = new Map();
@@ -355,6 +357,18 @@ class PanelRegistry {
       permissions: ['storage', 'process'],
       defaultLayout: 'split',
       shortcuts: { key: 'w', ctrlKey: true, shiftKey: true },
+      lazy: true,
+    });
+    
+    // Skill Manager Panel
+    this.register({
+      id: 'skills',
+      title: 'Skills',
+      icon: Cpu,
+      component: SkillManagerPanel,
+      permissions: ['storage', 'process'],
+      defaultLayout: 'split',
+      shortcuts: { key: 'k', ctrlKey: true, shiftKey: true },
       lazy: true,
     });
   }

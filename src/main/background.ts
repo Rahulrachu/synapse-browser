@@ -11,6 +11,7 @@ import GitManager from './GitManager';
 import PluginManager from './PluginManager';
 import ExtensionRepositoryService from './ExtensionRepositoryService';
 import WorkflowManager from './WorkflowManager';
+import SkillRegistry from './SkillRegistry';
 import ContextEngine from '../engine/ContextEngine';
 import MemorySystem from '../engine/MemorySystem';
 import PlanningEngine from '../engine/PlanningEngine';
