@@ -3,6 +3,8 @@ import { useWorkspaceStore } from './store/workspaceStore';
 import { useWorkspaceTemplateStore } from './store/workspaceTemplateStore';
 import { usePanelStore } from './store/panelStore';
 import { useBrowserStore } from './store/browserStore';
+import { useNotificationStore } from './store/notificationStore';
+import { Bell } from 'lucide-react';
 import { useKeyboardShortcuts, SHORTCUTS } from './hooks/useKeyboardShortcuts';
 import BrowserPanel from './components/BrowserPanel';
 import Sidebar from './components/Sidebar';
@@ -17,7 +19,8 @@ export default function App() {
   const addNote = useWorkspaceStore((state) => state.addNote);
   const [panelLayout, setPanelLayout] = useState<2 | 3 | 4>(2);
   const { templates, defaultTemplateId } = useWorkspaceTemplateStore();
-  const { restorePanelState, setPanelLayout: setStorePanelLayout } = usePanelStore();
+  const { restorePanelState, setPanelLayout: setStorePanelLayout, setActivePanel } = usePanelStore();
+  const unreadCount = useNotificationStore((state) => state.unreadCount);
 
   // Load default template on startup
   useEffect(() => {
@@ -74,7 +77,22 @@ export default function App() {
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Header */}
           <header className={`border-b ${isDarkMode ? 'border-gray-800 bg-synapse-darker' : 'border-gray-200 bg-gray-50'} px-4 py-3 flex items-center justify-between`}>
-            <h1 className="text-xl font-bold">Synapse Browser</h1>
+            <div className="flex items-center gap-4">
+              <h1 className="text-xl font-bold">Synapse Browser</h1>
+              <button 
+                onClick={() => setActivePanel('notifications', 'right')}
+                className={`relative p-2 rounded-full transition ${
+                  isDarkMode ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
+                }`}
+              >
+                <Bell size={20} />
+                {unreadCount > 0 && (
+                  <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-synapse-accent text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white dark:border-synapse-darker">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </button>
+            </div>
             <div className="flex gap-2">
               <button
                 onClick={() => setPanelLayout(2)}

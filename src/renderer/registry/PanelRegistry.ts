@@ -14,6 +14,7 @@ import {
   Layers,
   LayoutTemplate,
   Camera,
+  Bell,
 } from 'lucide-react';
 
 // Eager imports for frequently used panels
@@ -37,6 +38,7 @@ const TerminalPanel = lazy(() => import('../components/TerminalPanel'));
 const NotesPanel = lazy(() => import('../components/NotesPanel'));
 const WorkspaceTemplateManager = lazy(() => import('../components/WorkspaceTemplateManager'));
 const WorkspaceSnapshotManager = lazy(() => import('../components/WorkspaceSnapshotManager'));
+const NotificationCenter = lazy(() => import('../components/NotificationCenter'));
 
 class PanelRegistry {
   private panels: Map<string, PanelRegistryEntry> = new Map();
@@ -259,6 +261,18 @@ class PanelRegistry {
       permissions: ['storage'],
       defaultLayout: 'split',
       shortcuts: { key: 's', ctrlKey: true, shiftKey: true },
+      lazy: true,
+    });
+
+    // Notification Center
+    this.register({
+      id: 'notifications',
+      title: 'Notifications',
+      icon: Bell,
+      component: NotificationCenter,
+      permissions: ['storage'],
+      defaultLayout: 'split',
+      shortcuts: { key: 'i', ctrlKey: true, shiftKey: true },
       lazy: true,
     });
   }
