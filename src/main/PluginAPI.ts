@@ -6,6 +6,7 @@ import Storage from './Storage';
 import SkillRegistry from './SkillRegistry';
 import EventBus from './EventBus';
 import PermissionManager from './PermissionManager';
+import { JobStatus } from '../common/types/job';
 
 export class PluginAPI implements IPluginAPI {
   private pluginId: string;
@@ -137,5 +138,98 @@ export class PluginAPI implements IPluginAPI {
       const { default: MemoryManager } = await import('../engine/MemoryManager');
       return await MemoryManager.searchMemories(query, { k });
     }
+  };
+
+  taskQueue = {
+    enqueue: async (job: { name: string; type: string; payload?: Record<string, any>; priority?: number; isPersistent?: boolean; maxRetries?: number; retryDelay?: number; metadata?: Record<string, any> }) => {
+      const hasPermission = await PermissionManager.checkPermission(`plugin:${this.pluginId}`, 'task-queue:write');
+      if (!hasPermission) {
+        const granted = await PermissionManager.requestPermission({
+          id: `req-${Date.now()}`,
+          scope: `plugin:${this.pluginId}`,
+          resource: 'task-queue:write',
+          reason: `Plugin ${this.pluginId} wants to enqueue a job`,
+          timestamp: Date.now()
+        });
+        if (!granted) throw new Error(`Permission denied for task-queue:write`);
+      }
+      const { default: TaskQueueManager } = await import('./TaskQueueManager');
+      return await TaskQueueManager.enqueueJob(job);
+    },
+    getJob: async (id: string) => {
+      const hasPermission = await PermissionManager.checkPermission(`plugin:${this.pluginId}`, 'task-queue:read');
+      if (!hasPermission) {
+        const granted = await PermissionManager.requestPermission({
+          id: `req-${Date.now()}`,
+          scope: `plugin:${this.pluginId}`,
+          resource: 'task-queue:read',
+          reason: `Plugin ${this.pluginId} wants to get job details`,
+          timestamp: Date.now()
+        });
+        if (!granted) throw new Error(`Permission denied for task-queue:read`);
+      }
+      const { default: TaskQueueManager } = await import('./TaskQueueManager');
+      return await TaskQueueManager.getJob(id);
+    },
+    getAllJobs: async (filter?: { status?: JobStatus; type?: string; name?: string }) => {
+      const hasPermission = await PermissionManager.checkPermission(`plugin:${this.pluginId}`, 'task-queue:read');
+      if (!hasPermission) {
+        const granted = await PermissionManager.requestPermission({
+          id: `req-${Date.now()}`,
+          scope: `plugin:${this.pluginId}`,
+          resource: 'task-queue:read',
+          reason: `Plugin ${this.pluginId} wants to get all jobs`,
+          timestamp: Date.now()
+        });
+        if (!granted) throw new Error(`Permission denied for task-queue:read`);
+      }
+      const { default: TaskQueueManager } = await import('./TaskQueueManager');
+      return await TaskQueueManager.getAllJobs(filter);
+    },
+    cancelJob: async (id: string) => {
+      const hasPermission = await PermissionManager.checkPermission(`plugin:${this.pluginId}`, 'task-queue:write');
+      if (!hasPermission) {
+        const granted = await PermissionManager.requestPermission({
+          id: `req-${Date.now()}`,
+          scope: `plugin:${this.pluginId}`,
+          resource: 'task-queue:write',
+          reason: `Plugin ${this.pluginId} wants to cancel a job`,
+          timestamp: Date.now()
+        });
+        if (!granted) throw new Error(`Permission denied for task-queue:write`);
+      }
+      const { default: TaskQueueManager } = await import('./TaskQueueManager');
+      return await TaskQueueManager.cancelJob(id);
+    },
+    pauseJob: async (id: string) => {
+      const hasPermission = await PermissionManager.checkPermission(`plugin:${this.pluginId}`, 'task-queue:write');
+      if (!hasPermission) {
+        const granted = await PermissionManager.requestPermission({
+          id: `req-${Date.now()}`,
+          scope: `plugin:${this.pluginId}`,
+          resource: 'task-queue:write',
+          reason: `Plugin ${this.pluginId} wants to pause a job`,
+          timestamp: Date.now()
+        });
+        if (!granted) throw new Error(`Permission denied for task-queue:write`);
+      }
+      const { default: TaskQueueManager } = await import('./TaskQueueManager');
+      return await TaskQueueManager.pauseJob(id);
+    },
+    resumeJob: async (id: string) => {
+      const hasPermission = await PermissionManager.checkPermission(`plugin:${this.pluginId}`, 'task-queue:write');
+      if (!hasPermission) {
+        const granted = await PermissionManager.requestPermission({
+          id: `req-${Date.now()}`,
+          scope: `plugin:${this.pluginId}`,
+          resource: 'task-queue:write',
+          reason: `Plugin ${this.pluginId} wants to resume a job`,
+          timestamp: Date.now()
+        });
+        if (!granted) throw new Error(`Permission denied for task-queue:write`);
+      }
+      const { default: TaskQueueManager } = await import('./TaskQueueManager');
+      return await TaskQueueManager.resumeJob(id);
+    },
   };
 }

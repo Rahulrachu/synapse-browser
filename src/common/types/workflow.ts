@@ -1,6 +1,6 @@
 export interface WorkflowAction {
   id: string;
-  type: string;
+  type: string; // e.g., 'open-url', 'wait', 'plugin-action', 'trigger-event', 'add-memory', 'search-memory', 'enqueue-job'
   params: Record<string, any>;
 }
 

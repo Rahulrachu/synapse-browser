@@ -1,4 +1,5 @@
 import { lazy } from 'react';
+import { Database } from 'lucide-react';
 import { PanelRegistryEntry } from '../types/panel';
 import {
   Globe,
@@ -55,6 +56,7 @@ const SkillManagerPanel = lazy(() => import('../components/SkillManagerPanel'));
 const EventInspectorPanel = lazy(() => import('../components/EventInspectorPanel'));
 const PermissionManagerPanel = lazy(() => import('../components/PermissionManagerPanel'));
 const KnowledgeManagerPanel = lazy(() => import('../components/KnowledgeManagerPanel'));
+const TaskQueuePanel = lazy(() => import('../components/TaskQueuePanel'));
 
 class PanelRegistry {
   private panels: Map<string, PanelRegistryEntry> = new Map();
@@ -409,6 +411,18 @@ class PanelRegistry {
       permissions: ['storage', 'process'],
       defaultLayout: 'split',
       shortcuts: { key: 'k', ctrlKey: true, altKey: true },
+      lazy: true,
+    });
+
+    // Task Queue Panel
+    this.register({
+      id: 'task-queue',
+      title: 'Task Queue',
+      icon: Clock,
+      component: TaskQueuePanel,
+      permissions: ['storage', 'process'],
+      defaultLayout: 'split',
+      shortcuts: { key: 'q', ctrlKey: true, altKey: true },
       lazy: true,
     });
   }

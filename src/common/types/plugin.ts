@@ -77,4 +77,14 @@ export interface IPluginAPI {
     add(content: string, type?: string, metadata?: any, tags?: string[]): Promise<any>;
     search(query: string, k?: number): Promise<any[]>;
   };
+
+  // Task Queue API
+  taskQueue: {
+    enqueue(job: { name: string; type: string; payload?: Record<string, any>; priority?: number; isPersistent?: boolean; maxRetries?: number; retryDelay?: number; metadata?: Record<string, any> }): Promise<any>;
+    getJob(id: string): Promise<any>;
+    getAllJobs(filter?: { status?: string; type?: string; name?: string }): Promise<any[]>;
+    cancelJob(id: string): Promise<boolean>;
+    pauseJob(id: string): Promise<boolean>;
+    resumeJob(id: string): Promise<boolean>;
+  };
 }

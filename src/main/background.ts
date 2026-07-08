@@ -16,6 +16,8 @@ import PermissionManager from './PermissionManager';
 import ContextEngine from '../engine/ContextEngine';
 import MemorySystem from '../engine/MemorySystem';
 import MemoryManager from '../engine/MemoryManager';
+import TaskQueueManager from './TaskQueueManager';
+import NotificationService from './NotificationService';
 import EventBus from './EventBus';
 import PlanningEngine from '../engine/PlanningEngine';
 import BrowserAutomation from './BrowserAutomation';
@@ -33,6 +35,12 @@ app.on('ready', () => {
 
   // Initialize Memory Manager
   MemoryManager.initialize();
+
+  // Initialize Task Queue Manager
+  TaskQueueManager.initialize();
+
+  // Set main window for NotificationService
+  NotificationService.setMainWindow(mainWindow);
 
   // Create initial tab
   BrowserManager.createTab('https://www.google.com');
@@ -504,6 +512,15 @@ ipcMain.handle('memory:import', async (_, json) => {
 ipcMain.handle('memory:export', async (_, type) => {
   return MemoryManager.exportMemories(type);
 });
+
+// Task Queue handlers
+ipcMain.handle('task-queue:enqueue', async (_, job) => TaskQueueManager.enqueueJob(job));
+ipcMain.handle('task-queue:get-all', async (_, filter) => TaskQueueManager.getAllJobs(filter));
+ipcMain.handle('task-queue:get', async (_, id) => TaskQueueManager.getJob(id));
+ipcMain.handle('task-queue:cancel', async (_, id) => TaskQueueManager.cancelJob(id));
+ipcMain.handle('task-queue:pause', async (_, id) => TaskQueueManager.pauseJob(id));
+ipcMain.handle('task-queue:resume', async (_, id) => TaskQueueManager.resumeJob(id));
+ipcMain.handle('task-queue:clear-completed', async () => TaskQueueManager.clearCompletedJobs());
 
 // Planning Engine handlers
 ipcMain.handle('create-plan', async (event, goal: string, tasks: string[]) => {

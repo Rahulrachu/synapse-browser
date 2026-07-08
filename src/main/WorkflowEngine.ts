@@ -116,6 +116,22 @@ class WorkflowEngine {
         });
         break;
 
+      case 'enqueue-job':
+        const { default: TaskQueueManager } = await import('./TaskQueueManager');
+        const { jobName, jobType, jobPayload, jobPriority, jobIsPersistent, jobMaxRetries, jobRetryDelay, jobMetadata } = action.params;
+        if (!jobName || !jobType) throw new Error('Job name and type are required for enqueue-job action');
+        await TaskQueueManager.enqueueJob({
+          name: jobName,
+          type: jobType,
+          payload: jobPayload || {},
+          priority: jobPriority,
+          isPersistent: jobIsPersistent,
+          maxRetries: jobMaxRetries,
+          retryDelay: jobRetryDelay,
+          metadata: jobMetadata || {},
+        });
+        break;
+
       default:
         console.warn(`Unknown action type: ${action.type}`);
         break;

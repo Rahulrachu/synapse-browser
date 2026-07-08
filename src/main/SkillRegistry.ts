@@ -49,6 +49,96 @@ class SkillRegistry {
       source: 'builtin'
     });
 
+    // Register Task Queue skills
+    this.registerSkill({
+      id: 'task-queue:enqueue',
+      name: 'Enqueue Job',
+      description: 'Adds a new job to the background task queue.',
+      category: 'System',
+      version: '1.0.0',
+      author: 'Synapse Team',
+      enabled: true,
+      parameters: {
+        name: { type: 'string', description: 'Name of the job' },
+        type: { type: 'string', description: 'Type of the job (e.g., workflow-execution, ai-task)' },
+        payload: { type: 'object', description: 'Data required for job execution' },
+        priority: { type: 'number', description: 'Job priority (higher is more urgent)', default: 0 },
+        isPersistent: { type: 'boolean', description: 'Whether the job should persist across restarts', default: true },
+        maxRetries: { type: 'number', description: 'Maximum number of retries for the job', default: 3 },
+        retryDelay: { type: 'number', description: 'Initial delay in ms before retrying', default: 5000 },
+        metadata: { type: 'object', description: 'Additional job metadata' },
+      },
+      permissions: ['task-queue:write'],
+      capabilities: ['background-processing', 'automation'],
+      source: 'builtin'
+    });
+
+    this.registerSkill({
+      id: 'task-queue:get-status',
+      name: 'Get Job Status',
+      description: 'Retrieves the current status of a specific job or all jobs.',
+      category: 'System',
+      version: '1.0.0',
+      author: 'Synapse Team',
+      enabled: true,
+      parameters: {
+        id: { type: 'string', description: 'Optional: ID of a specific job to retrieve' },
+        status: { type: 'string', enum: ['queued', 'running', 'completed', 'failed', 'cancelled', 'paused'], description: 'Optional: Filter jobs by status' },
+        type: { type: 'string', description: 'Optional: Filter jobs by type' },
+      },
+      permissions: ['task-queue:read'],
+      capabilities: ['background-processing', 'monitoring'],
+      source: 'builtin'
+    });
+
+    this.registerSkill({
+      id: 'task-queue:cancel-job',
+      name: 'Cancel Job',
+      description: 'Cancels a running or queued job.',
+      category: 'System',
+      version: '1.0.0',
+      author: 'Synapse Team',
+      enabled: true,
+      parameters: {
+        id: { type: 'string', description: 'ID of the job to cancel' },
+      },
+      permissions: ['task-queue:write'],
+      capabilities: ['background-processing', 'control'],
+      source: 'builtin'
+    });
+
+    this.registerSkill({
+      id: 'task-queue:pause-job',
+      name: 'Pause Job',
+      description: 'Pauses a running or queued job.',
+      category: 'System',
+      version: '1.0.0',
+      author: 'Synapse Team',
+      enabled: true,
+      parameters: {
+        id: { type: 'string', description: 'ID of the job to pause' },
+      },
+      permissions: ['task-queue:write'],
+      capabilities: ['background-processing', 'control'],
+      source: 'builtin'
+    });
+
+    this.registerSkill({
+      id: 'task-queue:resume-job',
+      name: 'Resume Job',
+      description: 'Resumes a paused job.',
+      category: 'System',
+      version: '1.0.0',
+      author: 'Synapse Team',
+      enabled: true,
+      parameters: {
+        id: { type: 'string', description: 'ID of the job to resume' },
+      },
+      permissions: ['task-queue:write'],
+      capabilities: ['background-processing', 'control'],
+      source: 'builtin'
+    });
+
     // Bridge existing tools to skills
     const tools = toolRegistry.getAllTools();
     for (const tool of tools) {

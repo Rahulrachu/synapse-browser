@@ -13,6 +13,7 @@ export class AgentManager extends EventEmitter {
   private executionQueue: AgentTask[] = [];
   private isProcessingQueue: boolean = false;
   private sharedAgentContext: AgentContext; // Shared context for all agents
+  private toolRuntime: typeof ToolRuntime; // Declare toolRuntime as a class member
 
   constructor(registry: AgentRegistry, messageBus: AgentMessageBus, initialContext: AgentContext, toolRuntime: typeof ToolRuntime) {
     super();
