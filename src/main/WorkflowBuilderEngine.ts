@@ -303,8 +303,8 @@ export class WorkflowBuilderEngine {
           break;
         }
         case 'deploy': {
-          const { DeploymentService } = require(\'./DeploymentService\');
-          const { DeploymentTarget } = require(\'./DeploymentService\');
+          const { DeploymentService } = require('./DeploymentService');
+          const { DeploymentTarget } = require('./DeploymentService');
           const deployService = new DeploymentService(process.cwd());
           const deploymentConfig = {
             target: node.config.target as DeploymentTarget || 'vercel',

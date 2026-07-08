@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useWorkspaceStore } from './store/workspaceStore';
+import { useWorkspaceTemplateStore } from './store/workspaceTemplateStore';
+import { usePanelStore } from './store/panelStore';
 import { useBrowserStore } from './store/browserStore';
 import { useKeyboardShortcuts, SHORTCUTS } from './hooks/useKeyboardShortcuts';
 import BrowserPanel from './components/BrowserPanel';
@@ -14,6 +16,28 @@ export default function App() {
   const addTab = useBrowserStore((state) => state.addTab);
   const addNote = useWorkspaceStore((state) => state.addNote);
   const [panelLayout, setPanelLayout] = useState<2 | 3 | 4>(2);
+  const { templates, defaultTemplateId } = useWorkspaceTemplateStore();
+  const { restorePanelState, setPanelLayout: setStorePanelLayout } = usePanelStore();
+
+  // Load default template on startup
+  useEffect(() => {
+    if (defaultTemplateId) {
+      const template = templates.find(t => t.id === defaultTemplateId);
+      if (template) {
+        setStorePanelLayout(template.panelLayout);
+        restorePanelState(template.panelState);
+        
+        // Map panelLayout string to number for local state
+        const layoutMap: Record<string, 2 | 3 | 4> = {
+          'single': 2, // Default to 2 if single since MultiPanelLayout expects 2, 3, or 4
+          'split-h': 2,
+          'split-v': 2,
+          'grid': 4
+        };
+        setPanelLayout(layoutMap[template.panelLayout] || 2);
+      }
+    }
+  }, []);
 
   // Keyboard shortcuts
   useKeyboardShortcuts([

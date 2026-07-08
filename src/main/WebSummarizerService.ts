@@ -227,7 +227,6 @@ export class WebSummarizerService {
    * @returns A record where keys are words and values are their frequencies.
    */
   private calculateWordFrequency(words: string[]): Record<string, number> {
-  private calculateWordFrequency(words: string[]): Record<string, number> {
     const freq: Record<string, number> = {};
     const stopWords = new Set([
       'the',
@@ -294,7 +293,6 @@ export class WebSummarizerService {
    * @param text The text containing HTML entities.
    * @returns The text with HTML entities decoded.
    */
-  private decodeHtmlEntities(text: string): string {
   private decodeHtmlEntities(text: string): string {
     const entities: Record<string, string> = {
       '&amp;': '&',
