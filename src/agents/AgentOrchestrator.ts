@@ -6,10 +6,8 @@ import AgentRuntime from './AgentRuntime';
 import AgentLogger from './AgentLogger';
 import TaskQueueManager from '../main/TaskQueueManager';
 import EventBus from '../main/EventBus';
-import PermissionManager from '../main/PermissionManager';
 import MemoryManager from '../engine/MemoryManager';
 import SearchEngine from '../main/SearchEngine';
-import WorkflowEngine from '../main/WorkflowEngine';
 import { Job } from '../common/types/job';
 
 export class AgentOrchestrator extends EventEmitter {
@@ -23,30 +21,35 @@ export class AgentOrchestrator extends EventEmitter {
   }
 
   private setupIPCHandlers() {
-    const { ipcMain } = require('electron');
-    
-    ipcMain.handle('agent:orchestrate-goal', async (_: any, goal: string) => {
-      return this.orchestrateGoal(goal);
-    });
+    // In ESM we should use dynamic import for electron in main process code if needed,
+    // but typically it's better to import at the top. 
+    // However, since this is called in a constructor, let's ensure it's handled.
+    import('electron').then(({ ipcMain }) => {
+      ipcMain.handle('agent:orchestrate-goal', async (_: any, goal: string) => {
+        return this.orchestrateGoal(goal);
+      });
 
-    ipcMain.handle('agent:pause-task', async (_: any, taskId: string) => {
-      return this.pauseTask(taskId);
-    });
+      ipcMain.handle('agent:pause-task', async (_: any, taskId: string) => {
+        return this.pauseTask(taskId);
+      });
 
-    ipcMain.handle('agent:resume-task', async (_: any, taskId: string) => {
-      return this.resumeTask(taskId);
-    });
+      ipcMain.handle('agent:resume-task', async (_: any, taskId: string) => {
+        return this.resumeTask(taskId);
+      });
 
-    ipcMain.handle('agent:cancel-task', async (_: any, taskId: string) => {
-      return this.cancelTask(taskId);
-    });
+      ipcMain.handle('agent:cancel-task', async (_: any, taskId: string) => {
+        return this.cancelTask(taskId);
+      });
 
-    ipcMain.handle('agent:retry-task', async (_: any, taskId: string) => {
-      return this.retryTask(taskId);
-    });
+      ipcMain.handle('agent:retry-task', async (_: any, taskId: string) => {
+        return this.retryTask(taskId);
+      });
 
-    ipcMain.handle('agent:get-history', async (_: any) => {
-      return this.getExecutionHistory();
+      ipcMain.handle('agent:get-history', async (_: any) => {
+        return this.getExecutionHistory();
+      });
+    }).catch(err => {
+      AgentLogger.error('Failed to setup IPC handlers for AgentOrchestrator', 'orchestrator', { error: err });
     });
   }
 
@@ -141,7 +144,6 @@ export class AgentOrchestrator extends EventEmitter {
         instructions: ['Retry failed task'],
         status: 'pending',
         createdAt: Date.now(),
-        // metadata is not a property of AgentTask
       };
       await this.manager.assignTask(task);
       return true;
@@ -165,7 +167,7 @@ export class AgentOrchestrator extends EventEmitter {
     EventBus.publish({
       id: `evt-${Date.now()}`,
       type,
-      category: 'system', // 'agent' is not a valid category in EventCategory
+      category: 'system',
       source: 'AgentOrchestrator',
       payload,
       timestamp: Date.now(),

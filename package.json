@@ -2,7 +2,7 @@
   "type": "module",
   "name": "synapse-browser",
   "version": "1.0.0",
-  "main": "out/main/background.js",
+  "main": "out/main/main/background.js",
   "description": "AI-First Productivity Browser",
   "author": "Rahul S R",
   "license": "MIT",
