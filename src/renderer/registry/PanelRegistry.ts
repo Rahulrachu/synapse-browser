@@ -16,6 +16,7 @@ import {
   Camera,
   Bell,
   Download,
+  History,
 } from 'lucide-react';
 
 // Eager imports for frequently used panels
@@ -41,6 +42,7 @@ const WorkspaceTemplateManager = lazy(() => import('../components/WorkspaceTempl
 const WorkspaceSnapshotManager = lazy(() => import('../components/WorkspaceSnapshotManager'));
 const NotificationCenter = lazy(() => import('../components/NotificationCenter'));
 const DownloadManager = lazy(() => import('../components/DownloadManager'));
+const RecentManager = lazy(() => import('../components/RecentManager'));
 
 class PanelRegistry {
   private panels: Map<string, PanelRegistryEntry> = new Map();
@@ -287,6 +289,18 @@ class PanelRegistry {
       permissions: ['storage', 'filesystem'],
       defaultLayout: 'split',
       shortcuts: { key: 'j', ctrlKey: true },
+      lazy: true,
+    });
+
+    // Recent Items Manager
+    this.register({
+      id: 'recent',
+      title: 'Recent',
+      icon: History,
+      component: RecentManager,
+      permissions: ['storage', 'filesystem'],
+      defaultLayout: 'split',
+      shortcuts: { key: 'r', ctrlKey: true, shiftKey: true },
       lazy: true,
     });
   }
