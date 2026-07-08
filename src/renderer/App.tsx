@@ -143,7 +143,10 @@ export default function App() {
           </header>
 
           {/* Panels Container */}
-          <MultiPanelLayout panelCount={panelLayout} />
+          <div className="flex-1 overflow-hidden">
+            <MultiPanelLayout panelCount={panelLayout} />
+          </div>
+          <StatusBar />
         </div>
       </div>
     </FadeIn>
