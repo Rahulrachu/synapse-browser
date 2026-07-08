@@ -17,6 +17,7 @@ import {
   Bell,
   Download,
   Activity,
+  TrendingUp,
 } from 'lucide-react';
 
 // Eager imports for frequently used panels
@@ -45,6 +46,7 @@ const DownloadManager = lazy(() => import('../components/DownloadManager'));
 const RecentManager = lazy(() => import('../components/RecentManager'));
 const HealthDashboard = lazy(() => import('../components/HealthDashboard'));
 const PluginManagerPanel = lazy(() => import('../components/PluginManagerPanel'));
+const ExtensionMarketplacePanel = lazy(() => import('../components/ExtensionMarketplacePanel'));
 
 class PanelRegistry {
   private panels: Map<string, PanelRegistryEntry> = new Map();
@@ -327,6 +329,18 @@ class PanelRegistry {
       permissions: ['storage', 'filesystem'],
       defaultLayout: 'split',
       shortcuts: { key: 'u', ctrlKey: true, shiftKey: true },
+      lazy: true,
+    });
+    
+    // Extension Marketplace Panel
+    this.register({
+      id: 'marketplace',
+      title: 'Marketplace',
+      icon: TrendingUp,
+      component: ExtensionMarketplacePanel,
+      permissions: ['network', 'storage'],
+      defaultLayout: 'split',
+      shortcuts: { key: 'm', ctrlKey: true, shiftKey: true },
       lazy: true,
     });
   }
