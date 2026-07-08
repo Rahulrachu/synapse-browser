@@ -4,7 +4,8 @@ import { useWorkspaceTemplateStore } from './store/workspaceTemplateStore';
 import { usePanelStore } from './store/panelStore';
 import { useBrowserStore } from './store/browserStore';
 import { useNotificationStore } from './store/notificationStore';
-import { Bell } from 'lucide-react';
+import { useDownloadStore } from './store/downloadStore';
+import { Bell, Download } from 'lucide-react';
 import { useKeyboardShortcuts, SHORTCUTS } from './hooks/useKeyboardShortcuts';
 import BrowserPanel from './components/BrowserPanel';
 import Sidebar from './components/Sidebar';
@@ -21,6 +22,7 @@ export default function App() {
   const { templates, defaultTemplateId } = useWorkspaceTemplateStore();
   const { restorePanelState, setPanelLayout: setStorePanelLayout, setActivePanel } = usePanelStore();
   const unreadCount = useNotificationStore((state) => state.unreadCount);
+  const activeDownloadCount = useDownloadStore((state) => state.activeCount);
 
   // Load default template on startup
   useEffect(() => {
@@ -89,6 +91,19 @@ export default function App() {
                 {unreadCount > 0 && (
                   <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-synapse-accent text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white dark:border-synapse-darker">
                     {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
+              </button>
+              <button 
+                onClick={() => setActivePanel('downloads', 'right')}
+                className={`relative p-2 rounded-full transition ${
+                  isDarkMode ? 'hover:bg-gray-800 text-gray-400' : 'hover:bg-gray-200 text-gray-600'
+                }`}
+              >
+                <Download size={20} />
+                {activeDownloadCount > 0 && (
+                  <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-synapse-accent text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white dark:border-synapse-darker">
+                    {activeDownloadCount}
                   </span>
                 )}
               </button>
