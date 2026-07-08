@@ -5,6 +5,7 @@ import BrowserManager from './BrowserManager';
 import Storage from './Storage';
 import SkillRegistry from './SkillRegistry';
 import EventBus from './EventBus';
+import PermissionManager from './PermissionManager';
 
 export class PluginAPI implements IPluginAPI {
   private pluginId: string;
@@ -55,7 +56,19 @@ export class PluginAPI implements IPluginAPI {
   async executeCommand(id: string, ...args: any[]): Promise<any> {
     const callback = this.commandCallbacks.get(id);
     if (callback) {
-      return callback();
+      // Check for 'plugin:command' permission
+      const hasPermission = await PermissionManager.checkPermission(`plugin:${this.pluginId}`, 'command');
+      if (!hasPermission) {
+        const granted = await PermissionManager.requestPermission({
+          id: `req-${Date.now()}`,
+          scope: `plugin:${this.pluginId}`,
+          resource: 'command',
+          reason: `Execute plugin command: ${id}`,
+          timestamp: Date.now()
+        });
+        if (!granted) throw new Error(`Permission denied for command: ${id}`);
+      }
+      return await callback();
     }
     throw new Error(`Command ${id} not found in plugin ${this.pluginId}`);
   }

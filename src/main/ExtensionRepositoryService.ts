@@ -3,6 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { ExtensionMetadata, MarketplaceSearchOptions, ExtensionUpdateInfo } from '../common/types/marketplace';
 import PluginManager from './PluginManager';
+import PermissionManager from './PermissionManager';
 
 class ExtensionRepositoryService {
   private mockExtensions: ExtensionMetadata[] = [
@@ -99,6 +100,19 @@ class ExtensionRepositoryService {
   async installExtension(id: string): Promise<boolean> {
     const ext = await this.getExtensionDetails(id);
     if (!ext) throw new Error('Extension not found');
+
+    // Check for 'marketplace:install' permission
+    const hasPermission = await PermissionManager.checkPermission('marketplace', 'install');
+    if (!hasPermission) {
+      const granted = await PermissionManager.requestPermission({
+        id: `req-${Date.now()}`,
+        scope: 'marketplace',
+        resource: 'install',
+        reason: `Install extension: ${ext.name}`,
+        timestamp: Date.now()
+      });
+      if (!granted) throw new Error(`Permission denied for installing extension: ${ext.name}`);
+    }
 
     // Verify compatibility
     const currentVersion = app.getVersion();

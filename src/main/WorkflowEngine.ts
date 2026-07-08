@@ -2,10 +2,25 @@ import { Workflow, WorkflowAction, WorkflowExecutionResult } from '../common/typ
 import BrowserManager from './BrowserManager';
 import PluginManager from './PluginManager';
 import EventBus from './EventBus';
+import PermissionManager from './PermissionManager';
 
 class WorkflowEngine {
   async executeWorkflow(workflow: Workflow): Promise<WorkflowExecutionResult> {
     console.log(`Executing workflow: ${workflow.name} (${workflow.id})`);
+    
+    // Check for 'workflow:execution' permission
+    const hasPermission = await PermissionManager.checkPermission(`workflow:${workflow.id}`, 'execution');
+    if (!hasPermission) {
+      const granted = await PermissionManager.requestPermission({
+        id: `req-${Date.now()}`,
+        scope: `workflow:${workflow.id}`,
+        resource: 'execution',
+        reason: `Execute workflow: ${workflow.name}`,
+        timestamp: Date.now()
+      });
+      if (!granted) throw new Error(`Permission denied for workflow: ${workflow.name}`);
+    }
+
     let completedActions = 0;
 
     try {
