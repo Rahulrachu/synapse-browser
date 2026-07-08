@@ -15,6 +15,8 @@ import SkillRegistry from './SkillRegistry';
 import PermissionManager from './PermissionManager';
 import ContextEngine from '../engine/ContextEngine';
 import MemorySystem from '../engine/MemorySystem';
+import MemoryManager from '../engine/MemoryManager';
+import EventBus from './EventBus';
 import PlanningEngine from '../engine/PlanningEngine';
 import BrowserAutomation from './BrowserAutomation';
 import { ToolRegistry, initializeTools } from '../tools';
@@ -28,6 +30,9 @@ app.on('ready', () => {
 
   // Initialize Tool Runtime
   initializeTools();
+
+  // Initialize Memory Manager
+  MemoryManager.initialize();
 
   // Create initial tab
   BrowserManager.createTab('https://www.google.com');
@@ -430,16 +435,74 @@ ipcMain.handle('get-context-summary', async () => {
 });
 
 // Memory System handlers
-ipcMain.handle('add-memory', async (event, type: any, content: string, metadata: any) => {
-  return MemorySystem.addMemory(type, content, metadata);
+ipcMain.handle('memory:initialize', async () => {
+  return MemoryManager.initialize();
 });
 
-ipcMain.handle('search-memories', async (event, query: string) => {
-  return MemorySystem.searchMemories(query);
+ipcMain.handle('memory:add', async (_, entry) => {
+  const result = await MemoryManager.addMemory(entry);
+  EventBus.publish({
+    id: Date.now().toString(),
+    type: 'memory:added',
+    category: 'system',
+    source: 'MemoryManager',
+    payload: result,
+    timestamp: Date.now(),
+    priority: 1
+  });
+  return result;
 });
 
-ipcMain.handle('get-recent-memories', async (event, limit?: number) => {
-  return MemorySystem.getRecentMemories(limit);
+ipcMain.handle('memory:get', async (_, id) => {
+  return MemoryManager.getMemory(id);
+});
+
+ipcMain.handle('memory:update', async (_, id, updates) => {
+  const result = await MemoryManager.updateMemory(id, updates);
+  if (result) {
+    EventBus.publish({
+      id: Date.now().toString(),
+      type: 'memory:updated',
+      category: 'system',
+      source: 'MemoryManager',
+      payload: result,
+      timestamp: Date.now(),
+      priority: 1
+    });
+  }
+  return result;
+});
+
+ipcMain.handle('memory:delete', async (_, id) => {
+  const result = await MemoryManager.deleteMemory(id);
+  if (result) {
+    EventBus.publish({
+      id: Date.now().toString(),
+      type: 'memory:deleted',
+      category: 'system',
+      source: 'MemoryManager',
+      payload: { id },
+      timestamp: Date.now(),
+      priority: 1
+    });
+  }
+  return result;
+});
+
+ipcMain.handle('memory:search', async (_, query, options) => {
+  return MemoryManager.searchMemories(query, options);
+});
+
+ipcMain.handle('memory:get-by-type', async (_, type, options) => {
+  return MemoryManager.getMemoriesByType(type, options);
+});
+
+ipcMain.handle('memory:import', async (_, json) => {
+  return MemoryManager.importMemories(json);
+});
+
+ipcMain.handle('memory:export', async (_, type) => {
+  return MemoryManager.exportMemories(type);
 });
 
 // Planning Engine handlers

@@ -13,6 +13,42 @@ class SkillRegistry {
   }
 
   private async initializeBuiltinSkills() {
+    // Register Memory & Knowledge Engine skills
+    this.registerSkill({
+      id: 'memory:add',
+      name: 'Add Memory',
+      description: 'Store a piece of information in the long-term or short-term memory.',
+      category: 'AI',
+      version: '1.0.0',
+      author: 'Synapse Team',
+      enabled: true,
+      parameters: {
+        content: { type: 'string', description: 'The information to remember' },
+        type: { type: 'string', enum: ['short_term', 'long_term', 'workspace', 'project', 'conversation'], default: 'short_term' },
+        tags: { type: 'array', items: { type: 'string' } }
+      },
+      permissions: ['memory:write'],
+      capabilities: ['memory', 'knowledge'],
+      source: 'builtin'
+    });
+
+    this.registerSkill({
+      id: 'memory:search',
+      name: 'Search Memories',
+      description: 'Search through stored memories using semantic or keyword search.',
+      category: 'AI',
+      version: '1.0.0',
+      author: 'Synapse Team',
+      enabled: true,
+      parameters: {
+        query: { type: 'string', description: 'The search query' },
+        k: { type: 'number', description: 'Number of results to return', default: 5 }
+      },
+      permissions: ['memory:read'],
+      capabilities: ['memory', 'search'],
+      source: 'builtin'
+    });
+
     // Bridge existing tools to skills
     const tools = toolRegistry.getAllTools();
     for (const tool of tools) {

@@ -71,4 +71,10 @@ export interface IPluginAPI {
   notifications: {
     show(title: string, message: string): void;
   };
+
+  // Memory API
+  memory: {
+    add(content: string, type?: string, metadata?: any, tags?: string[]): Promise<any>;
+    search(query: string, k?: number): Promise<any[]>;
+  };
 }

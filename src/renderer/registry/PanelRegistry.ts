@@ -54,6 +54,7 @@ const WorkflowManagerPanel = lazy(() => import('../components/WorkflowManagerPan
 const SkillManagerPanel = lazy(() => import('../components/SkillManagerPanel'));
 const EventInspectorPanel = lazy(() => import('../components/EventInspectorPanel'));
 const PermissionManagerPanel = lazy(() => import('../components/PermissionManagerPanel'));
+const KnowledgeManagerPanel = lazy(() => import('../components/KnowledgeManagerPanel'));
 
 class PanelRegistry {
   private panels: Map<string, PanelRegistryEntry> = new Map();
@@ -396,6 +397,18 @@ class PanelRegistry {
       permissions: ['storage', 'process'],
       defaultLayout: 'split',
       shortcuts: { key: 'p', ctrlKey: true, shiftKey: true },
+      lazy: true,
+    });
+
+    // Knowledge Manager Panel
+    this.register({
+      id: 'knowledge',
+      title: 'Knowledge',
+      icon: Database,
+      component: KnowledgeManagerPanel,
+      permissions: ['storage', 'process'],
+      defaultLayout: 'split',
+      shortcuts: { key: 'k', ctrlKey: true, altKey: true },
       lazy: true,
     });
   }

@@ -97,4 +97,45 @@ export class PluginAPI implements IPluginAPI {
       console.log(`Notification from ${this.pluginId}: ${title} - ${message}`);
     }
   };
+
+  memory = {
+    add: async (content: string, type: any = 'short_term', metadata: any = {}, tags: string[] = []) => {
+      // Check for 'memory:write' permission
+      const hasPermission = await PermissionManager.checkPermission(`plugin:${this.pluginId}`, 'memory:write');
+      if (!hasPermission) {
+        const granted = await PermissionManager.requestPermission({
+          id: `req-${Date.now()}`,
+          scope: `plugin:${this.pluginId}`,
+          resource: 'memory:write',
+          reason: `Plugin ${this.pluginId} wants to add a memory`,
+          timestamp: Date.now()
+        });
+        if (!granted) throw new Error(`Permission denied for memory:write`);
+      }
+      const { default: MemoryManager } = await import('../engine/MemoryManager');
+      return await MemoryManager.addMemory({
+        content,
+        type,
+        metadata,
+        tags,
+        source: `plugin:${this.pluginId}`
+      });
+    },
+    search: async (query: string, k: number = 5) => {
+      // Check for 'memory:read' permission
+      const hasPermission = await PermissionManager.checkPermission(`plugin:${this.pluginId}`, 'memory:read');
+      if (!hasPermission) {
+        const granted = await PermissionManager.requestPermission({
+          id: `req-${Date.now()}`,
+          scope: `plugin:${this.pluginId}`,
+          resource: 'memory:read',
+          reason: `Plugin ${this.pluginId} wants to search memories`,
+          timestamp: Date.now()
+        });
+        if (!granted) throw new Error(`Permission denied for memory:read`);
+      }
+      const { default: MemoryManager } = await import('../engine/MemoryManager');
+      return await MemoryManager.searchMemories(query, { k });
+    }
+  };
 }

@@ -85,6 +85,37 @@ class WorkflowEngine {
         });
         break;
 
+      case 'add-memory':
+        const { content, memoryType, metadata, tags } = action.params;
+        if (!content) throw new Error('Content is required for add-memory action');
+        // Import MemoryManager dynamically to avoid circular dependency if any
+        const { default: MemoryManager } = await import('../engine/MemoryManager');
+        await MemoryManager.addMemory({
+          content,
+          type: memoryType || 'short_term',
+          metadata: metadata || {},
+          tags: tags || [],
+          source: `workflow`
+        });
+        break;
+
+      case 'search-memory':
+        const { query, k } = action.params;
+        if (!query) throw new Error('Query is required for search-memory action');
+        const { default: MemMgr } = await import('../engine/MemoryManager');
+        const results = await MemMgr.searchMemories(query, { k: k || 5 });
+        // Store results in context or publish event
+        EventBus.publish({
+          id: `evt-${Date.now()}`,
+          type: 'workflow:memory-search-results',
+          category: 'workflow',
+          source: 'workflow-engine',
+          payload: { query, results },
+          timestamp: Date.now(),
+          priority: 0
+        });
+        break;
+
       default:
         console.warn(`Unknown action type: ${action.type}`);
         break;
