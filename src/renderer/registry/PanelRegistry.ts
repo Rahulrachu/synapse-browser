@@ -13,6 +13,7 @@ import {
   Search,
   Layers,
   LayoutTemplate,
+  Camera,
 } from 'lucide-react';
 
 // Eager imports for frequently used panels
@@ -35,6 +36,7 @@ const LivePreviewPanel = lazy(() => import('../components/LivePreviewPanel'));
 const TerminalPanel = lazy(() => import('../components/TerminalPanel'));
 const NotesPanel = lazy(() => import('../components/NotesPanel'));
 const WorkspaceTemplateManager = lazy(() => import('../components/WorkspaceTemplateManager'));
+const WorkspaceSnapshotManager = lazy(() => import('../components/WorkspaceSnapshotManager'));
 
 class PanelRegistry {
   private panels: Map<string, PanelRegistryEntry> = new Map();
@@ -245,6 +247,18 @@ class PanelRegistry {
       permissions: ['storage'],
       defaultLayout: 'split',
       shortcuts: { key: 't', ctrlKey: true },
+      lazy: true,
+    });
+
+    // Workspace Snapshot Manager
+    this.register({
+      id: 'snapshots',
+      title: 'Snapshots',
+      icon: Camera,
+      component: WorkspaceSnapshotManager,
+      permissions: ['storage'],
+      defaultLayout: 'split',
+      shortcuts: { key: 's', ctrlKey: true, shiftKey: true },
       lazy: true,
     });
   }
