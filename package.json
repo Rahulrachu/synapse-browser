@@ -18,7 +18,8 @@
     "postinstall": "electron-builder install-app-deps",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "release": "standard-version"
   },
   "build": {
     "appId": "com.synapse.browser",
@@ -54,7 +55,9 @@
         }
       ],
       "icon": "public/icon.png",
-      "signingHashAlgorithms": ["sha256"],
+      "signingHashAlgorithms": [
+        "sha256"
+      ],
       "signAndEditExecutable": false
     },
     "nsis": {
@@ -148,6 +151,7 @@
     "postcss": "^8.5.16",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
+    "standard-version": "^9.5.0",
     "tailwindcss": "^4.3.2",
     "typescript": "^6.0.3",
     "vite": "^8.1.3",
