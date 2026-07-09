@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "main": "out/main/main/background.js",
   "description": "AI-First Productivity Browser",
-  "author": "Rahul S R",
+  "author": "Rahul S R <rahul.s.r@example.com>",
   "license": "MIT",
   "scripts": {
     "dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
@@ -35,8 +35,7 @@
     },
     "linux": {
       "target": [
-        "AppImage",
-        "deb"
+        "AppImage"
       ]
     },
     "mac": {
@@ -64,7 +63,6 @@
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
     "react-router-dom": "^7.18.1",
-    "sqlite3": "^6.0.1",
     "tailwindcss": "^4.3.2",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.3",
@@ -74,6 +72,8 @@
     "zustand": "^5.0.14"
   },
   "dependencies": {
+    "axios": "^1.6.0",
+    "sqlite3": "^6.0.1",
     "sqlite": "^5.1.1"
   }
 }
