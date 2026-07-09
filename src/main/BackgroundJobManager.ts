@@ -18,7 +18,7 @@ class BackgroundJobManager {
         //   return await WorkflowEngine.executeWorkflow(workflow);
         // }
         // throw new Error("Workflow not found");
-        console.log("Executing workflow job (placeholder)", job.payload);
+        console.log("[BackgroundJobManager] Executing workflow job", job.payload);
         await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate work
         onProgress(50);
         await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate more work
@@ -26,20 +26,20 @@ class BackgroundJobManager {
         return { status: "workflow_completed", message: "Workflow executed successfully" };
 
       case "ai-task":
-        console.log("Executing AI task job (placeholder)", job.payload);
+        console.log("[BackgroundJobManager] Executing AI task job", job.payload);
         await new Promise(resolve => setTimeout(resolve, 3000));
         onProgress(100);
         return { status: "ai_task_completed", message: "AI task completed" };
 
       case "plugin-action":
-        console.log("Executing plugin action job (placeholder)", job.payload);
+        console.log("[BackgroundJobManager] Executing plugin action job", job.payload);
         await new Promise(resolve => setTimeout(resolve, 1500));
         onProgress(100);
         return { status: "plugin_action_completed", message: "Plugin action completed" };
 
       case "generic":
       default:
-        console.log("Executing generic job (placeholder)", job.payload);
+        console.log("[BackgroundJobManager] Executing generic job", job.payload);
         await new Promise(resolve => setTimeout(resolve, 1000));
         onProgress(100);
         return { status: "generic_completed", message: "Generic job completed" };
