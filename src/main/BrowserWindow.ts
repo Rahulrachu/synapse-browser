@@ -30,7 +30,7 @@ export function createWindow() {
 
   const startUrl = isDev
     ? 'http://localhost:5173'
-    : `file://${path.join(__dirname, '../renderer/index.html')}`;
+    : `file://${path.join(__dirname, '../../dist/renderer/index.html')}`;
 
   mainWindow.loadURL(startUrl);
 

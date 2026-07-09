@@ -9,6 +9,8 @@
 }
 
 html, body, #root {
+  background-color: #0f172a !important;
+  color: white !important;
   width: 100%;
   height: 100%;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
