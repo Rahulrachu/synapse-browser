@@ -1,9 +1,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { app, ipcMain } from 'electron';
-import { PluginInfo, PluginManifest } from '../common/types/plugin';
-import { PluginAPI } from './PluginAPI';
-import Storage from './Storage';
+import { PluginInfo, PluginManifest } from '../common/types/plugin.js';
+import { PluginAPI } from './PluginAPI.js';
+import Storage from './Storage.js';
 
 /**
  * Manages the lifecycle and state of plugins in the Synapse Browser.

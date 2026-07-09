@@ -1,9 +1,9 @@
-import ToolRegistry from './ToolRuntime';
-import { BrowserTool } from './BrowserTool';
-import { TerminalTool } from './TerminalTool';
-import { FileSystemTool } from './FileSystemTool';
-import { ContextTool, MemoryTool, PlanningTool } from './EngineTools';
-import { GitTool, HttpTool, ClipboardTool, NotesTool } from './OtherTools';
+import ToolRegistry from './ToolRuntime.js';
+import { BrowserTool } from './BrowserTool.js';
+import { TerminalTool } from './TerminalTool.js';
+import { FileSystemTool } from './FileSystemTool.js';
+import { ContextTool, MemoryTool, PlanningTool } from './EngineTools.js';
+import { GitTool, HttpTool, ClipboardTool, NotesTool } from './OtherTools.js';
 
 // Initialize and register all tools
 export function initializeTools() {

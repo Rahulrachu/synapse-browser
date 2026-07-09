@@ -9,10 +9,10 @@ import {
   AIChatResponse, 
   AIStreamChunk,
   AIProviderHealth
-} from '../common/types/ai';
-import EventBus from './EventBus';
-import AIServiceManager from './AIServiceManager';
-import PromptManager from './PromptManager';
+} from '../common/types/ai.js';
+import EventBus from './EventBus.js';
+import AIServiceManager from './AIServiceManager.js';
+import PromptManager from './PromptManager.js';
 
 export abstract class BaseAIProvider {
   public abstract readonly type: AIProviderType;

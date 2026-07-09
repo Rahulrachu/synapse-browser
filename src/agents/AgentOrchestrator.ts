@@ -1,14 +1,14 @@
 
 import { EventEmitter } from 'events';
-import { AgentId, AgentTask, AgentResult, AgentContext, AgentMessage } from './types';
-import { AgentManager } from './AgentManager';
-import AgentRuntime from './AgentRuntime';
-import AgentLogger from './AgentLogger';
-import TaskQueueManager from '../main/TaskQueueManager';
-import EventBus from '../main/EventBus';
-import MemoryManager from '../engine/MemoryManager';
-import SearchEngine from '../main/SearchEngine';
-import { Job } from '../common/types/job';
+import { AgentId, AgentTask, AgentResult, AgentContext, AgentMessage } from './types.js';
+import { AgentManager } from './AgentManager.js';
+import AgentRuntime from './AgentRuntime.js';
+import AgentLogger from './AgentLogger.js';
+import TaskQueueManager from '../main/TaskQueueManager.js';
+import EventBus from '../main/EventBus.js';
+import MemoryManager from '../engine/MemoryManager.js';
+import SearchEngine from '../main/SearchEngine.js';
+import { Job } from '../common/types/job.js';
 
 export class AgentOrchestrator extends EventEmitter {
   private manager: AgentManager;

@@ -1,5 +1,5 @@
 
-import { AIPrompt } from '../common/types/prompt';
+import { AIPrompt } from '../common/types/prompt.js';
 
 export const BUILT_IN_PROMPTS: AIPrompt[] = [
   {

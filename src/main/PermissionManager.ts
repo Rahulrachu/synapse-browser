@@ -1,6 +1,6 @@
 import { ipcMain, dialog, BrowserWindow } from 'electron';
-import { Permission, PermissionRequest, PermissionState, PermissionHistoryEntry } from '../common/types/permission';
-import Storage from './Storage';
+import { Permission, PermissionRequest, PermissionState, PermissionHistoryEntry } from '../common/types/permission.js';
+import Storage from './Storage.js';
 
 class PermissionManager {
   private permissions: Map<string, Permission> = new Map();

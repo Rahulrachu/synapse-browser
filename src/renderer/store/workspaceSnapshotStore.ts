@@ -1,9 +1,9 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { WorkspaceSnapshot } from '../types/workspace';
-import { useBrowserStore } from './browserStore';
-import { usePanelStore } from './panelStore';
-import { useWorkspaceStore } from './workspaceStore';
+import { WorkspaceSnapshot } from '../types/workspace.js';
+import { useBrowserStore } from './browserStore.js';
+import { usePanelStore } from './panelStore.js';
+import { useWorkspaceStore } from './workspaceStore.js';
 
 interface WorkspaceSnapshotState {
   snapshots: WorkspaceSnapshot[];

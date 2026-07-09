@@ -1,5 +1,5 @@
 import { Menu, MenuItem, WebContents, clipboard } from 'electron';
-import BrowserManager from './BrowserManager';
+import BrowserManager from './BrowserManager.js';
 
 /**
  * Sets up the context menu for a given WebContents instance.

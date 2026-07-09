@@ -1,5 +1,5 @@
-import { Tool, ToolDefinition, ToolResult } from './ToolRuntime';
-import BrowserAutomation from '../main/BrowserAutomation';
+import { Tool, ToolDefinition, ToolResult } from './ToolRuntime.js';
+import BrowserAutomation from '../main/BrowserAutomation.js';
 
 export class BrowserTool extends Tool {
   definition: ToolDefinition = {

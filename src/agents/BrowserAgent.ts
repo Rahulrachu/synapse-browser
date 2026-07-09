@@ -1,5 +1,5 @@
 
-import { BaseAgent } from './BaseAgent';
+import { BaseAgent } from './BaseAgent.js';
 import { 
   AgentId, 
   AgentName, 
@@ -8,11 +8,11 @@ import {
   AgentResult, 
   AgentContext, 
   AgentMessage 
-} from './types';
-import { AgentMessageBus } from './AgentMessageBus';
-import AgentLogger from './AgentLogger';
-import BrowserAutomation from '../main/BrowserAutomation';
-import BrowserManager from '../main/BrowserManager';
+} from './types.js';
+import { AgentMessageBus } from './AgentMessageBus.js';
+import AgentLogger from './AgentLogger.js';
+import BrowserAutomation from '../main/BrowserAutomation.js';
+import BrowserManager from '../main/BrowserManager.js';
 
 export class BrowserAgent extends BaseAgent {
   constructor(id: AgentId, messageBus: AgentMessageBus, initialContext: AgentContext) {

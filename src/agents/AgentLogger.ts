@@ -1,5 +1,5 @@
 
-import { AgentId, AgentMessage, AgentTask, AgentResult } from './types';
+import { AgentId, AgentMessage, AgentTask, AgentResult } from './types.js';
 
 export enum LogLevel {
   DEBUG = 'DEBUG',

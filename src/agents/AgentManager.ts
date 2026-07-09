@@ -1,11 +1,11 @@
 
-import { AgentRegistry } from './AgentRegistry';
-import { AgentMessageBus } from './AgentMessageBus';
-import { BaseAgent } from './BaseAgent';
-import { AgentId, AgentTask, AgentResult, AgentContext, AgentMessage, AgentCapability } from './types';
-import ToolRuntime from '../tools/ToolRuntime';
+import { AgentRegistry } from './AgentRegistry.js';
+import { AgentMessageBus } from './AgentMessageBus.js';
+import { BaseAgent } from './BaseAgent.js';
+import { AgentId, AgentTask, AgentResult, AgentContext, AgentMessage, AgentCapability } from './types.js';
+import ToolRuntime from '../tools/ToolRuntime.js';
 import { EventEmitter } from 'events';
-import AgentLogger from './AgentLogger';
+import AgentLogger from './AgentLogger.js';
 
 export class AgentManager extends EventEmitter {
   private registry: AgentRegistry;

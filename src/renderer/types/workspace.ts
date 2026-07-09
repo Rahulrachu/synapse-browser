@@ -1,4 +1,4 @@
-import { PanelState } from './panel';
+import { PanelState } from './panel.js';
 
 export interface WorkspaceTemplate {
   id: string;

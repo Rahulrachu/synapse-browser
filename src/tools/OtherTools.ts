@@ -1,8 +1,8 @@
-import { Tool, ToolDefinition, ToolResult } from './ToolRuntime';
+import { Tool, ToolDefinition, ToolResult } from './ToolRuntime.js';
 import { clipboard } from 'electron';
 import axios from 'axios';
-import GitManager from '../main/GitManager';
-import Storage from '../main/Storage';
+import GitManager from '../main/GitManager.js';
+import Storage from '../main/Storage.js';
 
 export class GitTool extends Tool {
   definition: ToolDefinition = {

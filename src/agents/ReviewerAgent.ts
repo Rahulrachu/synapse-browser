@@ -1,4 +1,4 @@
-import { BaseAgent } from './BaseAgent';
+import { BaseAgent } from './BaseAgent.js';
 import { 
   AgentId, 
   AgentName, 
@@ -7,10 +7,10 @@ import {
   AgentResult, 
   AgentContext, 
   AgentMessage 
-} from './types';
-import { AgentMessageBus } from './AgentMessageBus';
-import AgentLogger from './AgentLogger';
-import { BugFixingEngine } from '../main/BugFixingEngine';
+} from './types.js';
+import { AgentMessageBus } from './AgentMessageBus.js';
+import AgentLogger from './AgentLogger.js';
+import { BugFixingEngine } from '../main/BugFixingEngine.js';
 
 export interface ReviewTaskContext {
   code: string;

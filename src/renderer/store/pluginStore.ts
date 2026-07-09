@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { PluginInfo } from '../../common/types/plugin';
+import { PluginInfo } from '../../common/types/plugin.js';
 
 interface PluginStoreState {
   plugins: PluginInfo[];

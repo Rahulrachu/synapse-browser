@@ -1,5 +1,5 @@
 import { WebContents, nativeImage } from 'electron';
-import BrowserManager from './BrowserManager';
+import BrowserManager from './BrowserManager.js';
 
 export interface AutomationResult {
   success: boolean;

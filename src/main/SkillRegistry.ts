@@ -1,7 +1,7 @@
 import { ipcMain } from 'electron';
-import { Skill, SkillSearchOptions } from '../common/types/skill';
-import Storage from './Storage';
-import toolRegistry from '../tools/ToolRuntime';
+import { Skill, SkillSearchOptions } from '../common/types/skill.js';
+import Storage from './Storage.js';
+import toolRegistry from '../tools/ToolRuntime.js';
 
 class SkillRegistry {
   private skills: Map<string, Skill> = new Map();

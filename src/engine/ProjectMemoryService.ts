@@ -1,4 +1,4 @@
-import { MemorySystem } from './MemorySystem';
+import { MemorySystem } from './MemorySystem.js';
 
 export interface ProjectMemory {
   projectId: string;

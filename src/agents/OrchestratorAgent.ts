@@ -1,5 +1,5 @@
 
-import { BaseAgent } from './BaseAgent';
+import { BaseAgent } from './BaseAgent.js';
 import {
   AgentId,
   AgentCapability,
@@ -7,11 +7,11 @@ import {
   AgentResult,
   AgentContext,
   AgentMessage
-} from './types';
-import { AgentMessageBus } from './AgentMessageBus';
-import AgentLogger from './AgentLogger';
-import { AgentManager } from './AgentManager';
-import { PlannerAgent } from './PlannerAgent';
+} from './types.js';
+import { AgentMessageBus } from './AgentMessageBus.js';
+import AgentLogger from './AgentLogger.js';
+import { AgentManager } from './AgentManager.js';
+import { PlannerAgent } from './PlannerAgent.js';
 
 export class OrchestratorAgent extends BaseAgent {
   private agentManager: AgentManager;

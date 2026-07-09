@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { SearchQuery, SearchResult, SearchStats, SearchProviderInfo } from '../../common/types/search';
+import { SearchQuery, SearchResult, SearchStats, SearchProviderInfo } from '../../common/types/search.js';
 
 const { ipcRenderer } = (window as any).electron;
 

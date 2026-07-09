@@ -66,7 +66,11 @@ export class WebSummarizerService {
     const topSentences = scoredSentences
       .sort((a, b) => b.score - a.score)
       .slice(0, Math.ceil(sentences.length / 3))
-      .sort((a, b) => sentences.indexOf(a.sentence) - sentences.indexOf(b.sentence))
+      .sort((a, b) => {
+        const indexA = sentences.findIndex(s => s.trim() === a.sentence);
+        const indexB = sentences.findIndex(s => s.trim() === b.sentence);
+        return indexA - indexB;
+      })
       .map((s) => s.sentence)
       .join(' ');
 

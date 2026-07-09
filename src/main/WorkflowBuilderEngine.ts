@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { DeploymentConfig, DeploymentTarget } from './DeploymentService';
+import { DeploymentConfig, DeploymentTarget } from './DeploymentService.js';
 
 export interface WorkflowNode {
   id: string;
@@ -290,16 +290,24 @@ export class WorkflowBuilderEngine {
           const { exec } = require('child_process');
           const { promisify } = require('util');
           const execAsync = promisify(exec);
-          const { stdout, stderr } = await execAsync('npm test', { cwd: process.cwd() }).catch(e => e);
-          execution.variables.testResults = { output: stdout + stderr, success: !stderr.includes('FAIL') };
+          try {
+            const { stdout, stderr } = await execAsync('npm test', { cwd: process.cwd() });
+            execution.variables.testResults = { output: stdout + stderr, success: !stderr.includes('FAIL') };
+          } catch (e: any) {
+            execution.variables.testResults = { output: e.stdout + e.stderr, success: false };
+          }
           break;
         }
         case 'build': {
           const { exec } = require('child_process');
           const { promisify } = require('util');
           const execAsync = promisify(exec);
-          const { stdout, stderr } = await execAsync('npm run build', { cwd: process.cwd() }).catch(e => e);
-          execution.variables.buildStatus = stderr.includes('error') ? 'failed' : 'success';
+          try {
+            const { stdout, stderr } = await execAsync('npm run build', { cwd: process.cwd() });
+            execution.variables.buildStatus = stderr.includes('error') ? 'failed' : 'success';
+          } catch (e: any) {
+            execution.variables.buildStatus = 'failed';
+          }
           break;
         }
         case 'deploy': {

@@ -1,4 +1,4 @@
-import { BaseAgent } from './BaseAgent';
+import { BaseAgent } from './BaseAgent.js';
 import { 
   AgentId, 
   AgentName, 
@@ -7,11 +7,11 @@ import {
   AgentResult, 
   AgentContext, 
   AgentMessage 
-} from './types';
-import { AgentMessageBus } from './AgentMessageBus';
-import AgentLogger from './AgentLogger';
-import MemorySystem from '../engine/MemorySystem';
-import { DocumentationGeneratorService } from '../main/DocumentationGeneratorService';
+} from './types.js';
+import { AgentMessageBus } from './AgentMessageBus.js';
+import AgentLogger from './AgentLogger.js';
+import MemorySystem from '../engine/MemorySystem.js';
+import { DocumentationGeneratorService } from '../main/DocumentationGeneratorService.js';
 
 export interface WriterTaskContext {
   format?: 'markdown' | 'html' | 'pdf' | 'plain';

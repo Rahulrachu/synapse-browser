@@ -1,5 +1,5 @@
 import { BrowserWindow } from 'electron';
-import { NotificationType } from '../renderer/types/notification';
+import { NotificationType } from '../renderer/types/notification.js';
 
 interface ShowNotificationOptions {
   type: NotificationType;

@@ -1,8 +1,8 @@
 import { EventEmitter } from 'events';
-import { TaskGraphManager, TaskGraph, ExecutionContext } from './TaskGraphManager';
-import { CognitiveEngine, Goal, Plan } from './CognitiveEngine';
-import { UniversalToolRuntime } from './UniversalToolRuntime';
-import { ContinuousLearningEngine } from './ContinuousLearningEngine';
+import { TaskGraphManager, TaskGraph, ExecutionContext } from './TaskGraphManager.js';
+import { CognitiveEngine, Goal, Plan } from './CognitiveEngine.js';
+import { UniversalToolRuntime } from './UniversalToolRuntime.js';
+import { ContinuousLearningEngine } from './ContinuousLearningEngine.js';
 
 export interface ProjectRequest {
   id: string;

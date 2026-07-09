@@ -1,4 +1,4 @@
-import PermissionManager from './PermissionManager';
+import PermissionManager from './PermissionManager.js';
 
 class CapabilityManager {
   private capabilityMap: Map<string, string[]> = new Map([

@@ -1,16 +1,16 @@
-import { ISearchProvider } from './SearchEngine';
-import { SearchQuery, SearchResult } from '../common/types/search';
-import BrowserManager from './BrowserManager';
-import Storage from './Storage';
-import { Note } from '../common/utils';
-import WorkflowManager from './WorkflowManager';
-import SkillRegistry from './SkillRegistry';
-import PluginManager from './PluginManager';
-import ExtensionRepositoryService from './ExtensionRepositoryService';
-import DownloadManager from './DownloadManager';
-import MemoryManager from '../engine/MemoryManager';
-import TaskQueueManager from './TaskQueueManager';
-import ProjectManager from './ProjectManager';
+import { ISearchProvider } from './SearchEngine.js';
+import { SearchQuery, SearchResult } from '../common/types/search.js';
+import BrowserManager from './BrowserManager.js';
+import Storage from './Storage.js';
+import { Note } from '../common/utils.js';
+import WorkflowManager from './WorkflowManager.js';
+import SkillRegistry from './SkillRegistry.js';
+import PluginManager from './PluginManager.js';
+import ExtensionRepositoryService from './ExtensionRepositoryService.js';
+import DownloadManager from './DownloadManager.js';
+import MemoryManager from '../engine/MemoryManager.js';
+import TaskQueueManager from './TaskQueueManager.js';
+import ProjectManager from './ProjectManager.js';
 
 // Helper for fuzzy matching (simplified)
 function fuzzyMatch(text: string, query: string): number {

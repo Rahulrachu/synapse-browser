@@ -1,4 +1,15 @@
+import path from 'path';
+import { fileURLToPath } from 'url';
+
 export const isDev = process.env.NODE_ENV === 'development';
+
+export const getDirname = (importMetaUrl: string) => {
+  return path.dirname(fileURLToPath(importMetaUrl));
+};
+
+export const getFilename = (importMetaUrl: string) => {
+  return fileURLToPath(importMetaUrl);
+};
 
 export interface TabData {
   id: string;

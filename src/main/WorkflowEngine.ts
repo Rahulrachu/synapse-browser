@@ -1,8 +1,8 @@
-import { Workflow, WorkflowAction, WorkflowExecutionResult } from '../common/types/workflow';
-import BrowserManager from './BrowserManager';
-import PluginManager from './PluginManager';
-import EventBus from './EventBus';
-import PermissionManager from './PermissionManager';
+import { Workflow, WorkflowAction, WorkflowExecutionResult } from '../common/types/workflow.js';
+import BrowserManager from './BrowserManager.js';
+import PluginManager from './PluginManager.js';
+import EventBus from './EventBus.js';
+import PermissionManager from './PermissionManager.js';
 
 class WorkflowEngine {
   async executeWorkflow(workflow: Workflow): Promise<WorkflowExecutionResult> {

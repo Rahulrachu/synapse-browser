@@ -1,7 +1,7 @@
-import { Tool, ToolDefinition, ToolResult } from './ToolRuntime';
-import ContextEngine from '../engine/ContextEngine';
-import MemorySystem from '../engine/MemorySystem';
-import PlanningEngine from '../engine/PlanningEngine';
+import { Tool, ToolDefinition, ToolResult } from './ToolRuntime.js';
+import ContextEngine from '../engine/ContextEngine.js';
+import MemorySystem from '../engine/MemorySystem.js';
+import PlanningEngine from '../engine/PlanningEngine.js';
 
 export class ContextTool extends Tool {
   definition: ToolDefinition = {

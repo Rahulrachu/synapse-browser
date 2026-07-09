@@ -1,6 +1,6 @@
 import { WebContentsView, ipcMain, app } from 'electron';
-import { getMainWindow } from './BrowserWindow';
-import { setupContextMenu } from './ContextMenu';
+import { getMainWindow } from './BrowserWindow.js';
+import { setupContextMenu } from './ContextMenu.js';
 
 interface TabInfo {
   id: string;

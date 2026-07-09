@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron';
-import { SearchQuery, SearchResult, SearchStats, SearchProviderInfo } from '../common/types/search';
-import EventBus from './EventBus';
+import { SearchQuery, SearchResult, SearchStats, SearchProviderInfo } from '../common/types/search.js';
+import EventBus from './EventBus.js';
 
 export interface ISearchProvider {
   id: string;

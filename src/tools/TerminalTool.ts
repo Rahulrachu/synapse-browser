@@ -1,4 +1,4 @@
-import { Tool, ToolDefinition, ToolResult } from './ToolRuntime';
+import { Tool, ToolDefinition, ToolResult } from './ToolRuntime.js';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 

@@ -1,7 +1,7 @@
-import { Job } from "../common/types/job";
-import WorkflowEngine from "./WorkflowEngine";
-import PluginManager from "./PluginManager";
-import SkillRegistry from "./SkillRegistry";
+import { Job } from '../common/types/job.js';
+import WorkflowEngine from './WorkflowEngine.js';
+import PluginManager from './PluginManager.js';
+import SkillRegistry from './SkillRegistry.js';
 
 class BackgroundJobManager {
   async executeJob(job: Job, onProgress: (progress: number) => void): Promise<any> {

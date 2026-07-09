@@ -1,5 +1,5 @@
 
-import { BaseAgent } from './BaseAgent';
+import { BaseAgent } from './BaseAgent.js';
 import { 
   AgentId, 
   AgentName, 
@@ -8,10 +8,10 @@ import {
   AgentResult, 
   AgentContext, 
   AgentMessage 
-} from './types';
-import { AgentMessageBus } from './AgentMessageBus';
-import AgentLogger from './AgentLogger';
-import MemorySystem from '../engine/MemorySystem';
+} from './types.js';
+import { AgentMessageBus } from './AgentMessageBus.js';
+import AgentLogger from './AgentLogger.js';
+import MemorySystem from '../engine/MemorySystem.js';
 
 export interface ResearchFinding {
   source: string;

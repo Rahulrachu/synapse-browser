@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Workflow, WorkflowExecutionResult } from '../../common/types/workflow';
+import { Workflow, WorkflowExecutionResult } from '../../common/types/workflow.js';
 
 interface WorkflowStoreState {
   workflows: Workflow[];

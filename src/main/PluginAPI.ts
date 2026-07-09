@@ -1,12 +1,12 @@
-import { IPluginAPI } from '../common/types/plugin';
-import { Skill } from '../common/types/skill';
-import { SynapseEvent, SubscriptionOptions, EventCallback } from '../common/types/event';
-import BrowserManager from './BrowserManager';
-import Storage from './Storage';
-import SkillRegistry from './SkillRegistry';
-import EventBus from './EventBus';
-import PermissionManager from './PermissionManager';
-import { JobStatus } from '../common/types/job';
+import { IPluginAPI } from '../common/types/plugin.js';
+import { Skill } from '../common/types/skill.js';
+import { SynapseEvent, SubscriptionOptions, EventCallback } from '../common/types/event.js';
+import BrowserManager from './BrowserManager.js';
+import Storage from './Storage.js';
+import SkillRegistry from './SkillRegistry.js';
+import EventBus from './EventBus.js';
+import PermissionManager from './PermissionManager.js';
+import { JobStatus } from '../common/types/job.js';
 
 export class PluginAPI implements IPluginAPI {
   private pluginId: string;

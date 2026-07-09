@@ -1,5 +1,5 @@
 
-import { BaseAIProvider } from '../AIModelProviderManager';
+import { BaseAIProvider } from '../AIModelProviderManager.js';
 import { 
   AIProviderType, 
   AIModel, 
@@ -9,7 +9,7 @@ import {
   AIChatResponse, 
   AIStreamChunk,
   AIProviderHealth
-} from '../../common/types/ai';
+} from '../../common/types/ai.js';
 import axios from 'axios';
 
 export class OpenAIProvider extends BaseAIProvider {

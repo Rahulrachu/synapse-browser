@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Skill, SkillSearchOptions } from '../../common/types/skill';
+import { Skill, SkillSearchOptions } from '../../common/types/skill.js';
 
 interface SkillStoreState {
   skills: Skill[];

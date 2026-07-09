@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Permission, PermissionHistoryEntry, PermissionRequest } from '../../common/types/permission';
+import { Permission, PermissionHistoryEntry, PermissionRequest } from '../../common/types/permission.js';
 
 interface PermissionStoreState {
   permissions: Permission[];

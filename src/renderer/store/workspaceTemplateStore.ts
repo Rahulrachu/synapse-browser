@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { WorkspaceTemplate } from '../types/workspace';
-import { PanelState } from '../types/panel';
+import { WorkspaceTemplate } from '../types/workspace.js';
+import { PanelState } from '../types/panel.js';
 
 interface WorkspaceTemplateState {
   templates: WorkspaceTemplate[];

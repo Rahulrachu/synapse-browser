@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { DownloadItem, DownloadStatus } from '../types/download';
+import { DownloadItem, DownloadStatus } from '../types/download.js';
 
 interface DownloadStore {
   downloads: DownloadItem[];

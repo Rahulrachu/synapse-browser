@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { RecentItem, RecentItemType } from '../types/recent';
+import { RecentItem, RecentItemType } from '../types/recent.js';
 
 interface RecentStore {
   items: RecentItem[];

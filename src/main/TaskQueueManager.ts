@@ -2,10 +2,10 @@ import { app, ipcMain } from 'electron';
 import path from 'path';
 import sqlite3 from 'sqlite3';
 import { open, Database } from 'sqlite';
-import { Job, JobStatus, JobFilterOptions, JobUpdatePayload } from '../common/types/job';
-import EventBus from './EventBus';
-import BackgroundJobManager from './BackgroundJobManager';
-import NotificationService from './NotificationService';
+import { Job, JobStatus, JobFilterOptions, JobUpdatePayload } from '../common/types/job.js';
+import EventBus from './EventBus.js';
+import BackgroundJobManager from './BackgroundJobManager.js';
+import NotificationService from './NotificationService.js';
 
 const JOB_DB_NAME = 'jobs.sqlite';
 const MAX_CONCURRENT_JOBS = 3; // Example limit

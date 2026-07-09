@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { ExtensionMetadata, MarketplaceSearchOptions, ExtensionUpdateInfo } from '../../common/types/marketplace';
+import { ExtensionMetadata, MarketplaceSearchOptions, ExtensionUpdateInfo } from '../../common/types/marketplace.js';
 
 interface MarketplaceStoreState {
   extensions: ExtensionMetadata[];

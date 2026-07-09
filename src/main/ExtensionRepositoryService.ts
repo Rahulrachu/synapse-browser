@@ -1,9 +1,9 @@
 import { app, ipcMain } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
-import { ExtensionMetadata, MarketplaceSearchOptions, ExtensionUpdateInfo } from '../common/types/marketplace';
-import PluginManager from './PluginManager';
-import PermissionManager from './PermissionManager';
+import { ExtensionMetadata, MarketplaceSearchOptions, ExtensionUpdateInfo } from '../common/types/marketplace.js';
+import PluginManager from './PluginManager.js';
+import PermissionManager from './PermissionManager.js';
 
 class ExtensionRepositoryService {
   private mockExtensions: ExtensionMetadata[] = [

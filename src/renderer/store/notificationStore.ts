@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Notification, NotificationType } from '../types/notification';
+import { Notification, NotificationType } from '../types/notification.js';
 
 interface NotificationStore {
   notifications: Notification[];

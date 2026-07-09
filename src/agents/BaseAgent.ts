@@ -1,9 +1,9 @@
 
-import { AgentId, AgentName, AgentCapability, AgentTask, AgentResult, AgentContext, AgentMessage } from './types';
-import { AgentMessageBus } from './AgentMessageBus';
-import AgentLogger from './AgentLogger';
-import AIModelProviderManager from '../main/AIModelProviderManager';
-import { AIChatMessage, AIChatOptions, AIChatResponse } from '../common/types/ai';
+import { AgentId, AgentName, AgentCapability, AgentTask, AgentResult, AgentContext, AgentMessage } from './types.js';
+import { AgentMessageBus } from './AgentMessageBus.js';
+import AgentLogger from './AgentLogger.js';
+import AIModelProviderManager from '../main/AIModelProviderManager.js';
+import { AIChatMessage, AIChatOptions, AIChatResponse } from '../common/types/ai.js';
 
 export abstract class BaseAgent {
   public readonly id: AgentId;

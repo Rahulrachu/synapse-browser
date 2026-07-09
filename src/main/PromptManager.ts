@@ -2,8 +2,8 @@
 import path from 'path';
 import { app, ipcMain } from 'electron';
 import fs from 'fs';
-import { AIPrompt, PromptLibraryStats } from '../common/types/prompt';
-import { BUILT_IN_PROMPTS } from './BuiltInPrompts';
+import { AIPrompt, PromptLibraryStats } from '../common/types/prompt.js';
+import { BUILT_IN_PROMPTS } from './BuiltInPrompts.js';
 
 class PromptManager {
   private dataDir: string;

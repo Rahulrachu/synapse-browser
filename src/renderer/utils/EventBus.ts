@@ -1,4 +1,4 @@
-import { SynapseEvent, EventCallback, SubscriptionOptions } from '../../common/types/event';
+import { SynapseEvent, EventCallback, SubscriptionOptions } from '../../common/types/event.js';
 
 class RendererEventBus {
   private listeners: Map<string, { callback: EventCallback; options: SubscriptionOptions }[]> = new Map();

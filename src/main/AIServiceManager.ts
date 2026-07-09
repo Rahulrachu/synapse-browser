@@ -97,7 +97,7 @@ class AIServiceManager {
    * Retrieves all registered AI service configurations.
    * @returns An array of all AI service configurations.
    */
-  getServices(): AIServiceConfig {
+  getServices(): AIServiceConfig[] {
     return Array.from(this.services.values());
   }
 
@@ -115,7 +115,7 @@ class AIServiceManager {
    * @param service The type of AI service to filter by.
    * @returns An array of AI service configurations matching the specified type.
    */
-  getServicesByType(service: AIService): AIServiceConfig {
+  getServicesByType(service: AIService): AIServiceConfig[] {
     return Array.from(this.services.values()).filter((s) => s.service === service);
   }
 
@@ -208,7 +208,7 @@ class AIServiceManager {
    * @param serviceId Optional. The ID of the AI service to filter conversations by.
    * @returns An array of AI conversations.
    */
-  getConversations(serviceId?: string): AIConversation {
+  getConversations(serviceId?: string): AIConversation[] {
     try {
       const files = fs.readdirSync(this.conversationsDir);
       const conversations: AIConversation[] = [];

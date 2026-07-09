@@ -1,6 +1,6 @@
 import { lazy } from 'react';
 import { Database } from 'lucide-react';
-import { PanelRegistryEntry } from '../types/panel';
+import { PanelRegistryEntry } from '../types/panel.js';
 import {
   Globe,
   BookmarkIcon,
@@ -26,10 +26,10 @@ import {
 } from 'lucide-react';
 
 // Eager imports for frequently used panels
-import BrowserPanel from '../components/BrowserPanel';
-import WorkspacePanel from '../components/WorkspacePanel';
-import HistoryPanel from '../components/HistoryPanel';
-import BookmarksPanel from '../components/BookmarksPanel';
+import BrowserPanel from '../components/BrowserPanel.js';
+import WorkspacePanel from '../components/WorkspacePanel.js';
+import HistoryPanel from '../components/HistoryPanel.js';
+import BookmarksPanel from '../components/BookmarksPanel.js';
 
 // Lazy imports for heavier panels
 const AIWorkspacePanel = lazy(() => import('../components/AIWorkspacePanel'));

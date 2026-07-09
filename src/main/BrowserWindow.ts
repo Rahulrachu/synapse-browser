@@ -1,8 +1,10 @@
 import { app, BrowserWindow, ipcMain, Menu, dialog, session } from 'electron';
 import path from 'path';
-import { isDev } from '../common/utils';
-import BrowserManager from './BrowserManager';
-import DownloadManager from './DownloadManager';
+import { isDev, getDirname } from '../common/utils.js';
+
+const __dirname = getDirname(import.meta.url);
+import BrowserManager from './BrowserManager.js';
+import DownloadManager from './DownloadManager.js';
 
 let mainWindow: BrowserWindow | null = null;
 

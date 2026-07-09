@@ -1,5 +1,5 @@
 import { ipcMain, WebContents, webContents } from 'electron';
-import { SynapseEvent, EventCallback, SubscriptionOptions } from '../common/types/event';
+import { SynapseEvent, EventCallback, SubscriptionOptions } from '../common/types/event.js';
 
 class EventBus {
   private listeners: Map<string, { callback: EventCallback; options: SubscriptionOptions }[]> = new Map();

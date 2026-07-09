@@ -1,9 +1,9 @@
 
 export function useIPC() {
-  const electron = (window as any).electron;
+  const electron = window.electron;
   
   const invoke = async (channel: string, ...args: any[]) => {
-    if (!electron || !electron.ipcRenderer) {
+    if (!electron) {
       console.error(`IPC not available for channel: ${channel}`);
       return null;
     }
@@ -11,7 +11,7 @@ export function useIPC() {
   };
 
   const send = (channel: string, ...args: any[]) => {
-    if (!electron || !electron.ipcRenderer) {
+    if (!electron) {
       console.error(`IPC not available for channel: ${channel}`);
       return;
     }
@@ -19,11 +19,10 @@ export function useIPC() {
   };
 
   const on = (channel: string, callback: (...args: any[]) => void) => {
-    if (!electron || !electron.ipcRenderer) {
+    if (!electron) {
       return () => {};
     }
-    electron.ipcRenderer.on(channel, callback);
-    return () => electron.ipcRenderer.removeListener(channel, callback);
+    return electron.ipcRenderer.on(channel, callback);
   };
 
   return { invoke, send, on };

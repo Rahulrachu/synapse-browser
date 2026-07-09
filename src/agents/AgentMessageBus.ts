@@ -1,5 +1,5 @@
 
-import { AgentId, AgentMessage } from './types';
+import { AgentId, AgentMessage } from './types.js';
 
 export class AgentMessageBus {
   private subscribers: Map<AgentId | 'broadcast', ((message: AgentMessage) => Promise<void>)[]> = new Map();

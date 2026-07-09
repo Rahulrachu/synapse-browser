@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { PanelState } from '../types/panel';
+import { PanelState } from '../types/panel.js';
 
 interface PanelStoreState extends PanelState {
   setActivePanel: (panelId: string, slot?: 'left' | 'right' | 'top' | 'bottom') => void;

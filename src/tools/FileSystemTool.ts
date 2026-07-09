@@ -1,4 +1,4 @@
-import { Tool, ToolDefinition, ToolResult } from './ToolRuntime';
+import { Tool, ToolDefinition, ToolResult } from './ToolRuntime.js';
 import fs from 'fs/promises';
 import path from 'path';
 

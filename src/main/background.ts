@@ -1,25 +1,25 @@
 import { app, ipcMain } from 'electron';
-import { createWindow } from './BrowserWindow';
-import BrowserManager from './BrowserManager';
-import Storage from './Storage';
-import SessionManager from './SessionManager';
-import TabGroupManager from './TabGroupManager';
-import PanelManager from './PanelManager';
-import AIServiceManager from './AIServiceManager';
-import ProjectManager from './ProjectManager';
-import GitManager from './GitManager';
-import PluginManager from './PluginManager';
-import ExtensionRepositoryService from './ExtensionRepositoryService';
-import WorkflowManager from './WorkflowManager';
-import SkillRegistry from './SkillRegistry';
-import PermissionManager from './PermissionManager';
-import ContextEngine from '../engine/ContextEngine';
-import MemorySystem from '../engine/MemorySystem';
-import MemoryManager from '../engine/MemoryManager';
-import TaskQueueManager from './TaskQueueManager';
-import NotificationService from './NotificationService';
-import EventBus from './EventBus';
-import SearchEngine from './SearchEngine';
+import { createWindow } from './BrowserWindow.js';
+import BrowserManager from './BrowserManager.js';
+import Storage from './Storage.js';
+import SessionManager from './SessionManager.js';
+import TabGroupManager from './TabGroupManager.js';
+import PanelManager from './PanelManager.js';
+import AIServiceManager from './AIServiceManager.js';
+import ProjectManager from './ProjectManager.js';
+import GitManager from './GitManager.js';
+import PluginManager from './PluginManager.js';
+import ExtensionRepositoryService from './ExtensionRepositoryService.js';
+import WorkflowManager from './WorkflowManager.js';
+import SkillRegistry from './SkillRegistry.js';
+import PermissionManager from './PermissionManager.js';
+import ContextEngine from '../engine/ContextEngine.js';
+import MemorySystem from '../engine/MemorySystem.js';
+import MemoryManager from '../engine/MemoryManager.js';
+import TaskQueueManager from './TaskQueueManager.js';
+import NotificationService from './NotificationService.js';
+import EventBus from './EventBus.js';
+import SearchEngine from './SearchEngine.js';
 import { 
   BrowserTabProvider, 
   NoteProvider, 
@@ -30,16 +30,16 @@ import {
   MarketplaceProvider, 
   DownloadProvider, 
   MemoryProvider 
-} from './SearchProviders';
-import PlanningEngine from '../engine/PlanningEngine';
-import AIModelProviderManager from './AIModelProviderManager';
-import { OpenAIProvider } from './providers/OpenAIProvider';
-import { OllamaProvider } from './providers/OllamaProvider';
-import PromptManager from './PromptManager';
-import BrowserAutomation from './BrowserAutomation';
-import { ToolRegistry, initializeTools } from '../tools';
-import AgentRuntime from '../agents/AgentRuntime';
-import AgentLogger from '../agents/AgentLogger';
+} from './SearchProviders.js';
+import PlanningEngine from '../engine/PlanningEngine.js';
+import AIModelProviderManager from './AIModelProviderManager.js';
+import { OpenAIProvider } from './providers/OpenAIProvider.js';
+import { OllamaProvider } from './providers/OllamaProvider.js';
+import PromptManager from './PromptManager.js';
+import BrowserAutomation from './BrowserAutomation.js';
+import { ToolRegistry, initializeTools } from '../tools/index.js';
+import AgentRuntime from '../agents/AgentRuntime.js';
+import AgentLogger from '../agents/AgentLogger.js';
 
 let mainWindow: any = null;
 

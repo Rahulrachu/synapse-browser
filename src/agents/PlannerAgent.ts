@@ -1,5 +1,5 @@
 
-import { BaseAgent } from './BaseAgent';
+import { BaseAgent } from './BaseAgent.js';
 import {
   AgentId,
   AgentName,
@@ -8,12 +8,12 @@ import {
   AgentResult,
   AgentContext,
   AgentMessage
-} from './types';
-import { WriterAgent } from './WriterAgent'; // Import WriterAgent for capability checking
-import { OrchestratorAgent } from './OrchestratorAgent'; // Import OrchestratorAgent for capability checking
-import { AgentMessageBus } from './AgentMessageBus';
-import AgentLogger from './AgentLogger';
-import PlanningEngine from '../engine/PlanningEngine';
+} from './types.js';
+import { WriterAgent } from './WriterAgent.js'; // Import WriterAgent for capability checking
+import { OrchestratorAgent } from './OrchestratorAgent.js'; // Import OrchestratorAgent for capability checking
+import { AgentMessageBus } from './AgentMessageBus.js';
+import AgentLogger from './AgentLogger.js';
+import PlanningEngine from '../engine/PlanningEngine.js';
 
 export class PlannerAgent extends BaseAgent {
   constructor(id: AgentId, messageBus: AgentMessageBus, initialContext: AgentContext) {

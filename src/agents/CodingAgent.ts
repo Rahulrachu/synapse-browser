@@ -1,4 +1,4 @@
-import { BaseAgent } from './BaseAgent';
+import { BaseAgent } from './BaseAgent.js';
 import { 
   AgentId, 
   AgentName, 
@@ -7,11 +7,11 @@ import {
   AgentResult, 
   AgentContext, 
   AgentMessage 
-} from './types';
-import { AgentMessageBus } from './AgentMessageBus';
-import AgentLogger from './AgentLogger';
-import { BugFixingEngine } from '../main/BugFixingEngine';
-import { CodeRefactoringEngine } from '../main/CodeRefactoringEngine';
+} from './types.js';
+import { AgentMessageBus } from './AgentMessageBus.js';
+import AgentLogger from './AgentLogger.js';
+import { BugFixingEngine } from '../main/BugFixingEngine.js';
+import { CodeRefactoringEngine } from '../main/CodeRefactoringEngine.js';
 
 export interface CodeTaskContext {
   language: string;

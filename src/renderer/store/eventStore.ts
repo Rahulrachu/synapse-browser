@@ -1,6 +1,6 @@
 import { create } from 'zustand';
-import { SynapseEvent, EventCategory } from '../../common/types/event';
-import { eventBus } from '../utils/EventBus';
+import { SynapseEvent, EventCategory } from '../../common/types/event.js';
+import { eventBus } from '../utils/EventBus.js';
 
 interface EventStoreState {
   events: SynapseEvent[];

@@ -1,20 +1,20 @@
 
-import { AgentRegistry } from './AgentRegistry';
-import { AgentMessageBus } from './AgentMessageBus';
-import { AgentManager } from './AgentManager';
-import { AgentContext } from './types';
-import ContextEngine from '../engine/ContextEngine';
-import MemorySystem from '../engine/MemorySystem';
-import PlanningEngine from '../engine/PlanningEngine';
-import ToolRuntime from '../tools/ToolRuntime';
-import { PlannerAgent } from './PlannerAgent';
-import { ResearchAgent } from './ResearchAgent';
-import { CodingAgent } from './CodingAgent';
-import { ReviewerAgent } from './ReviewerAgent';
-import { WriterAgent } from './WriterAgent';
-import { OrchestratorAgent } from './OrchestratorAgent';
-import { BrowserAgent } from './BrowserAgent';
-import { AgentOrchestrator } from './AgentOrchestrator';
+import { AgentRegistry } from './AgentRegistry.js';
+import { AgentMessageBus } from './AgentMessageBus.js';
+import { AgentManager } from './AgentManager.js';
+import { AgentContext } from './types.js';
+import ContextEngine from '../engine/ContextEngine.js';
+import MemorySystem from '../engine/MemorySystem.js';
+import PlanningEngine from '../engine/PlanningEngine.js';
+import ToolRuntime from '../tools/ToolRuntime.js';
+import { PlannerAgent } from './PlannerAgent.js';
+import { ResearchAgent } from './ResearchAgent.js';
+import { CodingAgent } from './CodingAgent.js';
+import { ReviewerAgent } from './ReviewerAgent.js';
+import { WriterAgent } from './WriterAgent.js';
+import { OrchestratorAgent } from './OrchestratorAgent.js';
+import { BrowserAgent } from './BrowserAgent.js';
+import { AgentOrchestrator } from './AgentOrchestrator.js';
 
 class AgentRuntime {
   private registry: AgentRegistry;

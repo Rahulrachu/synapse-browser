@@ -1,6 +1,6 @@
 
-import { AgentId, AgentName, AgentCapability } from './types';
-import { BaseAgent } from './BaseAgent';
+import { AgentId, AgentName, AgentCapability } from './types.js';
+import { BaseAgent } from './BaseAgent.js';
 
 export class AgentRegistry {
   private agents: Map<AgentId, BaseAgent> = new Map();

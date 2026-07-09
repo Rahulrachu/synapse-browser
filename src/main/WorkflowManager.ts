@@ -1,8 +1,8 @@
 import { ipcMain } from 'electron';
-import { Workflow } from '../common/types/workflow';
-import Storage from './Storage';
-import WorkflowEngine from './WorkflowEngine';
-import SkillRegistry from './SkillRegistry';
+import { Workflow } from '../common/types/workflow.js';
+import Storage from './Storage.js';
+import WorkflowEngine from './WorkflowEngine.js';
+import SkillRegistry from './SkillRegistry.js';
 
 class WorkflowManager {
   private STORAGE_KEY = 'workflows';

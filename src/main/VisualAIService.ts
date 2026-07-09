@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import AgentLogger from '../agents/AgentLogger';
+import AgentLogger from '../agents/AgentLogger.js';
 
 export interface UIComponent {
   id: string;
@@ -182,7 +182,13 @@ export class VisualAIService {
    * @returns A promise that resolves to a record containing debug information, issues, metrics, and suggestions.
    */
   async visualDebug(componentPath: string, previewUrl: string): Promise<Record<string, any>> {
-    const debugInfo = {
+    const debugInfo: {
+      componentPath: string;
+      previewUrl: string;
+      issues: string[];
+      metrics: Record<string, number>;
+      suggestions: string[];
+    } = {
       componentPath,
       previewUrl,
       issues: [],
