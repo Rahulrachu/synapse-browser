@@ -210,19 +210,32 @@ class GitManager {
    * Retrieves a list of all local and remote Git branches.
    * @returns An array of branch names.
    */
-  getBranches(): string[] {
+  getBranches(): { name: string; isActive: boolean; lastCommit: string }[] {
     if (!this.projectPath) return [];
 
     try {
-      const output = execSync('git branch -a', {
+      const output = execSync('git branch --format="%(refname:short)|%(authordate:relative)"', {
         cwd: this.projectPath,
         encoding: 'utf-8',
       });
 
+      const activeBranch = execSync('git rev-parse --abbrev-ref HEAD', {
+        cwd: this.projectPath,
+        encoding: 'utf-8',
+      }).trim();
+
       return output
         .trim()
         .split('\n')
-        .map((line) => line.replace(/^\*?\s+/, ''));
+        .filter(line => line)
+        .map((line) => {
+          const [name, lastCommit] = line.split('|');
+          return {
+            name,
+            isActive: name === activeBranch,
+            lastCommit: lastCommit || 'Unknown',
+          };
+        });
     } catch (error) {
       console.error('Failed to get branches:', error);
       return [];

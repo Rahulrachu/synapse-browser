@@ -65,6 +65,9 @@ app.on('ready', () => {
   // Create initial tab
   BrowserManager.createTab('https://www.google.com');
 
+  // Set default git path to the project itself for testing
+  GitManager.setProjectPath(app.getAppPath());
+
   // Discover and load plugins
   PluginManager.discoverPlugins();
 
@@ -449,11 +452,11 @@ ipcMain.handle('get-git-status', async () => {
   return GitManager.getStatus();
 });
 
-ipcMain.handle('get-git-commit-history', async (event, limit?: number) => {
+ipcMain.handle('get-git-commits', async (event, limit?: number) => {
   return GitManager.getCommitHistory(limit);
 });
 
-ipcMain.handle('git-commit', async (event, message: string) => {
+ipcMain.handle('git-commit', async (event, { message }: { message: string }) => {
   return GitManager.commit(message);
 });
 
@@ -465,16 +468,20 @@ ipcMain.handle('git-pull', async () => {
   return GitManager.pull();
 });
 
-ipcMain.handle('git-create-branch', async (event, branchName: string) => {
-  return GitManager.createBranch(branchName);
+ipcMain.handle('git-create-branch', async (event, { name }: { name: string }) => {
+  return GitManager.createBranch(name);
 });
 
-ipcMain.handle('git-switch-branch', async (event, branchName: string) => {
-  return GitManager.switchBranch(branchName);
+ipcMain.handle('git-switch-branch', async (event, { name }: { name: string }) => {
+  return GitManager.switchBranch(name);
 });
 
-ipcMain.handle('git-get-branches', async () => {
+ipcMain.handle('get-git-branches', async () => {
   return GitManager.getBranches();
+});
+
+ipcMain.handle('get-git-status', async () => {
+  return GitManager.getStatus();
 });
 
 ipcMain.handle('git-get-diff', async (event, filePath?: string) => {

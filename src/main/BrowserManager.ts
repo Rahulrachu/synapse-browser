@@ -375,6 +375,7 @@ class BrowserManager {
    * @param bounds The new bounds for the browser area.
    */
   setBrowserAreaBounds(bounds: { x: number; y: number; width: number; height: number }): void {
+    console.log(`[BrowserManager] Setting browser bounds:`, bounds);
     this.currentBrowserBounds = bounds;
 
     // Update active view bounds
@@ -382,6 +383,20 @@ class BrowserManager {
       const view = this.tabViews.get(this.activeTabId);
       if (view) {
         view.setBounds(bounds);
+      }
+    }
+  }
+
+  /**
+   * Sets the visibility of all browser views. Used to hide them when overlays are open.
+   * @param visible Whether the browser views should be visible.
+   */
+  setBrowserViewVisibility(visible: boolean): void {
+    console.log(`[BrowserManager] Setting browser visibility: ${visible}`);
+    if (this.activeTabId) {
+      const view = this.tabViews.get(this.activeTabId);
+      if (view) {
+        view.setVisible(visible);
       }
     }
   }

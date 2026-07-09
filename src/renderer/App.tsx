@@ -26,6 +26,15 @@ export default function App() {
   const unreadCount = useNotificationStore((state) => state.unreadCount);
   const activeDownloadCount = useDownloadStore((state) => state.activeCount);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+  // Send visibility update to main process when overlays are toggled
+  useEffect(() => {
+    const isOverlayOpen = isSearchOpen || isCommandPaletteOpen || isSettingsOpen;
+    (window as any).electron.ipcRenderer.invoke('set-browser-view-visibility', !isOverlayOpen);
+  }, [isSearchOpen, isCommandPaletteOpen, isSettingsOpen]);
+
   // Load default template on startup
   useEffect(() => {
     if (defaultTemplateId) {
@@ -74,6 +83,22 @@ export default function App() {
       ctrl: true,
       shift: true,
       handler: () => setIsSearchOpen(true),
+    },
+    {
+      key: 'k',
+      ctrl: true,
+      handler: () => setIsCommandPaletteOpen(true),
+    },
+    {
+      key: ',',
+      ctrl: true,
+      handler: () => setIsSettingsOpen(true),
+    },
+    {
+      key: 'a',
+      ctrl: true,
+      shift: true,
+      handler: () => setActivePanel('ai', 'left'),
     },
   ]);
 
@@ -161,6 +186,49 @@ export default function App() {
         isOpen={isSearchOpen} 
         onClose={() => setIsSearchOpen(false)} 
       />
+      {isCommandPaletteOpen && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 bg-black/50">
+          <div className="w-full max-w-2xl bg-white dark:bg-synapse-darker rounded-lg shadow-xl">
+            <div className="p-4">
+              <input
+                type="text"
+                placeholder="Type a command..."
+                className="w-full px-4 py-2 rounded bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') setIsCommandPaletteOpen(false);
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+      {isSettingsOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-2xl bg-white dark:bg-synapse-darker rounded-lg shadow-xl p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold">Settings</h2>
+              <button
+                onClick={() => setIsSettingsOpen(false)}
+                className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Theme</label>
+                <button
+                  onClick={toggleDarkMode}
+                  className="px-4 py-2 bg-synapse-accent text-white rounded hover:bg-opacity-90"
+                >
+                  {isDarkMode ? 'Light Mode' : 'Dark Mode'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </FadeIn>
   );
 }

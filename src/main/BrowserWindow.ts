@@ -76,6 +76,11 @@ function setupIPC() {
     BrowserManager.setBrowserAreaBounds(bounds);
     return true;
   });
+
+  ipcMain.handle('set-browser-view-visibility', async (event, visible: boolean) => {
+    BrowserManager.setBrowserViewVisibility(visible);
+    return true;
+  });
 }
 
 /**

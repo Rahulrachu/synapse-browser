@@ -8,8 +8,14 @@ export default function AIWorkspacePanel() {
 
   const handleSend = () => {
     if (input.trim()) {
-      setMessages([...messages, { role: 'user', content: input }]);
+      const newMessages = [...messages, { role: 'user', content: input }];
+      setMessages(newMessages);
       setInput('');
+      
+      // Mock AI response
+      setTimeout(() => {
+        setMessages(prev => [...prev, { role: 'assistant', content: 'I am your Synapse AI Assistant. How can I help you today?' }]);
+      }, 1000);
     }
   };
 
@@ -19,9 +25,20 @@ export default function AIWorkspacePanel() {
         <h2 className="text-lg font-bold">AI Workspace</h2>
       </div>
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.length === 0 && (
+          <div className="h-full flex items-center justify-center text-gray-500">
+            <p>Start a conversation with Synapse AI</p>
+          </div>
+        )}
         {messages.map((msg, i) => (
-          <div key={i} className={`p-3 rounded ${msg.role === 'user' ? 'bg-synapse-accent text-white ml-auto' : 'bg-gray-700'} max-w-xs`}>
-            {msg.content}
+          <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div className={`p-3 rounded-lg max-w-[80%] ${
+              msg.role === 'user' 
+                ? 'bg-synapse-accent text-white' 
+                : (isDarkMode ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-900')
+            }`}>
+              {msg.content}
+            </div>
           </div>
         ))}
       </div>

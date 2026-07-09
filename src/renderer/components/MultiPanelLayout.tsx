@@ -40,7 +40,7 @@ export default function MultiPanelLayout({ panelCount }: MultiPanelLayoutProps) 
   };
 
   return (
-    <div className="flex-1 flex gap-2 p-2 overflow-hidden">
+    <div className="flex-1 flex gap-2 p-2 overflow-hidden z-10">
       {Array.from({ length: panelCount }).map((_, index) => (
         <ResizablePanel
           key={index}

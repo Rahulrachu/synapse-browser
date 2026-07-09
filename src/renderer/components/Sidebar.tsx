@@ -13,7 +13,7 @@ export default function Sidebar() {
   const menuItems = panelRegistry.getAll();
 
   return (
-    <aside className={`w-16 border-r ${isDarkMode ? 'border-gray-800 bg-synapse-darker' : 'border-gray-200 bg-gray-100'} flex flex-col items-center py-4 gap-4`}>
+    <aside className={`w-16 border-r ${isDarkMode ? 'border-gray-800 bg-synapse-darker' : 'border-gray-200 bg-gray-100'} flex flex-col items-center py-4 gap-4 z-10`}>
       {/* Logo */}
       <div className="w-10 h-10 rounded-lg bg-synapse-accent flex items-center justify-center text-white font-bold">
         S
