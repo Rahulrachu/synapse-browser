@@ -56,66 +56,25 @@ export function createWindow() {
 function setupIPC() {
   if (!mainWindow) return;
 
-  // Browser navigation
-  ipcMain.handle('navigate-to', async (event, url: string) => {
-    return BrowserManager.navigateTo(url);
+  // Download handlers
+  ipcMain.handle('get-downloads', async () => {
+    return DownloadManager.getDownloads();
   });
 
-  ipcMain.handle('go-back', async () => {
-    return BrowserManager.goBack();
+  ipcMain.handle('open-downloads-folder', async () => {
+    DownloadManager.openDownloadsFolder();
+    return true;
   });
 
-  ipcMain.handle('go-forward', async () => {
-    return BrowserManager.goForward();
+  ipcMain.handle('clear-downloads', async () => {
+    DownloadManager.clearDownloads();
+    return true;
   });
-
-  ipcMain.handle('reload', async () => {
-    return BrowserManager.reload();
-  });
-
-  ipcMain.handle('stop-loading', async () => {
-    return BrowserManager.stopLoading();
-  });
-
-  ipcMain.handle('get-current-url', async () => {
-    return BrowserManager.getCurrentUrl();
-  });
-
-ipcMain.handle('get-current-title', async () => {
-  return BrowserManager.getCurrentTitle();
-});
-
-// Download handlers
-ipcMain.handle('get-downloads', async () => {
-  return DownloadManager.getDownloads();
-});
-
-ipcMain.handle('open-downloads-folder', async () => {
-  DownloadManager.openDownloadsFolder();
-  return true;
-});
-
-ipcMain.handle('clear-downloads', async () => {
-  DownloadManager.clearDownloads();
-  return true;
-});
-
-  ipcMain.handle('get-app-version', () => app.getVersion());
-  ipcMain.handle('get-app-path', () => app.getAppPath());
-  ipcMain.handle('get-user-data-path', () => app.getPath('userData'));
 
   // Browser area management
   ipcMain.handle('resize-browser-area', async (event, bounds: { x: number; y: number; width: number; height: number }) => {
     BrowserManager.setBrowserAreaBounds(bounds);
     return true;
-  });
-
-  ipcMain.handle('duplicate-tab', async (event, tabId: string) => {
-    const newTabId = BrowserManager.duplicateTab(tabId);
-    return {
-      tabs: BrowserManager.getAllTabs(),
-      activeTabId: newTabId,
-    };
   });
 }
 
