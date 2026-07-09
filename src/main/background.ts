@@ -480,10 +480,6 @@ ipcMain.handle('get-git-branches', async () => {
   return GitManager.getBranches();
 });
 
-ipcMain.handle('get-git-status', async () => {
-  return GitManager.getStatus();
-});
-
 ipcMain.handle('git-get-diff', async (event, filePath?: string) => {
   return GitManager.getDiff(filePath);
 });
