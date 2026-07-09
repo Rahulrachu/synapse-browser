@@ -71,10 +71,14 @@ class BrowserManager {
       view.webContents.loadURL('about:blank').catch(console.error);
     }
 
-    // Attach view to main window if bounds are set
+    // Attach view to main window
+    mainWindow.contentView.addChildView(view);
     if (this.currentBrowserBounds) {
-      mainWindow.contentView.addChildView(view);
       view.setBounds(this.currentBrowserBounds);
+    } else {
+      // Set initial bounds if not yet set (e.g., on first tab creation)
+      // This is a fallback and should ideally be updated by the renderer
+      view.setBounds({ x: 0, y: 0, width: mainWindow.getBounds().width, height: mainWindow.getBounds().height });
     }
 
     this.broadcastTabsUpdate();
@@ -193,12 +197,13 @@ class BrowserManager {
     const tab = this.tabs.get(tabId);
     if (tab) {
       const view = this.tabViews.get(tabId);
-      if (view) {
-        const mainWindow = getMainWindow();
-        if (mainWindow && !mainWindow.isDestroyed()) {
-          mainWindow.contentView.removeChildView(view);
+        if (view) {
+          const mainWindow = getMainWindow();
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.contentView.removeChildView(view);
+
+          }
         }
-      }
       this.tabs.delete(tabId);
       this.tabViews.delete(tabId);
 

@@ -36,3 +36,78 @@
 ## Next Steps
 - Move to Sprint 2: Real Autonomous Validation.
 - Implement automated scenarios for Planner, Research, Coding, Reviewer, and Git.
+
+
+---
+
+# Synapse Browser - Production Stabilization Audit (Current Session)
+
+## Phase 1: Comprehensive Repository Audit
+
+### Critical Issues Found & Fixed
+
+#### 1. **Production Build Path Issue** (FIXED)
+- **Problem**: In production mode, the app tried to load `index.html` from incorrect path.
+- **File**: `src/main/BrowserWindow.ts` (line 33)
+- **Fix**: Updated the path to correctly point to `../../dist/renderer/index.html`.
+- **Status**: ✅ FIXED
+
+#### 2. **Asset Loading Issue** (FIXED)
+- **Problem**: Vite was generating absolute asset paths (`/assets/...`) instead of relative paths.
+- **File**: `vite.config.ts`
+- **Fix**: Added `base: './'` to Vite configuration.
+- **Status**: ✅ FIXED
+
+#### 3. **IPC Listener Memory Leak** (FIXED)
+- **Problem**: In `preload.ts`, listeners weren't being properly removed, causing memory leaks.
+- **File**: `src/main/preload.ts`
+- **Fix**: Fixed listener removal logic to properly track wrapped callbacks.
+- **Status**: ✅ FIXED
+
+#### 4. **Missing lazy Import** (FIXED)
+- **Problem**: `PanelRegistry.ts` used `lazy()` but didn't import it from React.
+- **File**: `src/renderer/registry/PanelRegistry.ts`
+- **Fix**: Added `import { lazy } from 'react';`
+- **Status**: ✅ FIXED
+
+#### 5. **Missing StatusBar Import** (FIXED)
+- **Problem**: `App.tsx` rendered `<StatusBar />` without importing it.
+- **File**: `src/renderer/App.tsx`
+- **Fix**: Added `import StatusBar from './components/StatusBar';`
+- **Status**: ✅ FIXED
+
+#### 6. **WebContentsView Bounds Issue** (FIXED)
+- **Problem**: WebContentsView wasn't being attached to main window on tab creation.
+- **File**: `src/main/BrowserManager.ts`
+- **Fix**: Always attach view to main window and set fallback bounds.
+- **Status**: ✅ FIXED
+
+## Build Status
+
+- **TypeScript Compilation**: ✅ PASS (no errors)
+- **Vite Build**: ✅ PASS (all assets generated)
+- **Production Bundle Size**: ~369 KB (uncompressed), ~114 KB (gzipped)
+- **Asset Count**: 100+ optimized chunks
+
+## Files Modified in Current Session
+
+1. `src/main/BrowserWindow.ts` - Fixed production path
+2. `vite.config.ts` - Added relative base path
+3. `src/main/preload.ts` - Fixed IPC listener leak
+4. `src/renderer/registry/PanelRegistry.ts` - Added lazy import
+5. `src/renderer/App.tsx` - Added StatusBar import
+6. `src/main/BrowserManager.ts` - Fixed WebContentsView attachment
+7. `src/renderer/styles/index.css` - Added background color
+
+## Testing Status
+
+- **Compilation**: ✅ PASS
+- **Build**: ✅ PASS
+- **Launch**: ⚠️ IN PROGRESS (headless environment limitations)
+- **Functional Testing**: ⚠️ IN PROGRESS
+- **Stress Testing**: ⏳ PENDING
+- **Production Verification**: ⏳ PENDING
+
+## Known Environment Limitations
+
+Testing is being performed in a headless X11 environment (xvfb) without GPU acceleration. WebContentsView rendering may not work properly in this environment. Real-world testing on a system with GPU support is recommended for accurate verification.

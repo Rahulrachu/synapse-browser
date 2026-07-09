@@ -13,6 +13,7 @@ import WorkspacePanel from './components/WorkspacePanel';
 import MultiPanelLayout from './components/MultiPanelLayout';
 import FadeIn from './components/FadeIn';
 import GlobalSearchModal from './components/GlobalSearchModal';
+import StatusBar from './components/StatusBar';
 
 export default function App() {
   const isDarkMode = useWorkspaceStore((state) => state.isDarkMode);
