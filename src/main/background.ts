@@ -1,4 +1,5 @@
 import { app, ipcMain } from 'electron';
+import { exec } from 'child_process';
 import { createWindow } from './BrowserWindow.js';
 import BrowserManager from './BrowserManager.js';
 import Storage from './Storage.js';
@@ -40,6 +41,10 @@ import BrowserAutomation from './BrowserAutomation.js';
 import { ToolRegistry, initializeTools } from '../tools/index.js';
 import AgentRuntime from '../agents/AgentRuntime.js';
 import AgentLogger from '../agents/AgentLogger.js';
+import ResearchManager from './ResearchManager.js';
+import { RepositoryAnalysisService } from './RepositoryAnalysisService.js';
+import { ProjectScaffoldService } from './ProjectScaffoldService.js';
+import os from 'os';
 
 let mainWindow: any = null;
 
@@ -130,6 +135,19 @@ app.on('ready', () => {
       activeTabId: BrowserManager.getActiveTab()?.id,
     };
   });
+
+  // Project Scaffold handlers
+  const scaffoldService = new ProjectScaffoldService();
+  ipcMain.handle('get-project-templates', async () => {
+    const templates = await scaffoldService.getAvailableTemplates();
+    return { templates };
+  });
+
+  ipcMain.handle('create-project', async (event, request) => {
+    return scaffoldService.createProject(request, (progress) => {
+      mainWindow.webContents.send('project-creation-progress', progress);
+    });
+  });
 });
 
 app.on('window-all-closed', () => {
@@ -195,6 +213,10 @@ ipcMain.handle('add-bookmark', async (event, title: string, url: string) => {
 });
 
 ipcMain.handle('remove-bookmark', async (event, id: string) => {
+  return Storage.removeBookmark(id);
+});
+
+ipcMain.handle('delete-bookmark', async (event, id: string) => {
   return Storage.removeBookmark(id);
 });
 
@@ -679,6 +701,88 @@ ipcMain.handle('agent-get-logs', async (event, filter?: any) => {
 
 ipcMain.handle('agent-sync-context', async () => {
   return AgentRuntime.syncContext();
+});
+
+// Terminal execute handler
+ipcMain.handle('terminal-execute', async (event, { command }: { command: string }) => {
+  return new Promise((resolve) => {
+    exec(command, (error, stdout, stderr) => {
+      resolve({
+        output: stdout,
+        error: error ? stderr || error.message : null
+      });
+    });
+  });
+});
+
+// Diagnostics handler
+ipcMain.handle('get-diagnostics', async () => {
+  // Mock diagnostics for now
+  return {
+    diagnostics: [
+      {
+        id: 'diag-1',
+        file: 'src/main/background.ts',
+        line: 1,
+        column: 1,
+        severity: 'info',
+        message: 'System initialized successfully',
+        source: 'System'
+      }
+    ]
+  };
+});
+
+// System stats handler
+ipcMain.handle('get-system-stats', async () => {
+  return {
+    memory: {
+      total: os.totalmem(),
+      free: os.freemem(),
+      usage: (os.totalmem() - os.freemem()) / os.totalmem() * 100
+    },
+    cpu: {
+      load: os.loadavg()[0],
+      cores: os.cpus().length
+    },
+    uptime: os.uptime(),
+    version: app.getVersion(),
+    branch: 'master'
+  };
+});
+
+// Repository Analysis handlers
+ipcMain.handle('analyze-repository', async (event, projectPath: string) => {
+  const analysisService = new RepositoryAnalysisService(projectPath || app.getAppPath());
+  const analysis = await analysisService.analyzeRepository();
+  return { analysis };
+});
+
+ipcMain.handle('download-analysis-report', async (event, { analysis }: { analysis: any }) => {
+  const reportPath = path.join(app.getPath('downloads'), `analysis-report-${Date.now()}.json`);
+  fs.writeFileSync(reportPath, JSON.stringify(analysis, null, 2));
+  return { path: reportPath };
+});
+
+// Research Collections handlers
+ipcMain.handle('get-research-collections', async () => {
+  return { collections: ResearchManager.getCollections() };
+});
+
+ipcMain.handle('create-research-collection', async (event, { collection }) => {
+  return ResearchManager.createCollection(collection);
+});
+
+ipcMain.handle('delete-research-collection', async (event, id: string) => {
+  return ResearchManager.deleteCollection(id);
+});
+
+ipcMain.handle('add-page-to-collection', async (event, { collectionId, page }) => {
+  return ResearchManager.addPageToCollection(collectionId, page);
+});
+
+ipcMain.handle('remove-page-from-collection', async (event, { collectionId, pageId }) => {
+  return ResearchManager.removePageFromCollection(collectionId, pageId);
 });
 
 // Orchestrator handlers are already registered in AgentOrchestrator.ts constructor

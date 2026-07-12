@@ -6,6 +6,10 @@
   "description": "AI-First Productivity Browser",
   "author": "Rahul S R <rahul.s.r@example.com>",
   "license": "MIT",
+  "engines": {
+    "node": ">=24.0.0",
+    "pnpm": ">=9.0.0"
+  },
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
