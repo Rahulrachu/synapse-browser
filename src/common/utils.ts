@@ -12,6 +12,7 @@ export const getFilename = (importMetaUrl: string) => {
 };
 
 export interface TabData {
+  isLoading?: boolean;
   id: string;
   title: string;
   url: string;

@@ -37,7 +37,7 @@ const DeveloperWorkspace = lazy(() => import('../components/DeveloperWorkspace')
 const CommandPalette = lazy(() => import('../components/CommandPalette'));
 const SettingsPanel = lazy(() => import('../components/SettingsPanel'));
 const ProductivityPanel = lazy(() => import('../components/ProductivityPanel'));
-const Terminal = lazy(() => import('../components/Terminal'));
+const TerminalComponent = lazy(() => import('../components/Terminal'));
 const GitPanel = lazy(() => import('../components/GitPanel'));
 const AIChatPanel = lazy(() => import('../components/AIChatPanel'));
 const ProjectExplorerPanel = lazy(() => import('../components/ProjectExplorerPanel'));
@@ -124,7 +124,7 @@ class PanelRegistry {
       id: 'terminal',
       title: 'Terminal',
       icon: Terminal,
-      component: Terminal,
+      component: TerminalComponent,
       permissions: ['process', 'filesystem'],
       defaultLayout: 'split',
       shortcuts: { key: 't', ctrlKey: true, shiftKey: true },

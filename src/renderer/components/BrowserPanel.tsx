@@ -3,6 +3,7 @@ import { ArrowLeft, ArrowRight, RotateCcw, Loader, Home, X, Plus } from 'lucide-
 import { useWorkspaceStore } from '../store/workspaceStore';
 import { useBrowserStore } from '../store/browserStore';
 import AdvancedTabBar from './AdvancedTabBar';
+import { TabData } from '../../common/utils.js';
 
 interface Tab {
   id: string;
@@ -21,7 +22,7 @@ interface Tab {
 export default function BrowserPanel() {
   const isDarkMode = useWorkspaceStore((state) => state.isDarkMode);
   const { tabs: storeTabs } = useBrowserStore();
-  const [tabs, setTabs] = useState<Tab[]>([]);
+  const [tabs, setTabs] = useState<any[]>([]);
   const [activeTabId, setActiveTabId] = useState<string | null>(null);
   const [urlInput, setUrlInput] = useState('');
   const [canGoBack, setCanGoBack] = useState(false);

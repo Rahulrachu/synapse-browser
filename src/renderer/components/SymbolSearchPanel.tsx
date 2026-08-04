@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Function, Variable, Type, File } from 'lucide-react';
+import { Search, Code2, Variable, Type, File } from 'lucide-react';
 import { useWorkspaceStore } from '../store/workspaceStore';
 
 interface CodeSymbol {
@@ -75,7 +75,7 @@ export default function SymbolSearchPanel() {
   const getSymbolIcon = (type: string) => {
     switch (type) {
       case 'function':
-        return <Function size={16} />;
+        return <Code2 size={16} />;
       case 'variable':
         return <Variable size={16} />;
       case 'class':

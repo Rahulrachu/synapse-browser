@@ -49,7 +49,7 @@ export default function HealthDashboard() {
       setSystemStats(prev => ({
         ...prev,
         uptime: `${mockUptime}s`,
-        memory: `${Math.round(performance.memory?.usedJSHeapSize / 1024 / 1024) || 120} MB`,
+        memory: `${Math.round((performance as any).memory?.usedJSHeapSize / 1024 / 1024) || 120} MB`,
         cpu: `${(Math.random() * 5).toFixed(1)}%`
       }));
     } finally {

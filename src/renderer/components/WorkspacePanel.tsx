@@ -108,8 +108,10 @@ export default function WorkspacePanel() {
                 </button>
                 <button
                   onClick={() => {
-                    deleteNote(selectedNoteId);
-                    setSelectedNoteId(null);
+                    if (selectedNoteId) {
+                      deleteNote(selectedNoteId);
+                      setSelectedNoteId(null);
+                    }
                   }}
                   className="px-3 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
                 >

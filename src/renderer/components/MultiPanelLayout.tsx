@@ -23,14 +23,14 @@ export default function MultiPanelLayout({ panelCount }: MultiPanelLayoutProps) 
     if (panelCount === 2) {
       return index === 0 ? splitPanels.left : splitPanels.right;
     } else if (panelCount === 3) {
-      if (index === 0) return splitPanels.left;
-      if (index === 1) return splitPanels.right;
-      return splitPanels.top;
+      if (index === 0) return splitPanels.left || null;
+      if (index === 1) return splitPanels.right || null;
+      return splitPanels.top || null;
     } else {
-      if (index === 0) return splitPanels.left;
-      if (index === 1) return splitPanels.right;
-      if (index === 2) return splitPanels.top;
-      return splitPanels.bottom;
+      if (index === 0) return splitPanels.left || null;
+      if (index === 1) return splitPanels.right || null;
+      if (index === 2) return splitPanels.top || null;
+      return splitPanels.bottom || null;
     }
   };
 

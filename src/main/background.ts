@@ -2,6 +2,8 @@ import { app, ipcMain } from 'electron';
 import { exec } from 'child_process';
 import { createWindow } from './BrowserWindow.js';
 import BrowserManager from './BrowserManager.js';
+import path from 'path';
+import fs from 'fs';
 import Storage from './Storage.js';
 import SessionManager from './SessionManager.js';
 import TabGroupManager from './TabGroupManager.js';
