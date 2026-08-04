@@ -60,16 +60,17 @@ export default function ResearchCollectionsPanel() {
   const handleCreateCollection = async () => {
     if (!newCollectionName.trim()) return;
 
-    try {
-      const newCollection: ResearchCollection = {
-        id: Date.now().toString(),
-        name: newCollectionName,
-        description: newCollectionDescription,
-        pages: [],
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      };
+    const previousCollections = [...collections];
+    const newCollection: ResearchCollection = {
+      id: Date.now().toString(),
+      name: newCollectionName,
+      description: newCollectionDescription,
+      pages: [],
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
 
+    try {
       setCollections((prev) => [...prev, newCollection]);
       setSelectedCollectionId(newCollection.id);
       setNewCollectionName('');
@@ -82,12 +83,16 @@ export default function ResearchCollectionsPanel() {
       });
     } catch (err) {
       console.error('Failed to create collection:', err);
+      // Rollback
+      setCollections(previousCollections);
+      alert('Failed to create collection. Changes rolled back.');
     }
   };
 
   const handleDeleteCollection = async (id: string) => {
     if (!confirm('Are you sure you want to delete this collection?')) return;
 
+    const previousCollections = [...collections];
     try {
       setCollections((prev) => prev.filter((c) => c.id !== id));
       if (selectedCollectionId === id) {
@@ -97,6 +102,9 @@ export default function ResearchCollectionsPanel() {
       await window.electron.ipcRenderer.invoke('delete-research-collection', id);
     } catch (err) {
       console.error('Failed to delete collection:', err);
+      // Rollback
+      setCollections(previousCollections);
+      alert('Failed to delete collection. Changes rolled back.');
     }
   };
 
@@ -106,6 +114,7 @@ export default function ResearchCollectionsPanel() {
     const url = prompt('Enter page URL:');
     if (!url) return;
 
+    const previousCollections = [...collections];
     try {
       const newPage: ResearchPage = {
         id: Date.now().toString(),
@@ -132,12 +141,16 @@ export default function ResearchCollectionsPanel() {
       });
     } catch (err) {
       console.error('Failed to add page:', err);
+      // Rollback
+      setCollections(previousCollections);
+      alert('Failed to add page. Changes rolled back.');
     }
   };
 
   const handleDeletePage = async (pageId: string) => {
     if (!selectedCollection) return;
 
+    const previousCollections = [...collections];
     try {
       const updatedCollection = {
         ...selectedCollection,
@@ -155,6 +168,9 @@ export default function ResearchCollectionsPanel() {
       });
     } catch (err) {
       console.error('Failed to delete page:', err);
+      // Rollback
+      setCollections(previousCollections);
+      alert('Failed to delete page. Changes rolled back.');
     }
   };
 
@@ -165,7 +181,7 @@ export default function ResearchCollectionsPanel() {
   return (
     <div
       className={`flex h-full rounded-lg border ${
-        isDarkMode ? 'border-gray-700 bg-synapse-darker' : 'border-gray-300 bg-white'
+        isDarkMode ? 'border-gray-700 bg-synapse-darker text-white' : 'border-gray-300 bg-white text-gray-900'
       } overflow-hidden`}
     >
       {/* Collections List */}
@@ -295,15 +311,15 @@ export default function ResearchCollectionsPanel() {
             </div>
 
             {/* Search */}
-            <div className="px-3 py-2 border-b border-gray-700">
-              <div className="flex items-center gap-2 bg-gray-700 rounded px-2 py-1">
+            <div className={`px-3 py-2 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+              <div className={`flex items-center gap-2 rounded px-2 py-1 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
                 <Search size={14} className="text-gray-400" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search pages..."
-                  className="flex-1 bg-transparent text-sm text-white placeholder-gray-400 focus:outline-none"
+                  className="flex-1 bg-transparent text-sm focus:outline-none"
                 />
               </div>
             </div>
@@ -315,7 +331,7 @@ export default function ResearchCollectionsPanel() {
                   <p className="text-gray-400 text-sm">No pages in this collection</p>
                 </div>
               ) : (
-                <div className="divide-y divide-gray-700">
+                <div className={`divide-y ${isDarkMode ? 'divide-gray-700' : 'divide-gray-200'}`}>
                   {filteredPages.map((page) => (
                     <button
                       key={page.id}

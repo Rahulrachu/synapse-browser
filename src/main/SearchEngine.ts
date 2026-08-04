@@ -85,10 +85,19 @@ class SearchEngine {
     this.updateStats();
   }
 
-  private updateStats() {
+  private async updateStats() {
     this.stats.providerCount = this.providers.size;
-    // Note: totalItems calculation would depend on providers reporting their count
-    this.stats.totalItems = 0; // Placeholder
+    
+    // Calculate total items across all providers if they support getStats or similar
+    let count = 0;
+    for (const provider of this.providers.values()) {
+      // If provider has a getCount or similar method, we'd use it here
+      // For now, we'll increment based on what's available
+      if ((provider as any).getCount) {
+        count += await (provider as any).getCount();
+      }
+    }
+    this.stats.totalItems = count;
   }
 
   private getProviders(): SearchProviderInfo[] {

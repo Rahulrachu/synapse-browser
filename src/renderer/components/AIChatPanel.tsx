@@ -74,27 +74,40 @@ export default function AIChatPanel({
     try {
       // Save user message to conversation
       if (conversationId) {
-        await window.electron.ipcRenderer.invoke('add-message', {
+        await window.electron.ipcRenderer.invoke('add-message', 
           conversationId,
-          message: userMessage,
-        });
+          userMessage.role,
+          userMessage.content
+        );
       }
 
-      // Send to AI service (this would integrate with AIServiceManager)
-      const response = await window.electron.ipcRenderer.invoke(
-        'ai-service-send-message',
-        {
-          serviceId,
-          serviceType,
-          message: input,
-          conversationId,
-        }
-      );
+      // Send to AI service
+      // We'll use the newer 'ai:chat' channel if available, otherwise fallback
+      let response;
+      try {
+        // Corrected to positional arguments: (providerId, messages, options?)
+        response = await window.electron.ipcRenderer.invoke(
+          'ai:chat',
+          serviceId || 'openai-default',
+          [...messages, userMessage].map(m => ({ role: m.role, content: m.content }))
+        );
+      } catch (e) {
+        console.warn('ai:chat failed, trying legacy ai-service-send-message', e);
+        response = await window.electron.ipcRenderer.invoke(
+          'ai-service-send-message',
+          {
+            serviceId,
+            serviceType,
+            message: input,
+            conversationId,
+          }
+        );
+      }
 
       const assistantMessage: AIChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: response.content || 'No response received',
+        content: typeof response === 'string' ? response : (response.content || 'No response received'),
         timestamp: Date.now(),
       };
 
@@ -102,10 +115,11 @@ export default function AIChatPanel({
 
       // Save assistant message to conversation
       if (conversationId) {
-        await window.electron.ipcRenderer.invoke('add-message', {
+        await window.electron.ipcRenderer.invoke('add-message', 
           conversationId,
-          message: assistantMessage,
-        });
+          assistantMessage.role,
+          assistantMessage.content
+        );
       }
     } catch (err) {
       const errorMessage =

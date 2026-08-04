@@ -12,6 +12,7 @@ import {
 import { AgentMessageBus } from './AgentMessageBus.js';
 import AgentLogger from './AgentLogger.js';
 import MemorySystem from '../engine/MemorySystem.js';
+import AIModelProviderManager from '../main/AIModelProviderManager.js';
 
 export interface ResearchFinding {
   source: string;
@@ -123,7 +124,7 @@ export class ResearchAgent extends BaseAgent {
 
       // In a real scenario, we'd wait for all browser content to be returned
       // For this implementation, we'll simulate the gathering and summarization
-      const summary = this.generateSummary(topic, urls);
+      const summary = await this.generateSummary(topic, urls);
 
       const agentResult: AgentResult = {
         success: true,
@@ -207,17 +208,38 @@ export class ResearchAgent extends BaseAgent {
     return false;
   }
 
-  private generateSummary(topic: string, urls: string[]): ResearchSummary {
-    // Mock summary generation
-    return {
-      topic,
-      findings: (this.findings.get('current') || []).map(f => ({
-        source: f.source,
-        content: f.content,
-        timestamp: f.timestamp
-      })),
-      summary: `Research findings for ${topic} from ${urls.length} sources.`,
-      sources: urls
-    };
+  private async generateSummary(topic: string, urls: string[]): Promise<ResearchSummary> {
+    const findings = this.findings.get('current') || [];
+    
+    try {
+      const prompt = `Summarize the following research findings for the topic: ${topic}.
+      
+      Findings:
+      ${findings.map(f => `Source: ${f.source}\nContent: ${f.content}`).join('\n\n')}
+      
+      Provide a concise, professional summary.`;
+
+      const response = await AIModelProviderManager.chat('openai-default', [
+        { role: 'system', content: 'You are a research assistant.' },
+        { role: 'user', content: prompt }
+      ]);
+
+      const summaryText = typeof response === 'string' ? response : (response.content || 'No summary generated');
+
+      return {
+        topic,
+        findings,
+        summary: summaryText,
+        sources: urls
+      };
+    } catch (err) {
+      AgentLogger.error(`AI summary generation failed: ${err}`, this.id);
+      return {
+        topic,
+        findings,
+        summary: `Research findings for ${topic} from ${urls.length} sources. (AI summarization failed)`,
+        sources: urls
+      };
+    }
   }
 }

@@ -14,6 +14,7 @@ import { OrchestratorAgent } from './OrchestratorAgent.js'; // Import Orchestrat
 import { AgentMessageBus } from './AgentMessageBus.js';
 import AgentLogger from './AgentLogger.js';
 import PlanningEngine from '../engine/PlanningEngine.js';
+import AIModelProviderManager from '../main/AIModelProviderManager.js';
 
 export class PlannerAgent extends BaseAgent {
   constructor(id: AgentId, messageBus: AgentMessageBus, initialContext: AgentContext) {
@@ -148,26 +149,46 @@ export class PlannerAgent extends BaseAgent {
   public async generateExecutionPlan(goal: string, options: { forceDirect?: boolean } = {}): Promise<AgentTask[]> {
     AgentLogger.info(`Generating execution plan for: ${goal}`, this.id);
     
-    // 1. Analyze goal (Placeholder for LLM-based analysis)
-    const analysis = this.analyzeGoal(goal);
+    try {
+      const prompt = `Break down the following goal into a structured execution plan. 
+      Return a JSON array of tasks, where each task has:
+      - id: unique string
+      - agentId: one of ['research-agent', 'writer-agent', 'coding-agent', 'browser-agent', 'reviewer-agent', 'orchestrator-agent']
+      - goal: concise description of the task
+      - instructions: array of strings for detailed steps
+      - priority: number (1 is highest)
+      - dependencies: array of task ids this task depends on
+      
+      Goal: ${goal}`;
 
-    if (options.forceDirect) {
-      analysis.category = 'direct';
+      const response = await AIModelProviderManager.chat('openai-default', [
+        { role: 'system', content: 'You are an expert project planner. Return only valid JSON.' },
+        { role: 'user', content: prompt }
+      ]);
+
+      const tasks = JSON.parse(typeof response === 'string' ? response : (response.content || '[]'));
+      
+      const formattedTasks: AgentTask[] = tasks.map((t: any) => ({
+        ...t,
+        status: 'pending',
+        createdAt: Date.now()
+      }));
+
+      // Integrate with existing PlanningEngine
+      PlanningEngine.createPlan(goal, formattedTasks.map(t => t.goal));
+
+      return formattedTasks;
+    } catch (err) {
+      AgentLogger.error(`AI plan generation failed, falling back to heuristic: ${err}`, this.id);
+      // Fallback to basic heuristic
+      const analysis = this.analyzeGoal(goal);
+      if (options.forceDirect) analysis.category = 'direct';
+      const tasks = this.decomposeGoal(goal, analysis);
+      const tasksWithDependencies = this.mapDependencies(tasks);
+      const prioritizedTasks = this.prioritizeTasks(tasksWithDependencies);
+      PlanningEngine.createPlan(goal, prioritizedTasks.map(t => t.goal));
+      return prioritizedTasks;
     }
-    
-    // 2. Decompose into tasks
-    const tasks = this.decomposeGoal(goal, analysis);
-    
-    // 3. Map dependencies
-    const tasksWithDependencies = this.mapDependencies(tasks);
-    
-    // 4. Prioritize
-    const prioritizedTasks = this.prioritizeTasks(tasksWithDependencies);
-
-    // Integrate with existing PlanningEngine
-    PlanningEngine.createPlan(goal, prioritizedTasks.map(t => t.goal));
-
-    return prioritizedTasks;
   }
 
   private analyzeGoal(goal: string): any {

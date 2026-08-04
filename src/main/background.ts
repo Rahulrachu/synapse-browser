@@ -136,6 +136,16 @@ app.on('ready', () => {
     };
   });
 
+  ipcMain.handle('set-browser-area-bounds', async (event, bounds) => {
+    BrowserManager.setBrowserAreaBounds(bounds);
+    return true;
+  });
+
+  ipcMain.handle('set-browser-view-visibility', async (event, visible) => {
+    BrowserManager.setBrowserViewVisibility(visible);
+    return true;
+  });
+
   // Project Scaffold handlers
   const scaffoldService = new ProjectScaffoldService();
   ipcMain.handle('get-project-templates', async () => {
@@ -212,13 +222,9 @@ ipcMain.handle('add-bookmark', async (event, title: string, url: string) => {
   return Storage.addBookmark(title, url);
 });
 
-ipcMain.handle('remove-bookmark', async (event, id: string) => {
-  return Storage.removeBookmark(id);
-});
-
-ipcMain.handle('delete-bookmark', async (event, id: string) => {
-  return Storage.removeBookmark(id);
-});
+  ipcMain.handle('delete-bookmark', async (event, id: string) => {
+    return Storage.removeBookmark(id);
+  });
 
 ipcMain.handle('get-history', async (event, limit?: number) => {
   return Storage.getHistory(limit);
@@ -333,62 +339,8 @@ ipcMain.handle('rename-layout', async (event, id: string, newName: string) => {
   return PanelManager.renameLayout(id, newName);
 });
 
-ipcMain.handle('create-vertical-split', async (event, leftTab: string, rightTab: string) => {
-  return PanelManager.createVerticalSplit(leftTab, rightTab);
-});
-
-ipcMain.handle('create-horizontal-split', async (event, topTab: string, bottomTab: string) => {
-  return PanelManager.createHorizontalSplit(topTab, bottomTab);
-});
-
-ipcMain.handle('create-grid-layout', async (event, tabs: string[]) => {
-  return PanelManager.createGridLayout(tabs);
-});
-
-ipcMain.handle('add-panel-to-layout', async (event, layoutId: string, tabId: string, position: string) => {
-  return PanelManager.addPanelToLayout(layoutId, tabId, position as any);
-});
-
-ipcMain.handle('remove-panel-from-layout', async (event, layoutId: string, panelId: string) => {
-  return PanelManager.removePanelFromLayout(layoutId, panelId);
-});
-
-ipcMain.handle('resize-panel', async (event, layoutId: string, panelId: string, newSize: number) => {
-  return PanelManager.resizePanel(layoutId, panelId, newSize);
-});
-
-// AI Service handlers
-ipcMain.handle('add-ai-service', async (event, service: string, name: string, config: any) => {
-  return AIServiceManager.addService(service as any, name, config);
-});
-
-ipcMain.handle('get-ai-services', async () => {
-  return AIServiceManager.getServices();
-});
-
-ipcMain.handle('get-ai-service', async (event, id: string) => {
-  return AIServiceManager.getService(id);
-});
-
-ipcMain.handle('get-ai-services-by-type', async (event, service: string) => {
-  return AIServiceManager.getServicesByType(service as any);
-});
-
-ipcMain.handle('update-ai-service', async (event, id: string, updates: any) => {
-  return AIServiceManager.updateService(id, updates);
-});
-
-ipcMain.handle('delete-ai-service', async (event, id: string) => {
-  return AIServiceManager.deleteService(id);
-});
-
-ipcMain.handle('enable-ai-service', async (event, id: string) => {
-  return AIServiceManager.enableService(id);
-});
-
-ipcMain.handle('disable-ai-service', async (event, id: string) => {
-  return AIServiceManager.disableService(id);
-});
+// Unused legacy layout and AI service handlers removed. 
+// Functionality moved to PanelManager and AIModelProviderManager.
 
 // AI Conversation handlers
 ipcMain.handle('create-conversation', async (event, serviceId: string, title?: string) => {
@@ -406,6 +358,8 @@ ipcMain.handle('get-conversations', async (event, serviceId?: string) => {
 ipcMain.handle('add-message', async (event, conversationId: string, role: string, content: string) => {
   return AIServiceManager.addMessage(conversationId, role as any, content);
 });
+
+  // Note: ai-service-send-message removed in favor of ai:chat positional API
 
 ipcMain.handle('update-conversation-title', async (event, id: string, title: string) => {
   return AIServiceManager.updateConversationTitle(id, title);
@@ -654,9 +608,7 @@ ipcMain.handle('tool-invoke', async (event, id: string, input: any, options?: an
   return ToolRegistry.invoke(id, input, options);
 });
 
-ipcMain.handle('tool-history', async () => {
-  return ToolRegistry.getHistory();
-});
+// Unused legacy tool history handler removed.
 
 // Agent Runtime handlers
 ipcMain.handle('agent-list', async () => {
@@ -667,44 +619,28 @@ ipcMain.handle('agent-list', async () => {
   }));
 });
 
-ipcMain.handle('agent-initialize', async (event, agentId: string) => {
-  return AgentRuntime.getManager().initializeAgent(agentId);
-});
-
-ipcMain.handle('agent-start', async (event, agentId: string) => {
-  return AgentRuntime.getManager().startAgent(agentId);
-});
-
-ipcMain.handle('agent-stop', async (event, agentId: string) => {
-  return AgentRuntime.getManager().stopAgent(agentId);
-});
-
-ipcMain.handle('agent-pause', async (event, agentId: string) => {
-  const agent = AgentRuntime.getRegistry().getAgent(agentId);
-  if (agent) await agent.pause();
-  return true;
-});
-
-ipcMain.handle('agent-resume', async (event, agentId: string) => {
-  const agent = AgentRuntime.getRegistry().getAgent(agentId);
-  if (agent) await agent.resume();
-  return true;
-});
-
-ipcMain.handle('agent-assign-task', async (event, task: any) => {
-  return AgentRuntime.getManager().assignTask(task);
-});
-
-ipcMain.handle('agent-get-logs', async (event, filter?: any) => {
-  return AgentLogger.getLogs(filter);
-});
-
-ipcMain.handle('agent-sync-context', async () => {
-  return AgentRuntime.syncContext();
-});
+// Unused legacy agent handlers removed. 
+// Agent management moved to AgentRuntime and specialized agents.
 
 // Terminal execute handler
 ipcMain.handle('terminal-execute', async (event, { command }: { command: string }) => {
+  // Basic sanitization: prevent common shell injection characters
+  // In a real app, this should be even more restrictive or use a proper shell emulator
+  const forbiddenChars = [';', '&', '|', '>', '<', '`', '$', '(', ')', '{', '}', '[', ']'];
+  const hasForbidden = forbiddenChars.some(char => command.includes(char));
+  
+  // Allow common safe patterns like "npm install", "pnpm test", etc.
+  // This is a very basic check for demonstration
+  const allowedCommands = ['pnpm', 'npm', 'ls', 'git', 'pwd', 'echo'];
+  const isAllowed = allowedCommands.some(cmd => command.trim().startsWith(cmd));
+
+  if (hasForbidden && !isAllowed) {
+    return {
+      output: '',
+      error: 'Command contains potentially unsafe characters and is not in the allowed list.'
+    };
+  }
+
   return new Promise((resolve) => {
     exec(command, (error, stdout, stderr) => {
       resolve({

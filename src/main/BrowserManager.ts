@@ -197,13 +197,14 @@ class BrowserManager {
     const tab = this.tabs.get(tabId);
     if (tab) {
       const view = this.tabViews.get(tabId);
-        if (view) {
-          const mainWindow = getMainWindow();
-          if (mainWindow && !mainWindow.isDestroyed()) {
-            mainWindow.contentView.removeChildView(view);
-
-          }
+      if (view) {
+        const mainWindow = getMainWindow();
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.contentView.removeChildView(view);
         }
+        // Explicitly destroy the webContents to prevent memory leaks
+        (view.webContents as any).destroy();
+      }
       this.tabs.delete(tabId);
       this.tabViews.delete(tabId);
 

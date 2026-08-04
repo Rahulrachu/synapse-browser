@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import AIModelProviderManager from './AIModelProviderManager.js';
 
 const execAsync = promisify(exec);
 
@@ -79,35 +80,45 @@ export class BugFixingEngine {
    * Useful for quick checks in agents.
    */
   async analyzeCode(code: string): Promise<{ bugs: BugReport[]; complexity: number; maintainability: number }> {
-    const bugs: BugReport[] = [];
-    const lines = code.split('\n');
+    try {
+      const prompt = `Analyze the following code for bugs, security vulnerabilities, and code quality issues. Return the results in JSON format with a "bugs" array (each item having file, line, type, message, severity), "complexity" (0-100), and "maintainability" (0-100).
+      
+      Code:
+      \`\`\`
+      ${code}
+      \`\`\``;
 
-    // Simple heuristic-based bug detection
-    lines.forEach((line, index) => {
-      // Undefined variables (very basic check)
-      if (line.match(/\w+\s*=\s*\w+/) && !line.includes('const') && !line.includes('let') && !line.includes('var')) {
-        // This is a weak check, but serves as a placeholder for real static analysis
-      }
+      const response = await AIModelProviderManager.chat('openai-default', [
+        { role: 'system', content: 'You are a professional code auditor. Return only valid JSON.' },
+        { role: 'user', content: prompt }
+      ]);
 
-      // Placeholder detection (TODO/FIXME/HACK)
-      const placeholderMatch = line.match(/\/\/\s*(TODO|FIXME|HACK|BUG):?\s*(.*)/i);
-      if (placeholderMatch) {
-        bugs.push({
-          id: `static-${index}`,
-          file: 'memory',
-          line: index + 1,
-          type: 'placeholder',
-          message: `${placeholderMatch[1]}: ${placeholderMatch[2] || 'Unfinished implementation'}`,
-          severity: placeholderMatch[1].toUpperCase() === 'BUG' ? 'high' : 'low'
-        });
-      }
-    });
-
-    return {
-      bugs,
-      complexity: lines.length / 10, // Mock complexity
-      maintainability: Math.max(0, 100 - bugs.length * 5)
-    };
+      const result = JSON.parse(typeof response === 'string' ? response : (response.content || '{}'));
+      return {
+        bugs: result.bugs || [],
+        complexity: result.complexity || 0,
+        maintainability: result.maintainability || 100
+      };
+    } catch (err) {
+      console.error('AI analysis failed, falling back to heuristic:', err);
+      // Fallback to basic heuristic
+      const bugs: BugReport[] = [];
+      const lines = code.split('\n');
+      lines.forEach((line, index) => {
+        const placeholderMatch = line.match(/\/\/\s*(TODO|FIXME|HACK|BUG):?\s*(.*)/i);
+        if (placeholderMatch) {
+          bugs.push({
+            id: `static-${index}`,
+            file: 'memory',
+            line: index + 1,
+            type: 'placeholder',
+            message: `${placeholderMatch[1]}: ${placeholderMatch[2] || 'Unfinished implementation'}`,
+            severity: placeholderMatch[1].toUpperCase() === 'BUG' ? 'high' : 'low'
+          });
+        }
+      });
+      return { bugs, complexity: lines.length / 10, maintainability: 100 };
+    }
   }
 
   /**

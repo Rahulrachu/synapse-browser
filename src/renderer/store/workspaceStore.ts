@@ -1,69 +1,156 @@
 import { create } from 'zustand';
 import { Note, Prompt, WorkspaceLayout } from '@/common/utils';
 
+// Accessing window.electron from preload
+declare global {
+  interface Window {
+    electron: {
+      invoke: (channel: string, ...args: any[]) => Promise<any>;
+    };
+  }
+}
+
 interface WorkspaceStore {
   notes: Note[];
   prompts: Prompt[];
   workspaceLayout: WorkspaceLayout | null;
   isDarkMode: boolean;
+  isLoading: boolean;
+  error: string | null;
   
+  // Initialization
+  initialize: () => Promise<void>;
+
   // Note actions
-  addNote: (title: string, content: string) => void;
-  updateNote: (noteId: string, title: string, content: string) => void;
-  deleteNote: (noteId: string) => void;
+  addNote: (title: string, content: string) => Promise<void>;
+  updateNote: (noteId: string, title: string, content: string) => Promise<void>;
+  deleteNote: (noteId: string) => Promise<void>;
   
   // Prompt actions
-  addPrompt: (text: string, category: string) => void;
-  deletePrompt: (promptId: string) => void;
+  addPrompt: (text: string, category: string) => Promise<void>;
+  deletePrompt: (promptId: string) => Promise<void>;
   
   // Layout actions
-  setWorkspaceLayout: (layout: WorkspaceLayout) => void;
+  setWorkspaceLayout: (layout: WorkspaceLayout) => Promise<void>;
   
   // Theme actions
   toggleDarkMode: () => void;
 }
 
-export const useWorkspaceStore = create<WorkspaceStore>((set) => ({
+export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
   notes: [],
   prompts: [],
   workspaceLayout: null,
   isDarkMode: true,
+  isLoading: false,
+  error: null,
+
+  initialize: async () => {
+    set({ isLoading: true });
+    try {
+      const [notes, prompts, layout] = await Promise.all([
+        window.electron.invoke('get-notes'),
+        window.electron.invoke('get-prompts'),
+        window.electron.invoke('get-layouts'),
+      ]);
+      set({ notes, prompts, workspaceLayout: layout?.[0] || null, isLoading: false });
+    } catch (err: any) {
+      set({ error: err.message, isLoading: false });
+    }
+  },
   
-  addNote: (title, content) => set((state) => ({
-    notes: [...state.notes, {
+  addNote: async (title, content) => {
+    const previousNotes = get().notes;
+    const newNote: Note = {
       id: Date.now().toString(),
       title,
       content,
       createdAt: Date.now(),
       updatedAt: Date.now(),
-    }],
-  })),
+    };
+
+    // Optimistic update
+    set({ notes: [...previousNotes, newNote] });
+
+    try {
+      await window.electron.invoke('save-note', newNote);
+    } catch (err: any) {
+      // Rollback on failure
+      set({ notes: previousNotes, error: `Failed to save note: ${err.message}` });
+    }
+  },
   
-  updateNote: (noteId, title, content) => set((state) => ({
-    notes: state.notes.map(n => n.id === noteId
+  updateNote: async (noteId, title, content) => {
+    const previousNotes = get().notes;
+    const updatedNotes = previousNotes.map(n => n.id === noteId
       ? { ...n, title, content, updatedAt: Date.now() }
       : n
-    ),
-  })),
+    );
+
+    // Optimistic update
+    set({ notes: updatedNotes });
+
+    try {
+      const note = updatedNotes.find(n => n.id === noteId);
+      if (note) {
+        await window.electron.invoke('save-note', note);
+      }
+    } catch (err: any) {
+      // Rollback on failure
+      set({ notes: previousNotes, error: `Failed to update note: ${err.message}` });
+    }
+  },
   
-  deleteNote: (noteId) => set((state) => ({
-    notes: state.notes.filter(n => n.id !== noteId),
-  })),
+  deleteNote: async (noteId) => {
+    const previousNotes = get().notes;
+    set({ notes: previousNotes.filter(n => n.id !== noteId) });
+
+    try {
+      await window.electron.invoke('delete-note', noteId);
+    } catch (err: any) {
+      set({ notes: previousNotes, error: `Failed to delete note: ${err.message}` });
+    }
+  },
   
-  addPrompt: (text, category) => set((state) => ({
-    prompts: [...state.prompts, {
+  addPrompt: async (text, category) => {
+    const previousPrompts = get().prompts;
+    const newPrompt: Prompt = {
       id: Date.now().toString(),
       text,
       category,
       createdAt: Date.now(),
-    }],
-  })),
+    };
+
+    set({ prompts: [...previousPrompts, newPrompt] });
+
+    try {
+      await window.electron.invoke('save-prompt', newPrompt);
+    } catch (err: any) {
+      set({ prompts: previousPrompts, error: `Failed to save prompt: ${err.message}` });
+    }
+  },
   
-  deletePrompt: (promptId) => set((state) => ({
-    prompts: state.prompts.filter(p => p.id !== promptId),
-  })),
+  deletePrompt: async (promptId) => {
+    const previousPrompts = get().prompts;
+    set({ prompts: previousPrompts.filter(p => p.id !== promptId) });
+
+    try {
+      await window.electron.invoke('delete-prompt', promptId);
+    } catch (err: any) {
+      set({ prompts: previousPrompts, error: `Failed to delete prompt: ${err.message}` });
+    }
+  },
   
-  setWorkspaceLayout: (layout) => set({ workspaceLayout: layout }),
+  setWorkspaceLayout: async (layout) => {
+    const previousLayout = get().workspaceLayout;
+    set({ workspaceLayout: layout });
+
+    try {
+      await window.electron.invoke('update-layout', layout.id, layout);
+    } catch (err: any) {
+      set({ workspaceLayout: previousLayout, error: `Failed to save layout: ${err.message}` });
+    }
+  },
   
   toggleDarkMode: () => set((state) => ({ isDarkMode: !state.isDarkMode })),
 }));
