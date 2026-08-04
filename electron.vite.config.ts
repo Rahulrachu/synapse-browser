@@ -47,7 +47,7 @@ export default defineConfig({
       emptyOutDir: true,
       rollupOptions: {
         input: {
-          index: 'index.html',
+          index: path.resolve(__dirname, 'client/index.html'),
         },
       },
     },
