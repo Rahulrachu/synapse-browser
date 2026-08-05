@@ -43,6 +43,54 @@ class Storage {
     if (!fs.existsSync(this.historyFile)) {
       fs.writeFileSync(this.historyFile, JSON.stringify([]));
     }
+    
+    // Ensure notes and prompts files exist
+    const notesFile = path.join(this.dataDir, 'notes.json');
+    const promptsFile = path.join(this.dataDir, 'prompts.json');
+    if (!fs.existsSync(notesFile)) fs.writeFileSync(notesFile, JSON.stringify([]));
+    if (!fs.existsSync(promptsFile)) fs.writeFileSync(promptsFile, JSON.stringify([]));
+  }
+
+  // Notes
+  getNotes(): any[] {
+    try {
+      const file = path.join(this.dataDir, 'notes.json');
+      return JSON.parse(fs.readFileSync(file, 'utf-8'));
+    } catch { return []; }
+  }
+
+  saveNote(note: any): void {
+    const notes = this.getNotes();
+    const index = notes.findIndex(n => n.id === note.id);
+    if (index >= 0) notes[index] = note;
+    else notes.push(note);
+    fs.writeFileSync(path.join(this.dataDir, 'notes.json'), JSON.stringify(notes, null, 2));
+  }
+
+  deleteNote(id: string): void {
+    const notes = this.getNotes().filter(n => n.id !== id);
+    fs.writeFileSync(path.join(this.dataDir, 'notes.json'), JSON.stringify(notes, null, 2));
+  }
+
+  // Prompts
+  getPrompts(): any[] {
+    try {
+      const file = path.join(this.dataDir, 'prompts.json');
+      return JSON.parse(fs.readFileSync(file, 'utf-8'));
+    } catch { return []; }
+  }
+
+  savePrompt(prompt: any): void {
+    const prompts = this.getPrompts();
+    const index = prompts.findIndex(p => p.id === prompt.id);
+    if (index >= 0) prompts[index] = prompt;
+    else prompts.push(prompt);
+    fs.writeFileSync(path.join(this.dataDir, 'prompts.json'), JSON.stringify(prompts, null, 2));
+  }
+
+  deletePrompt(id: string): void {
+    const prompts = this.getPrompts().filter(p => p.id !== id);
+    fs.writeFileSync(path.join(this.dataDir, 'prompts.json'), JSON.stringify(prompts, null, 2));
   }
 
   // Bookmarks

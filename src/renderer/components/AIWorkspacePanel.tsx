@@ -22,7 +22,7 @@ export default function AIWorkspacePanel() {
       setIsLoading(true);
       
       try {
-        const response = await window.electron.ipcRenderer.invoke(
+        const response = await window.electron.invoke(
           'ai:chat', 
           'openai-default',
           newMessages.map(m => ({ role: m.role, content: m.content }))

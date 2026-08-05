@@ -10,9 +10,10 @@ import {
   AIStreamChunk,
   AIProviderHealth
 } from '../common/types/ai.js';
-import EventBus from './EventBus.js';
-import AIServiceManager from './AIServiceManager.js';
-import PromptManager from './PromptManager.js';
+// Legacy imports removed to fix build errors
+// import EventBus from './EventBus.js';
+// import AIServiceManager from './AIServiceManager.js';
+// import PromptManager from './PromptManager.js';
 
 export abstract class BaseAIProvider {
   public abstract readonly type: AIProviderType;

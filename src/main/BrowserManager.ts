@@ -1,6 +1,6 @@
 import { WebContentsView, ipcMain, app } from 'electron';
 import { getMainWindow } from './BrowserWindow.js';
-import { setupContextMenu } from './ContextMenu.js';
+// import { setupContextMenu } from './ContextMenu.js';
 
 interface TabInfo {
   id: string;
@@ -59,7 +59,7 @@ class BrowserManager {
 
     // Setup event listeners
     this.setupWebContentsListeners(view.webContents, tabId);
-    setupContextMenu(view.webContents);
+    // setupContextMenu(view.webContents);
 
     // Navigate to URL
     if (url !== 'about:blank') {

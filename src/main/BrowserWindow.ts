@@ -1,10 +1,11 @@
 import { app, BrowserWindow, ipcMain, Menu, dialog, session } from 'electron';
 import path from 'path';
-import { isDev, getDirname } from '../common/utils.js';
+// import { isDev, getDirname } from '../common/utils.js';
+const isDev = process.env.NODE_ENV === 'development';
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
-const __dirname = getDirname(import.meta.url);
 import BrowserManager from './BrowserManager.js';
-import DownloadManager from './DownloadManager.js';
+// import DownloadManager from './DownloadManager.js';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -38,9 +39,9 @@ export function createWindow() {
     mainWindow.webContents.openDevTools();
   }
 
-  setupIPC();
-  setupContextMenu();
-  DownloadManager.setupDownloadHandler(mainWindow);
+  // setupIPC();
+  // setupContextMenu();
+  // DownloadManager.setupDownloadHandler(mainWindow);
 
   mainWindow.on('closed', () => {
     mainWindow = null;

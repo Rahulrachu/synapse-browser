@@ -43,7 +43,7 @@ export default function AIChatPanel({
 
   const loadConversation = async () => {
     try {
-      const result = await window.electron.ipcRenderer.invoke(
+      const result = await window.electron.invoke(
         'get-conversation',
         conversationId
       );
@@ -74,7 +74,7 @@ export default function AIChatPanel({
     try {
       // Save user message to conversation
       if (conversationId) {
-        await window.electron.ipcRenderer.invoke('add-message', 
+        await window.electron.invoke('add-message', 
           conversationId,
           userMessage.role,
           userMessage.content
@@ -86,14 +86,14 @@ export default function AIChatPanel({
       let response;
       try {
         // Corrected to positional arguments: (providerId, messages, options?)
-        response = await window.electron.ipcRenderer.invoke(
+        response = await window.electron.invoke(
           'ai:chat',
           serviceId || 'openai-default',
           [...messages, userMessage].map(m => ({ role: m.role, content: m.content }))
         );
       } catch (e) {
         console.warn('ai:chat failed, trying legacy ai-service-send-message', e);
-        response = await window.electron.ipcRenderer.invoke(
+        response = await window.electron.invoke(
           'ai-service-send-message',
           {
             serviceId,
@@ -115,7 +115,7 @@ export default function AIChatPanel({
 
       // Save assistant message to conversation
       if (conversationId) {
-        await window.electron.ipcRenderer.invoke('add-message', 
+        await window.electron.invoke('add-message', 
           conversationId,
           assistantMessage.role,
           assistantMessage.content
