@@ -272,10 +272,14 @@ class BrowserManager {
     const view = this.tabViews.get(this.activeTabId);
     if (!view) return false;
 
-    // Ensure URL has protocol
-    let finalUrl = url;
-    if (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('about:')) {
-      finalUrl = 'https://' + url;
+    let finalUrl: string;
+    try {
+      const candidate = String(url || '').trim();
+      const parsed = new URL(/^https?:\/\//i.test(candidate) || /^about:/i.test(candidate) ? candidate : `https://${candidate}`);
+      if (!['http:', 'https:'].includes(parsed.protocol) && parsed.href !== 'about:blank') return false;
+      finalUrl = parsed.toString();
+    } catch {
+      return false;
     }
 
     view.webContents.loadURL(finalUrl).catch((err: Error) => {

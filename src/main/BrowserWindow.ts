@@ -51,40 +51,6 @@ export function createWindow() {
 }
 
 /**
- * Sets up Inter-Process Communication (IPC) handlers for various browser actions.
- * This allows the renderer process to communicate with the main process.
- */
-function setupIPC() {
-  if (!mainWindow) return;
-
-  // Download handlers
-  ipcMain.handle('get-downloads', async () => {
-    return DownloadManager.getDownloads();
-  });
-
-  ipcMain.handle('open-downloads-folder', async () => {
-    DownloadManager.openDownloadsFolder();
-    return true;
-  });
-
-  ipcMain.handle('clear-downloads', async () => {
-    DownloadManager.clearDownloads();
-    return true;
-  });
-
-  // Browser area management
-  ipcMain.handle('resize-browser-area', async (event, bounds: { x: number; y: number; width: number; height: number }) => {
-    BrowserManager.setBrowserAreaBounds(bounds);
-    return true;
-  });
-
-  ipcMain.handle('set-browser-view-visibility', async (event, visible: boolean) => {
-    BrowserManager.setBrowserViewVisibility(visible);
-    return true;
-  });
-}
-
-/**
  * Sets up the application's context menu (right-click menu).
  */
 function setupContextMenu() {
