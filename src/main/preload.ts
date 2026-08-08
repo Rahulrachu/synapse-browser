@@ -29,6 +29,8 @@ const VALID_INVOKE_CHANNELS = [
   'search:query', 'search:get-stats', 'search:get-providers', 'search:reindex'
 ];
 
+const VALID_RECEIVE_CHANNELS = ['agent:event'];
+
 const VALID_SEND_CHANNELS = [
   'command-new-file', 'command-open-file', 'command-save-file', 'command-analyze-project', 'command-project-summary',
   'command-git-status', 'command-git-commit', 'command-git-push',
@@ -48,16 +50,18 @@ const electronAPI = {
       return Promise.reject(new Error(`Unauthorized IPC channel: ${channel}`));
     },
     on: (channel: string, func: (...args: any[]) => void) => {
-      // We allow listening to any channel for now, as it's main -> renderer
+      if (!VALID_RECEIVE_CHANNELS.includes(channel)) return () => undefined;
       const subscription = (event: any, ...args: any[]) => func(...args);
       (func as any)._subscription = subscription;
       ipcRenderer.on(channel, subscription);
       return () => ipcRenderer.removeListener(channel, subscription);
     },
     once: (channel: string, func: (...args: any[]) => void) => {
+      if (!VALID_RECEIVE_CHANNELS.includes(channel)) return;
       ipcRenderer.once(channel, (event, ...args) => func(...args));
     },
     removeListener: (channel: string, func: (...args: any[]) => void) => {
+      if (!VALID_RECEIVE_CHANNELS.includes(channel)) return;
       const subscription = (func as any)._subscription || func;
       ipcRenderer.removeListener(channel, subscription);
     },
@@ -82,12 +86,14 @@ const electronAPI = {
     return Promise.reject(new Error(`Unauthorized IPC channel: ${channel}`));
   },
   on: (channel: string, func: (...args: any[]) => void) => {
+    if (!VALID_RECEIVE_CHANNELS.includes(channel)) return () => undefined;
     const subscription = (event: any, ...args: any[]) => func(...args);
     (func as any)._subscription = subscription;
     ipcRenderer.on(channel, subscription);
     return () => ipcRenderer.removeListener(channel, subscription);
   },
   removeListener: (channel: string, func: (...args: any[]) => void) => {
+    if (!VALID_RECEIVE_CHANNELS.includes(channel)) return;
     const subscription = (func as any)._subscription || func;
     ipcRenderer.removeListener(channel, subscription);
   },
