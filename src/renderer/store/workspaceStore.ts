@@ -1,11 +1,14 @@
 import { create } from 'zustand';
-import { Note, Prompt, WorkspaceLayout } from '@/common/utils';
+type Note = { id: string; title: string; content: string; createdAt: number; updatedAt: number };
+type Prompt = { id: string; text: string; category: string; createdAt: number };
+type WorkspaceLayout = { id: string; [key: string]: unknown };
 
 // Accessing window.electron from preload
 declare global {
   interface Window {
     electron: {
       invoke: (channel: string, ...args: any[]) => Promise<any>;
+      on: (channel: string, fn: (...args: any[]) => void) => () => void;
     };
   }
 }
