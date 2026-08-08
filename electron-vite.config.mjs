@@ -6,17 +6,17 @@ export default defineConfig({
   main: {
     plugins: [externalizeDepsPlugin()],
     build: {
-      rollupOptions: {
-        input: resolve('src/main/background.ts')
-      }
+      target: 'node20',
+      lib: { entry: resolve('src/main/background.ts'), formats: ['cjs'] },
+      rollupOptions: { input: resolve('src/main/background.ts'), external: ['electron'], output: { format: 'cjs' } }
     }
   },
   preload: {
     plugins: [externalizeDepsPlugin()],
     build: {
-      rollupOptions: {
-        input: resolve('src/main/preload.ts')
-      }
+      target: 'node20',
+      lib: { entry: resolve('src/main/preload.ts'), formats: ['cjs'] },
+      rollupOptions: { input: resolve('src/main/preload.ts'), output: { format: 'cjs' } }
     }
   },
   renderer: {
@@ -27,9 +27,8 @@ export default defineConfig({
     },
     plugins: [react()],
     build: {
-      rollupOptions: {
-        input: resolve('src/renderer/index.html')
-      }
+      target: 'chrome120',
+      rollupOptions: { input: resolve('src/renderer/index.html') }
     }
   }
 });

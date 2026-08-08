@@ -7,13 +7,14 @@ import SearchEngine from './SearchEngine.js';
 import PlanningEngine from '../engine/PlanningEngine.js';
 import AIModelProviderManager from './AIModelProviderManager.js';
 import AgentLogger from '../agents/AgentLogger.js';
-import { RepositoryAnalysisService } from './RepositoryAnalysisService.js';
+import AgentRuntime from './AgentRuntime.js';
 import os from 'os';
 
 let mainWindow: any = null;
 
 app.on('ready', () => {
   mainWindow = createWindow();
+  new AgentRuntime(mainWindow);
 
   // Create initial tab
   BrowserManager.createTab('https://www.google.com');

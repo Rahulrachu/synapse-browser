@@ -14,6 +14,7 @@ const VALID_INVOKE_CHANNELS = [
   'get-layouts', 'create-layout', 'delete-layout', 'get-layout',
   'get-ai-services', 'add-ai-service', 'get-conversation', 'get-conversations', 'create-conversation', 'add-message', 'ai-service-send-message',
   'ai:get-usage', 'ai:get-providers', 'ai:get-models', 'ai:set-config', 'ai:add-provider', 'ai:chat',
+  'agent:run', 'agent:cancel', 'agent:history',
   'prompts:get-all', 'prompts:get-stats', 'prompts:save', 'prompts:delete', 'prompts:toggle-favorite', 'prompts:import',
   'memory:search', 'memory:get-by-type', 'memory:add', 'memory:delete', 'memory:update', 'memory:export', 'memory:import',
   'task-queue:get-all', 'task-queue:cancel', 'task-queue:pause', 'task-queue:resume', 'task-queue:clear-completed',
