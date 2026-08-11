@@ -8,6 +8,14 @@ import PlanningEngine from '../engine/PlanningEngine.js';
 import AIModelProviderManager from './AIModelProviderManager.js';
 import AgentLogger from '../agents/AgentLogger.js';
 import AgentRuntime from './AgentRuntime.js';
+import ProjectScaffoldService from './ProjectScaffoldService.js';
+import SessionManager from './SessionManager.js';
+import TabGroupManager from './TabGroupManager.js';
+import PanelManager from './PanelManager.js';
+import ProjectManager from './ProjectManager.js';
+import GitManager from './GitManager.js';
+import ContextEngine from './ContextEngine.js';
+import AIServiceManager from './AIServiceManager.js';
 import os from 'os';
 
 let mainWindow: any = null;
