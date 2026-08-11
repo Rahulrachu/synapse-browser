@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { 
   Search, 
   Plus, 
@@ -27,6 +27,10 @@ interface Tab {
   isLoading: boolean;
   canGoBack: boolean;
   canGoForward: boolean;
+  isMuted?: boolean;
+  isPlayingAudio?: boolean;
+  isCrashed?: boolean;
+  pinned?: boolean;
 }
 
 const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
@@ -34,6 +38,7 @@ const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
   const [activeTabId, setActiveTabId] = useState<string | null>(null);
   const [isAIPanelOpen, setIsAIPanelOpen] = useState(true);
   const [addressBarValue, setAddressBarValue] = useState('');
+  const addressBarRef = useRef<HTMLInputElement>(null);
 
   // Initialize tabs on mount
   useEffect(() => {
@@ -67,13 +72,74 @@ const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
     return unsubscribe;
   }, []);
 
-  // Update address bar when active tab changes
+  // Update the omnibox from the active, real WebContentsView-backed tab.
   useEffect(() => {
     const activeTab = tabs.find(t => t.id === activeTabId);
-    if (activeTab) {
-      setAddressBarValue(activeTab.url);
-    }
+    if (activeTab) setAddressBarValue(activeTab.url);
   }, [activeTabId, tabs]);
+
+  // Browser shortcuts are handled at the application shell so they work regardless of page focus.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const modifier = event.ctrlKey || event.metaKey;
+      if (event.key === 'F12') {
+        event.preventDefault();
+        window.electron.invoke('open-devtools', activeTabId || undefined);
+        return;
+      }
+      if (event.altKey && event.key === 'ArrowLeft') {
+        event.preventDefault();
+        handleGoBack();
+        return;
+      }
+      if (event.altKey && event.key === 'ArrowRight') {
+        event.preventDefault();
+        handleGoForward();
+        return;
+      }
+      if (!modifier) return;
+      if (event.key.toLowerCase() === 'l') {
+        event.preventDefault();
+        addressBarRef.current?.focus();
+        addressBarRef.current?.select();
+      } else if (event.key.toLowerCase() === 't') {
+        event.preventDefault();
+        if (event.shiftKey) handleReopenClosedTab();
+        else handleCreateTab();
+      } else if (event.key.toLowerCase() === 'w') {
+        event.preventDefault();
+        if (activeTabId) handleCloseTab(activeTabId);
+      } else if (event.key.toLowerCase() === 'r') {
+        event.preventDefault();
+        if (event.shiftKey) window.electron.invoke('reload-hard');
+        else handleReload();
+      } else if (event.key.toLowerCase() === 'd') {
+        event.preventDefault();
+        if (activeTabId) window.electron.invoke('add-bookmark', tabs.find(t => t.id === activeTabId)?.title || '', addressBarValue);
+      } else if (event.key.toLowerCase() === 'f') {
+        event.preventDefault();
+        const query = window.prompt('Find in page');
+        if (query) window.electron.invoke('find-in-page', query);
+      } else if (event.key.toLowerCase() === 'p') {
+        event.preventDefault();
+        window.electron.invoke('print-page');
+      } else if (event.key.toLowerCase() === 's') {
+        event.preventDefault();
+        window.electron.invoke('save-page-pdf');
+      } else if (event.key === '+' || event.key === '=') {
+        event.preventDefault();
+        window.electron.invoke('zoom-in');
+      } else if (event.key === '-') {
+        event.preventDefault();
+        window.electron.invoke('zoom-out');
+      } else if (event.key === '0') {
+        event.preventDefault();
+        window.electron.invoke('zoom-reset');
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [activeTabId, addressBarValue, tabs]);
 
   const handleCreateTab = async () => {
     try {
@@ -143,6 +209,31 @@ const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
     }
   };
 
+  const handleReopenClosedTab = async () => {
+    const result = await window.electron.invoke('reopen-closed-tab');
+    setTabs(result.tabs || []);
+    setActiveTabId(result.activeTabId || null);
+  };
+
+  const handleDuplicateTab = async (tabId: string) => {
+    const result = await window.electron.invoke('duplicate-tab', tabId);
+    setTabs(result.tabs || []);
+    setActiveTabId(result.activeTabId || result.newTabId || null);
+  };
+
+  const handleToggleMute = async (tabId: string) => {
+    await window.electron.invoke('toggle-tab-mute', tabId);
+  };
+
+  const handlePinTab = async (tabId: string, pinned: boolean) => {
+    await window.electron.invoke('pin-tab', tabId, pinned);
+  };
+
+  const handleMoveTab = async (tabId: string, targetIndex: number) => {
+    const result = await window.electron.invoke('move-tab', tabId, targetIndex);
+    setTabs(result.tabs || []);
+  };
+
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-gray-100 dark:bg-neutral-950">
       {/* Sidebar */}
@@ -201,8 +292,9 @@ const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
               <Search size={14} />
             </div>
-            <input 
-              type="text" 
+            <input
+              ref={addressBarRef}
+              type="text"
               value={addressBarValue}
               onChange={(e) => setAddressBarValue(e.target.value)}
               placeholder="Search or enter address"
@@ -211,7 +303,7 @@ const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
           </form>
 
           <div className="flex items-center gap-2">
-            <button className="mac-button hover:bg-black/5 dark:hover:bg-white/5"><Plus size={16} /></button>
+            <button onClick={handleCreateTab} className="mac-button hover:bg-black/5 dark:hover:bg-white/5" title="New tab"><Plus size={16} /></button>
             <button className="mac-button hover:bg-black/5 dark:hover:bg-white/5"><Layout size={16} /></button>
             <button 
               className={`mac-button ${isAIPanelOpen ? 'bg-blue-500 text-white' : 'hover:bg-black/5 dark:hover:bg-white/5'}`}
@@ -229,6 +321,11 @@ const MainLayout: React.FC<{ children?: React.ReactNode }> = ({ children }) => {
           onSelectTab={handleSelectTab}
           onCloseTab={handleCloseTab}
           onNewTab={handleCreateTab}
+          onReopenClosedTab={handleReopenClosedTab}
+          onDuplicateTab={handleDuplicateTab}
+          onToggleMute={handleToggleMute}
+          onPinTab={handlePinTab}
+          onMoveTab={handleMoveTab}
         />
 
         {/* Content */}

@@ -2,11 +2,17 @@ import { contextBridge, ipcRenderer } from 'electron';
 
 const ALLOWED_INVOKE_CHANNELS = [
   'create-tab', 'close-tab', 'set-active-tab', 'duplicate-tab', 'get-all-tabs',
+  'reopen-closed-tab', 'get-recently-closed', 'move-tab', 'pin-tab', 'unpin-tab', 'toggle-tab-mute',
+  'get-current-tab', 'open-devtools', 'close-devtools', 'reload-hard',
+  'get-profiles', 'get-profile', 'create-profile', 'update-profile', 'delete-profile',
+  'get-downloads', 'pause-download', 'resume-download', 'cancel-download', 'open-download', 'show-download-in-folder', 'remove-download',
+  'find-in-page', 'stop-find-in-page', 'zoom-in', 'zoom-out', 'zoom-reset', 'print-page', 'save-page-pdf',
   'set-browser-area-bounds', 'set-browser-view-visibility',
   'navigate-to', 'go-back', 'go-forward', 'reload', 'stop-loading',
   'get-current-url', 'get-current-title',
-  'get-bookmarks', 'add-bookmark', 'delete-bookmark',
-  'get-history', 'add-to-history', 'clear-history',
+  'get-bookmarks', 'get-bookmark-folders', 'create-bookmark-folder', 'update-bookmark-folder', 'delete-bookmark-folder',
+  'add-bookmark', 'update-bookmark', 'delete-bookmark',
+  'get-history', 'add-to-history', 'delete-history-entry', 'clear-history',
   'get-notes', 'save-note', 'delete-note',
   'get-prompts', 'save-prompt', 'delete-prompt',
   'get-sessions', 'get-session', 'save-session', 'update-session', 'delete-session', 'rename-session',
@@ -24,7 +30,7 @@ const ALLOWED_INVOKE_CHANNELS = [
 ];
 
 const ALLOWED_RECEIVE_CHANNELS = [
-  'agent:event', 'tab-updated', 'tabs-updated', 'project-creation-progress'
+  'agent:event', 'tab-updated', 'tabs-updated', 'project-creation-progress', 'download-started', 'download-updated'
 ];
 
 contextBridge.exposeInMainWorld('electron', {

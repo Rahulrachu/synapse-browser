@@ -1,433 +1,560 @@
-import { WebContentsView, ipcMain, app } from 'electron';
+import { randomUUID } from 'node:crypto';
+import { BrowserWindow, clipboard, dialog, Menu, WebContentsView } from 'electron';
 import { getMainWindow } from './BrowserWindow.js';
-// import { setupContextMenu } from './ContextMenu.js';
+import Storage from './Storage.js';
+import DownloadManager from './DownloadManager.js';
 
-interface TabInfo {
+export interface TabInfo {
   id: string;
-  viewId?: number;
+  viewId: number;
   url: string;
   title: string;
   favicon?: string;
   isLoading: boolean;
   canGoBack: boolean;
   canGoForward: boolean;
+  isMuted: boolean;
+  isPlayingAudio: boolean;
+  isCrashed: boolean;
+  pinned: boolean;
+  profileId: string;
+  isPrivate: boolean;
 }
 
+export interface ClosedTabInfo {
+  url: string;
+  title: string;
+  favicon?: string;
+  profileId: string;
+  isPrivate: boolean;
+  closedAt: number;
+}
+
+type BrowserBounds = { x: number; y: number; width: number; height: number };
+
 /**
- * Manages browser tabs, their WebContents views, and navigation state.
- * Acts as the central controller for the multi-tab browser interface.
+ * Owns the actual Electron WebContentsView instance for every open tab.
+ * Renderer state is only a projection of this manager; navigation is never simulated in React.
  */
 class BrowserManager {
-  private tabs: Map<string, TabInfo> = new Map();
+  private readonly tabs = new Map<string, TabInfo>();
+  private readonly tabViews = new Map<string, WebContentsView>();
+  private readonly recentlyClosed: ClosedTabInfo[] = [];
+  private readonly permissionDecisions = new Map<string, boolean>();
   private activeTabId: string | null = null;
-  private tabViews: Map<string, WebContentsView> = new Map(); // tabId -> WebContentsView
-  private currentBrowserBounds: { x: number; y: number; width: number; height: number } | null = null;
+  private currentBrowserBounds: BrowserBounds | null = null;
 
-  /**
-   * Creates a new browser tab and its associated WebContentsView.
-   * @param url The initial URL to load. Defaults to 'about:blank'.
-   * @returns The unique ID of the newly created tab.
-   */
-  createTab(url: string = 'about:blank'): string {
+  createTab(
+    url = 'about:blank',
+    options: { profileId?: string; isPrivate?: boolean; activate?: boolean } = {},
+  ): string {
     const mainWindow = getMainWindow();
-    if (!mainWindow) throw new Error('Main window not found');
+    if (!mainWindow || mainWindow.isDestroyed()) {
+      throw new Error('Main window not found');
+    }
 
-    const tabId = Date.now().toString();
+    const tabId = randomUUID();
+    const profileId = options.profileId || 'default';
+    const isPrivate = Boolean(options.isPrivate);
+    const partition = isPrivate
+      ? `synapse-private-${tabId}`
+      : `persist:synapse-profile-${profileId}`;
 
-    // Create a new WebContentsView for this tab
     const view = new WebContentsView({
       webPreferences: {
+        partition,
         sandbox: true,
         contextIsolation: true,
         nodeIntegration: false,
+        spellcheck: true,
       },
     });
 
-    const tabInfo: TabInfo = {
+    const tab: TabInfo = {
       id: tabId,
       viewId: view.webContents.id,
-      url,
+      url: 'about:blank',
       title: 'New Tab',
       isLoading: false,
       canGoBack: false,
       canGoForward: false,
+      isMuted: false,
+      isPlayingAudio: false,
+      isCrashed: false,
+      pinned: false,
+      profileId,
+      isPrivate,
     };
 
-    this.tabs.set(tabId, tabInfo);
+    this.tabs.set(tabId, tab);
     this.tabViews.set(tabId, view);
-    this.activeTabId = tabId;
-
-    // Setup event listeners
-    this.setupWebContentsListeners(view.webContents, tabId);
-    // setupContextMenu(view.webContents);
-
-    // Navigate to URL
-    if (url !== 'about:blank') {
-      view.webContents.loadURL(url).catch((err: Error) => {
-        console.error('Failed to load URL:', err);
-        view.webContents.loadURL('about:blank').catch(console.error);
-      });
-    } else {
-      view.webContents.loadURL('about:blank').catch(console.error);
-    }
-
-    // Attach view to main window
+    DownloadManager.registerSession(view.webContents.session, tabId);
     mainWindow.contentView.addChildView(view);
-    if (this.currentBrowserBounds) {
-      view.setBounds(this.currentBrowserBounds);
-    } else {
-      // Set initial bounds if not yet set (e.g., on first tab creation)
-      // This is a fallback and should ideally be updated by the renderer
-      view.setBounds({ x: 0, y: 0, width: mainWindow.getBounds().width, height: mainWindow.getBounds().height });
+    view.setVisible(false);
+    this.applyBounds(view);
+    this.setupSessionHandlers(view.webContents.session);
+    this.setupWebContentsListeners(view, tabId);
+
+    const shouldActivate = options.activate !== false || !this.activeTabId;
+    if (shouldActivate) {
+      this.activeTabId = tabId;
+      this.updateActiveTabView();
     }
 
+    const navigationTarget = this.resolveNavigationInput(url);
+    if (navigationTarget) {
+      tab.url = navigationTarget;
+      tab.isLoading = true;
+      view.webContents.loadURL(navigationTarget).catch((error) => {
+        console.error(`[BrowserManager] Failed to load ${navigationTarget}:`, error);
+        this.updateTab(tabId, { isLoading: false, isCrashed: false });
+      });
+    }
+
+    this.persistOpenTabs();
     this.broadcastTabsUpdate();
     return tabId;
   }
 
-  /**
-   * Sets up event listeners for a tab's WebContents to track navigation, loading, and title changes.
-   * @param wc The WebContents instance.
-   * @param tabId The ID of the tab.
-   */
-  private setupWebContentsListeners(wc: any, tabId: string) {
-    wc.on('page-title-updated', (event: any, title: string) => {
-      const tab = this.tabs.get(tabId);
-      if (tab) {
-        tab.title = title;
-        this.broadcastTabUpdate(tabId);
+  restoreTabs(savedTabs: Array<{ url: string; profileId?: string; isPrivate?: boolean }>): void {
+    if (this.tabs.size > 0) return;
+    const restorable = savedTabs.filter((tab) => !tab.isPrivate && tab.url);
+    if (!restorable.length) {
+      this.createTab('https://www.google.com');
+      return;
+    }
+    restorable.forEach((tab, index) => {
+      this.createTab(tab.url, { profileId: tab.profileId || 'default', activate: index === restorable.length - 1 });
+    });
+  }
+
+  private persistOpenTabs(): void {
+    const tabs = this.getAllTabs()
+      .filter((tab) => !tab.isPrivate)
+      .map((tab) => ({ url: tab.url, profileId: tab.profileId }));
+    Storage.set('open-tabs', tabs).catch((error) => console.error('[BrowserManager] Failed to persist open tabs:', error));
+  }
+
+  private setupSessionHandlers(ses: Electron.Session): void {
+    const sessionKey = `permission-handler:${ses.partition || 'default'}`;
+    if ((ses as any)[sessionKey]) return;
+    (ses as any)[sessionKey] = true;
+    ses.setPermissionRequestHandler((webContents, permission, callback) => {
+      const origin = webContents?.getURL() ? new URL(webContents.getURL()).origin : 'unknown-origin';
+      const key = `${origin}:${permission}`;
+      const remembered = this.permissionDecisions.get(key);
+      if (remembered !== undefined) {
+        callback(remembered);
+        return;
       }
+      const mainWindow = getMainWindow();
+      if (!mainWindow || mainWindow.isDestroyed()) {
+        callback(false);
+        return;
+      }
+      const result = dialog.showMessageBoxSync(mainWindow, {
+        type: 'question',
+        buttons: ['Allow', 'Deny'],
+        defaultId: 0,
+        cancelId: 1,
+        title: 'Permission request',
+        message: `${origin} is requesting access to ${permission}.`,
+        detail: 'Choose Allow or Deny for this request.',
+      });
+      const allowed = result === 0;
+      this.permissionDecisions.set(key, allowed);
+      callback(allowed);
+    });
+  }
+
+  private setupWebContentsListeners(view: WebContentsView, tabId: string): void {
+    const wc = view.webContents;
+
+    wc.on('context-menu', (_event, params) => {
+      const template: Electron.MenuItemConstructorOptions[] = [
+        { label: 'Back', enabled: this.canGoBack(wc), click: () => wc.goBack() },
+        { label: 'Forward', enabled: this.canGoForward(wc), click: () => wc.goForward() },
+        { label: 'Reload', click: () => wc.reload() },
+        { type: 'separator' },
+        { label: 'Open link in new tab', enabled: Boolean(params.linkURL), click: () => params.linkURL && this.createTab(params.linkURL, { profileId: this.tabs.get(tabId)?.profileId, isPrivate: this.tabs.get(tabId)?.isPrivate }) },
+        { label: 'Copy link', enabled: Boolean(params.linkURL), click: () => params.linkURL && clipboard.writeText(params.linkURL) },
+        { label: 'Copy', enabled: Boolean(params.selectionText), click: () => wc.copy() },
+        { label: 'Search selection', enabled: Boolean(params.selectionText), click: () => this.navigateTo(`https://www.google.com/search?q=${encodeURIComponent(params.selectionText)}`) },
+        { type: 'separator' },
+        { label: 'Inspect element', click: () => wc.inspectElement(params.x, params.y) },
+      ];
+      Menu.buildFromTemplate(template).popup({ window: getMainWindow() || undefined });
+    });
+
+    wc.setWindowOpenHandler(({ url }) => {
+      if (url) this.createTab(url, { profileId: this.tabs.get(tabId)?.profileId, isPrivate: this.tabs.get(tabId)?.isPrivate });
+      return { action: 'deny' };
+    });
+
+    wc.on('page-title-updated', (event, title) => {
+      event.preventDefault();
+      this.updateTab(tabId, { title: title || 'New Tab' });
+    });
+
+    wc.on('page-favicon-updated', (_event, favicons) => {
+      this.updateTab(tabId, { favicon: favicons[0] });
     });
 
     wc.on('did-start-loading', () => {
-      const tab = this.tabs.get(tabId);
-      if (tab) {
-        tab.isLoading = true;
-        this.broadcastTabUpdate(tabId);
-      }
+      this.updateTab(tabId, { isLoading: true, isCrashed: false });
     });
 
     wc.on('did-stop-loading', () => {
+      this.updateTab(tabId, {
+        isLoading: false,
+        canGoBack: this.canGoBack(wc),
+        canGoForward: this.canGoForward(wc),
+      });
+    });
+
+    wc.on('did-navigate', (_event, url) => {
+      this.updateTab(tabId, {
+        url,
+        canGoBack: this.canGoBack(wc),
+        canGoForward: this.canGoForward(wc),
+      });
+    });
+
+    wc.on('did-navigate-in-page', (_event, url) => {
+      this.updateTab(tabId, { url });
+    });
+
+    wc.on('did-finish-load', () => {
+      const currentUrl = wc.getURL() || this.tabs.get(tabId)?.url || 'about:blank';
+      const currentTitle = wc.getTitle() || this.tabs.get(tabId)?.title || 'New Tab';
       const tab = this.tabs.get(tabId);
-      if (tab) {
-        tab.isLoading = false;
-        this.broadcastTabUpdate(tabId);
+      this.updateTab(tabId, {
+        url: currentUrl,
+        title: currentTitle,
+        isLoading: false,
+        canGoBack: this.canGoBack(wc),
+        canGoForward: this.canGoForward(wc),
+      });
+      if (tab && !tab.isPrivate && /^https?:/i.test(currentUrl)) {
+        Storage.addToHistory(currentUrl, currentTitle, tab.profileId, tab.favicon);
       }
     });
 
-    wc.on('did-navigate', (event: any, url: string) => {
-      const tab = this.tabs.get(tabId);
-      if (tab) {
-        tab.url = url;
-        this.broadcastTabUpdate(tabId);
-      }
+    wc.on('media-started-playing', () => {
+      this.updateTab(tabId, { isPlayingAudio: true });
     });
 
-    wc.on('did-navigate-in-page', (event: any, url: string) => {
-      const tab = this.tabs.get(tabId);
-      if (tab) {
-        tab.url = url;
-        this.broadcastTabUpdate(tabId);
-      }
+    wc.on('media-paused', () => {
+      this.updateTab(tabId, { isPlayingAudio: false });
     });
 
-    // Track navigation history state
-    wc.on('did-start-navigation', () => {
-      const tab = this.tabs.get(tabId);
-      if (tab) {
-        tab.canGoBack = wc.canGoBack();
-        tab.canGoForward = wc.canGoForward();
-        this.broadcastTabUpdate(tabId);
-      }
+    wc.on('render-process-gone', () => {
+      this.updateTab(tabId, { isLoading: false, isCrashed: true });
     });
 
-    wc.on('did-stop-loading', () => {
-      const tab = this.tabs.get(tabId);
-      if (tab) {
-        tab.canGoBack = wc.canGoBack();
-        tab.canGoForward = wc.canGoForward();
-        this.broadcastTabUpdate(tabId);
-      }
+    wc.on('destroyed', () => {
+      if (this.tabs.has(tabId)) this.removeTabState(tabId, false);
     });
   }
 
-  /**
-   * Broadcasts an update for a specific tab to the renderer process.
-   * @param tabId The ID of the tab that was updated.
-   */
-  private broadcastTabUpdate(tabId: string) {
-    const mainWindow = getMainWindow();
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      const tab = this.tabs.get(tabId);
-      mainWindow.webContents.send('tab-updated', tab);
-    }
+  private canGoBack(wc: Electron.WebContents): boolean {
+    return typeof wc.navigationHistory?.canGoBack === 'function' ? wc.navigationHistory.canGoBack() : (wc as any).canGoBack();
   }
 
-  /**
-   * Retrieves information about a specific tab.
-   * @param tabId The ID of the tab.
-   * @returns The tab information or undefined if not found.
-   */
-  getTab(tabId: string): TabInfo | undefined {
-    return this.tabs.get(tabId);
+  private canGoForward(wc: Electron.WebContents): boolean {
+    return typeof wc.navigationHistory?.canGoForward === 'function' ? wc.navigationHistory.canGoForward() : (wc as any).canGoForward();
   }
 
-  /**
-   * Retrieves the WebContentsView associated with a specific tab.
-   * @param tabId The ID of the tab.
-   * @returns The WebContentsView or undefined if not found.
-   */
-  getWebContents(tabId: string): WebContentsView | undefined {
-    return this.tabViews.get(tabId);
+  private updateTab(tabId: string, patch: Partial<TabInfo>): void {
+    const current = this.tabs.get(tabId);
+    if (!current) return;
+    Object.assign(current, patch);
+    this.broadcastTabUpdate(tabId);
   }
 
-  /**
-   * Retrieves information about all currently open tabs.
-   * @returns An array of all tab information objects.
-   */
-  getAllTabs(): TabInfo[] {
-    return Array.from(this.tabs.values());
-  }
-
-  /**
-   * Closes a specific tab and destroys its associated WebContentsView.
-   * @param tabId The ID of the tab to close.
-   */
-  closeTab(tabId: string): void {
+  private removeTabState(tabId: string, remember: boolean): void {
     const tab = this.tabs.get(tabId);
-    if (tab) {
-      const view = this.tabViews.get(tabId);
-      if (view) {
-        const mainWindow = getMainWindow();
-        if (mainWindow && !mainWindow.isDestroyed()) {
-          mainWindow.contentView.removeChildView(view);
-        }
-        // Explicitly destroy the webContents to prevent memory leaks
-        (view.webContents as any).destroy();
-      }
-      this.tabs.delete(tabId);
-      this.tabViews.delete(tabId);
-
-      if (this.activeTabId === tabId) {
-        const remainingTabs = Array.from(this.tabs.keys());
-        this.activeTabId = remainingTabs[0] || null;
-        this.updateActiveTabView();
-      }
-
-      this.broadcastTabsUpdate();
+    if (!tab) return;
+    if (remember && tab.url !== 'about:blank') {
+      this.recentlyClosed.unshift({
+        url: tab.url,
+        title: tab.title,
+        favicon: tab.favicon,
+        profileId: tab.profileId,
+        isPrivate: tab.isPrivate,
+        closedAt: Date.now(),
+      });
+      this.recentlyClosed.splice(20);
     }
+    this.tabs.delete(tabId);
+    this.tabViews.delete(tabId);
   }
 
-  /**
-   * Sets the specified tab as the active (visible) tab.
-   * @param tabId The ID of the tab to activate.
-   */
-  setActiveTab(tabId: string): void {
-    if (this.tabs.has(tabId)) {
-      this.activeTabId = tabId;
+  closeTab(tabId: string): void {
+    const view = this.tabViews.get(tabId);
+    const mainWindow = getMainWindow();
+    const wasActive = this.activeTabId === tabId;
+    this.removeTabState(tabId, true);
+
+    if (view && mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.contentView.removeChildView(view);
+      if (!view.webContents.isDestroyed()) view.webContents.close();
+    }
+
+    if (wasActive) {
+      const remainingTabs = Array.from(this.tabs.keys());
+      this.activeTabId = remainingTabs.length ? remainingTabs[Math.max(0, remainingTabs.length - 1)] : null;
+    }
+
+    if (!this.activeTabId && mainWindow && !mainWindow.isDestroyed()) {
+      this.createTab('about:blank');
+    } else {
       this.updateActiveTabView();
+      this.persistOpenTabs();
       this.broadcastTabsUpdate();
     }
   }
 
-  /**
-   * Updates the visibility and bounds of the WebContentsViews based on the currently active tab.
-   */
+  reopenClosedTab(): string | null {
+    const closed = this.recentlyClosed.shift();
+    if (!closed) return null;
+    const tabId = this.createTab(closed.url, {
+      profileId: closed.profileId,
+      isPrivate: closed.isPrivate,
+    });
+    return tabId;
+  }
+
+  getRecentlyClosed(): ClosedTabInfo[] {
+    return [...this.recentlyClosed];
+  }
+
+  setActiveTab(tabId: string): void {
+    if (!this.tabs.has(tabId)) return;
+    this.activeTabId = tabId;
+    this.updateActiveTabView();
+    this.broadcastTabsUpdate();
+  }
+
   private updateActiveTabView(): void {
     const mainWindow = getMainWindow();
     if (!mainWindow || mainWindow.isDestroyed()) return;
-
-    // Hide all views except active
-    for (const [tabId, view] of this.tabViews.entries()) {
-      if (tabId === this.activeTabId) {
-        view.setVisible(true);
-        if (this.currentBrowserBounds) {
-          view.setBounds(this.currentBrowserBounds);
-        }
-      } else {
-        view.setVisible(false);
-      }
+    for (const [tabId, view] of this.tabViews) {
+      const active = tabId === this.activeTabId;
+      view.setVisible(active);
+      if (active) this.applyBounds(view);
     }
   }
 
-  /**
-   * Retrieves information about the currently active tab.
-   * @returns The active tab information or null if no tab is active.
-   */
-  getActiveTab(): TabInfo | null {
-    return this.activeTabId ? this.tabs.get(this.activeTabId) || null : null;
-  }
-
-  /**
-   * Navigates the active tab to a specified URL.
-   * @param url The URL to navigate to.
-   * @returns True if navigation started successfully, false otherwise.
-   */
-  navigateTo(url: string): boolean {
-    if (!this.activeTabId) return false;
-
-    const tab = this.tabs.get(this.activeTabId);
-    if (!tab) return false;
-
-    const view = this.tabViews.get(this.activeTabId);
-    if (!view) return false;
-
-    let finalUrl: string;
-    try {
-      const candidate = String(url || '').trim();
-      const parsed = new URL(/^https?:\/\//i.test(candidate) || /^about:/i.test(candidate) ? candidate : `https://${candidate}`);
-      if (!['http:', 'https:'].includes(parsed.protocol) && parsed.href !== 'about:blank') return false;
-      finalUrl = parsed.toString();
-    } catch {
-      return false;
-    }
-
-    view.webContents.loadURL(finalUrl).catch((err: Error) => {
-      console.error('Failed to load URL:', err);
+  private applyBounds(view: WebContentsView): void {
+    const mainWindow = getMainWindow();
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    view.setBounds(this.currentBrowserBounds || {
+      x: 0,
+      y: 0,
+      width: mainWindow.getContentBounds().width,
+      height: mainWindow.getContentBounds().height,
     });
+  }
 
+  navigateTo(urlOrSearch: string, tabId = this.activeTabId): boolean {
+    if (!tabId) return false;
+    const view = this.tabViews.get(tabId);
+    if (!view || view.webContents.isDestroyed()) return false;
+    const target = this.resolveNavigationInput(urlOrSearch);
+    if (!target) return false;
+
+    this.updateTab(tabId, { url: target, isLoading: true, isCrashed: false });
+    view.webContents.loadURL(target).catch((error) => {
+      console.error(`[BrowserManager] Navigation failed for ${target}:`, error);
+      this.updateTab(tabId, { isLoading: false });
+    });
     return true;
   }
 
-  /**
-   * Navigates the active tab back in its history.
-   * @returns True if navigation started successfully, false otherwise.
-   */
-  goBack(): boolean {
-    if (!this.activeTabId) return false;
+  private resolveNavigationInput(input: string): string | null {
+    const candidate = String(input || '').trim();
+    if (!candidate) return 'about:blank';
+    if (/^about:/i.test(candidate)) return candidate;
 
-    const view = this.tabViews.get(this.activeTabId);
-    if (!view) return false;
-
-    if (view.webContents.canGoBack()) {
-      view.webContents.goBack();
-      return true;
+    try {
+      const parsed = new URL(/^[a-z][a-z\d+.-]*:\/\//i.test(candidate) ? candidate : `https://${candidate}`);
+      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') return parsed.toString();
+    } catch {
+      // Search terms are handled below.
     }
 
-    return false;
+    return `https://www.google.com/search?q=${encodeURIComponent(candidate)}`;
   }
 
-  /**
-   * Navigates the active tab forward in its history.
-   * @returns True if navigation started successfully, false otherwise.
-   */
-  goForward(): boolean {
-    if (!this.activeTabId) return false;
-
-    const view = this.tabViews.get(this.activeTabId);
-    if (!view) return false;
-
-    if (view.webContents.canGoForward()) {
-      view.webContents.goForward();
-      return true;
-    }
-
-    return false;
-  }
-
-  /**
-   * Reloads the current page in the active tab.
-   * @returns True if reload started successfully, false otherwise.
-   */
-  reload(): boolean {
-    if (!this.activeTabId) return false;
-
-    const view = this.tabViews.get(this.activeTabId);
-    if (!view) return false;
-
-    view.webContents.reload();
+  goBack(tabId = this.activeTabId): boolean {
+    const view = tabId ? this.tabViews.get(tabId) : undefined;
+    if (!view || view.webContents.isDestroyed() || !this.canGoBack(view.webContents)) return false;
+    view.webContents.goBack();
     return true;
   }
 
-  /**
-   * Stops the active tab from loading.
-   * @returns True if stop command was sent successfully, false otherwise.
-   */
-  stopLoading(): boolean {
-    if (!this.activeTabId) return false;
+  goForward(tabId = this.activeTabId): boolean {
+    const view = tabId ? this.tabViews.get(tabId) : undefined;
+    if (!view || view.webContents.isDestroyed() || !this.canGoForward(view.webContents)) return false;
+    view.webContents.goForward();
+    return true;
+  }
 
-    const view = this.tabViews.get(this.activeTabId);
-    if (!view) return false;
+  reload(hard = false, tabId = this.activeTabId): boolean {
+    const view = tabId ? this.tabViews.get(tabId) : undefined;
+    if (!view || view.webContents.isDestroyed()) return false;
+    if (hard) view.webContents.reloadIgnoringCache();
+    else view.webContents.reload();
+    return true;
+  }
 
+  stopLoading(tabId = this.activeTabId): boolean {
+    const view = tabId ? this.tabViews.get(tabId) : undefined;
+    if (!view || view.webContents.isDestroyed()) return false;
     view.webContents.stop();
     return true;
   }
 
-  /**
-   * Retrieves the URL of the currently active tab.
-   * @returns The current URL or an empty string if no tab is active.
-   */
+  findInPage(text: string, options: { forward?: boolean; matchCase?: boolean } = {}, tabId = this.activeTabId): number {
+    const view = tabId ? this.tabViews.get(tabId) : undefined;
+    if (!view || view.webContents.isDestroyed() || !text.trim()) return 0;
+    return view.webContents.findInPage(text, { forward: options.forward !== false, matchCase: Boolean(options.matchCase) });
+  }
+
+  stopFindInPage(action: 'clearSelection' | 'keepSelection' | 'activateSelection' = 'clearSelection', tabId = this.activeTabId): void {
+    const view = tabId ? this.tabViews.get(tabId) : undefined;
+    if (view && !view.webContents.isDestroyed()) view.webContents.stopFindInPage(action);
+  }
+
+  setZoom(delta: number, tabId = this.activeTabId): number | null {
+    const view = tabId ? this.tabViews.get(tabId) : undefined;
+    if (!view || view.webContents.isDestroyed()) return null;
+    const next = Math.min(5, Math.max(0.25, view.webContents.getZoomFactor() + delta));
+    view.webContents.setZoomFactor(next);
+    return next;
+  }
+
+  resetZoom(tabId = this.activeTabId): boolean {
+    const view = tabId ? this.tabViews.get(tabId) : undefined;
+    if (!view || view.webContents.isDestroyed()) return false;
+    view.webContents.setZoomFactor(1);
+    return true;
+  }
+
+  print(tabId = this.activeTabId): Promise<boolean> {
+    const view = tabId ? this.tabViews.get(tabId) : undefined;
+    if (!view || view.webContents.isDestroyed()) return Promise.resolve(false);
+    return new Promise((resolve) => view.webContents.print({}, (success) => resolve(success)));
+  }
+
+  async savePdf(tabId = this.activeTabId): Promise<string | null> {
+    const view = tabId ? this.tabViews.get(tabId) : undefined;
+    const mainWindow = getMainWindow();
+    if (!view || view.webContents.isDestroyed() || !mainWindow || mainWindow.isDestroyed()) return null;
+    const result = await dialog.showSaveDialog(mainWindow, {
+      title: 'Save page as PDF',
+      defaultPath: `${(view.webContents.getTitle() || 'page').replace(/[^a-z0-9-_]+/gi, '-').slice(0, 80)}.pdf`,
+      filters: [{ name: 'PDF document', extensions: ['pdf'] }],
+    });
+    if (result.canceled || !result.filePath) return null;
+    const data = await view.webContents.printToPDF({ printBackground: true });
+    await import('node:fs/promises').then(({ writeFile }) => writeFile(result.filePath!, data));
+    return result.filePath;
+  }
+
+  toggleMute(tabId = this.activeTabId): boolean {
+    if (!tabId) return false;
+    const view = this.tabViews.get(tabId);
+    const tab = this.tabs.get(tabId);
+    if (!view || !tab || view.webContents.isDestroyed()) return false;
+    const muted = !view.webContents.isAudioMuted();
+    view.webContents.setAudioMuted(muted);
+    this.updateTab(tabId, { isMuted: muted });
+    return muted;
+  }
+
+  moveTab(tabId: string, targetIndex: number): boolean {
+    const ids = Array.from(this.tabs.keys());
+    const currentIndex = ids.indexOf(tabId);
+    if (currentIndex < 0) return false;
+    ids.splice(currentIndex, 1);
+    const boundedIndex = Math.max(0, Math.min(targetIndex, ids.length));
+    ids.splice(boundedIndex, 0, tabId);
+
+    const reordered = new Map<string, TabInfo>();
+    for (const id of ids) reordered.set(id, this.tabs.get(id)!);
+    this.tabs.clear();
+    for (const [id, tab] of reordered) this.tabs.set(id, tab);
+    this.persistOpenTabs();
+    this.broadcastTabsUpdate();
+    return true;
+  }
+
+  setPinned(tabId: string, pinned: boolean): boolean {
+    if (!this.tabs.has(tabId)) return false;
+    this.updateTab(tabId, { pinned });
+    return true;
+  }
+
+  getTab(tabId: string): TabInfo | undefined {
+    const tab = this.tabs.get(tabId);
+    return tab ? { ...tab } : undefined;
+  }
+
+  getWebContents(tabId: string): WebContentsView | undefined {
+    return this.tabViews.get(tabId);
+  }
+
+  getAllTabs(): TabInfo[] {
+    return Array.from(this.tabs.values()).map((tab) => ({ ...tab }));
+  }
+
+  getActiveTab(): TabInfo | null {
+    return this.activeTabId ? this.getTab(this.activeTabId) || null : null;
+  }
+
   getCurrentUrl(): string {
-    if (!this.activeTabId) return '';
-
-    const tab = this.tabs.get(this.activeTabId);
-    return tab?.url || '';
+    return this.getActiveTab()?.url || '';
   }
 
-  /**
-   * Retrieves the title of the currently active tab.
-   * @returns The current title or an empty string if no tab is active.
-   */
   getCurrentTitle(): string {
-    if (!this.activeTabId) return '';
-
-    const tab = this.tabs.get(this.activeTabId);
-    return tab?.title || '';
+    return this.getActiveTab()?.title || '';
   }
 
-  /**
-   * Sets the bounds for the browser area. Called by the renderer process when the window resizes.
-   * @param bounds The new bounds for the browser area.
-   */
-  setBrowserAreaBounds(bounds: { x: number; y: number; width: number; height: number }): void {
-    console.log(`[BrowserManager] Setting browser bounds:`, bounds);
+  setBrowserAreaBounds(bounds: BrowserBounds): void {
     this.currentBrowserBounds = bounds;
-
-    // Update active view bounds
-    if (this.activeTabId) {
-      const view = this.tabViews.get(this.activeTabId);
-      if (view) {
-        view.setBounds(bounds);
-      }
-    }
+    const activeView = this.activeTabId ? this.tabViews.get(this.activeTabId) : undefined;
+    if (activeView) activeView.setBounds(bounds);
   }
 
-  /**
-   * Sets the visibility of all browser views. Used to hide them when overlays are open.
-   * @param visible Whether the browser views should be visible.
-   */
   setBrowserViewVisibility(visible: boolean): void {
-    console.log(`[BrowserManager] Setting browser visibility: ${visible}`);
-    if (this.activeTabId) {
-      const view = this.tabViews.get(this.activeTabId);
-      if (view) {
-        view.setVisible(visible);
-      }
-    }
+    const activeView = this.activeTabId ? this.tabViews.get(this.activeTabId) : undefined;
+    if (activeView) activeView.setVisible(visible);
   }
 
-  /**
-   * Duplicates an existing tab by creating a new tab with the same URL.
-   * @param tabId The ID of the tab to duplicate.
-   * @returns The ID of the newly created tab, or null if the original tab was not found.
-   */
   duplicateTab(tabId: string): string | null {
     const tab = this.tabs.get(tabId);
     if (!tab) return null;
-
-    return this.createTab(tab.url);
+    return this.createTab(tab.url, { profileId: tab.profileId, isPrivate: tab.isPrivate });
   }
 
-  /**
-   * Broadcasts the full list of tabs and the active tab ID to the renderer process.
-   */
-  private broadcastTabsUpdate() {
+  getAllTabsPayload(): { tabs: TabInfo[]; activeTabId: string | null } {
+    return { tabs: this.getAllTabs(), activeTabId: this.activeTabId };
+  }
+
+  private broadcastTabUpdate(tabId: string): void {
+    const mainWindow = getMainWindow();
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    const tab = this.getTab(tabId);
+    if (tab) mainWindow.webContents.send('tab-updated', tab);
+    this.broadcastTabsUpdate();
+  }
+
+  private broadcastTabsUpdate(): void {
     const mainWindow = getMainWindow();
     if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('tabs-updated', {
-        tabs: this.getAllTabs(),
-        activeTabId: this.activeTabId,
-      });
+      mainWindow.webContents.send('tabs-updated', this.getAllTabsPayload());
     }
   }
 }

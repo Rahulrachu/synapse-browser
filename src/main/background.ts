@@ -13,6 +13,8 @@ import SessionManager from './SessionManager.js';
 import TabGroupManager from './TabGroupManager.js';
 import PanelManager from './PanelManager.js';
 import ProjectManager from './ProjectManager.js';
+import ProfileManager from './ProfileManager.js';
+import DownloadManager from './DownloadManager.js';
 import GitManager from './GitManager.js';
 import ContextEngine from './ContextEngine.js';
 import AIServiceManager from './AIServiceManager.js';
@@ -20,12 +22,12 @@ import os from 'os';
 
 let mainWindow: any = null;
 
-app.on('ready', () => {
+app.on('ready', async () => {
   mainWindow = createWindow();
   new AgentRuntime(mainWindow);
 
-  // Create initial tab
-  BrowserManager.createTab('https://www.google.com');
+  const savedTabs = await Storage.get('open-tabs');
+  BrowserManager.restoreTabs(Array.isArray(savedTabs) ? savedTabs : []);
 
   // Initialize AI Providers
   const openAIConfig = {
@@ -45,27 +47,61 @@ app.on('ready', () => {
     return { tabId, tabs: BrowserManager.getAllTabs(), activeTabId: tabId };
   });
 
-  ipcMain.handle('close-tab', async (event, tabId: string) => {
+  ipcMain.handle('close-tab', async (_event, tabId: string) => {
     BrowserManager.closeTab(tabId);
-    return { tabs: BrowserManager.getAllTabs(), activeTabId: BrowserManager.getActiveTab()?.id };
+    return BrowserManager.getAllTabsPayload();
   });
 
-  ipcMain.handle('set-active-tab', async (event, tabId: string) => {
-    BrowserManager.setActiveTab(tabId);
-    return { activeTabId: tabId, tabs: BrowserManager.getAllTabs() };
+  ipcMain.handle('reopen-closed-tab', async () => {
+    const tabId = BrowserManager.reopenClosedTab();
+    return { tabId, ...BrowserManager.getAllTabsPayload() };
   });
 
-  ipcMain.handle('duplicate-tab', async (event, tabId: string) => {
+  ipcMain.handle('get-recently-closed', async () => BrowserManager.getRecentlyClosed());
+
+  ipcMain.handle('move-tab', async (_event, tabId: string, targetIndex: number) => {
+    BrowserManager.moveTab(tabId, targetIndex);
+    return BrowserManager.getAllTabsPayload();
+  });
+
+  ipcMain.handle('pin-tab', async (_event, tabId: string, pinned = true) => {
+    return BrowserManager.setPinned(tabId, pinned);
+  });
+
+  ipcMain.handle('toggle-tab-mute', async (_event, tabId?: string) => {
+    return BrowserManager.toggleMute(tabId);
+  });
+
+  ipcMain.handle('duplicate-tab', async (_event, tabId: string) => {
     const newTabId = BrowserManager.duplicateTab(tabId);
-    return { newTabId, tabs: BrowserManager.getAllTabs(), activeTabId: newTabId };
+    return { newTabId, ...BrowserManager.getAllTabsPayload() };
   });
 
-  ipcMain.handle('get-all-tabs', async () => {
-    return {
-      tabs: BrowserManager.getAllTabs(),
-      activeTabId: BrowserManager.getActiveTab()?.id,
-    };
+  ipcMain.handle('reload-hard', async () => BrowserManager.reload(true));
+  ipcMain.handle('get-current-tab', async () => BrowserManager.getActiveTab());
+  ipcMain.handle('open-devtools', async (_event, tabId?: string) => {
+    const target = tabId || BrowserManager.getActiveTab()?.id;
+    const view = target ? BrowserManager.getWebContents(target) : undefined;
+    if (!view || view.webContents.isDestroyed()) return false;
+    view.webContents.openDevTools({ mode: 'detach' });
+    return true;
   });
+  ipcMain.handle('close-devtools', async (_event, tabId?: string) => {
+    const target = tabId || BrowserManager.getActiveTab()?.id;
+    const view = target ? BrowserManager.getWebContents(target) : undefined;
+    if (!view || view.webContents.isDestroyed()) return false;
+    view.webContents.closeDevTools();
+    return true;
+  });
+
+  ipcMain.handle('set-active-tab', async (_event, tabId: string) => {
+    BrowserManager.setActiveTab(tabId);
+    return BrowserManager.getAllTabsPayload();
+  });
+
+
+
+  ipcMain.handle('get-all-tabs', async () => BrowserManager.getAllTabsPayload());
 
   ipcMain.handle('set-browser-area-bounds', async (event, bounds) => {
     BrowserManager.setBrowserAreaBounds(bounds);
@@ -104,6 +140,28 @@ app.on('activate', () => {
 });
 
 // Additional IPC Handlers
+ipcMain.handle('get-downloads', async () => DownloadManager.getDownloads());
+ipcMain.handle('pause-download', async (_event, id: string) => DownloadManager.pause(id));
+ipcMain.handle('resume-download', async (_event, id: string) => DownloadManager.resume(id));
+ipcMain.handle('cancel-download', async (_event, id: string) => DownloadManager.cancel(id));
+ipcMain.handle('open-download', async (_event, id: string) => DownloadManager.open(id));
+ipcMain.handle('show-download-in-folder', async (_event, id: string) => { DownloadManager.showInFolder(id); return true; });
+ipcMain.handle('remove-download', async (_event, id: string) => DownloadManager.remove(id));
+
+ipcMain.handle('find-in-page', async (_event, text: string, options?: { forward?: boolean; matchCase?: boolean }) => BrowserManager.findInPage(text, options));
+ipcMain.handle('stop-find-in-page', async (_event, action?: 'clearSelection' | 'keepSelection' | 'activateSelection') => { BrowserManager.stopFindInPage(action); return true; });
+ipcMain.handle('zoom-in', async () => BrowserManager.setZoom(0.1));
+ipcMain.handle('zoom-out', async () => BrowserManager.setZoom(-0.1));
+ipcMain.handle('zoom-reset', async () => BrowserManager.resetZoom());
+ipcMain.handle('print-page', async () => BrowserManager.print());
+ipcMain.handle('save-page-pdf', async () => BrowserManager.savePdf());
+
+ipcMain.handle('get-profiles', async () => ProfileManager.getProfiles());
+ipcMain.handle('get-profile', async (_event, id: string) => ProfileManager.getProfile(id));
+ipcMain.handle('create-profile', async (_event, name: string, avatar?: string) => ProfileManager.createProfile(name, avatar));
+ipcMain.handle('update-profile', async (_event, id: string, patch: any) => ProfileManager.updateProfile(id, patch));
+ipcMain.handle('delete-profile', async (_event, id: string) => ProfileManager.deleteProfile(id));
+
 ipcMain.handle('get-app-version', () => {
   return app.getVersion();
 });
@@ -128,9 +186,7 @@ ipcMain.handle('go-forward', async () => {
   return BrowserManager.goForward();
 });
 
-ipcMain.handle('reload', async () => {
-  return BrowserManager.reload();
-});
+ipcMain.handle('reload', async () => BrowserManager.reload());
 
 ipcMain.handle('stop-loading', async () => {
   return BrowserManager.stopLoading();
@@ -145,28 +201,42 @@ ipcMain.handle('get-current-title', async () => {
 });
 
 // Storage handlers
-ipcMain.handle('get-bookmarks', async () => {
-  return Storage.getBookmarks();
+ipcMain.handle('get-bookmarks', async (_event, profileId = 'default', query = '') => {
+  return Storage.getBookmarks(profileId, query);
 });
 
-ipcMain.handle('add-bookmark', async (event, title: string, url: string) => {
-  return Storage.addBookmark(title, url);
+ipcMain.handle('get-bookmark-folders', async (_event, profileId = 'default') => {
+  return Storage.getBookmarkFolders(profileId);
 });
 
-  ipcMain.handle('delete-bookmark', async (event, id: string) => {
-    return Storage.removeBookmark(id);
-  });
-
-ipcMain.handle('get-history', async (event, limit?: number) => {
-  return Storage.getHistory(limit);
+ipcMain.handle('create-bookmark-folder', async (_event, name: string, parentId: string | null = null, profileId = 'default') => {
+  return Storage.createBookmarkFolder(name, parentId, profileId);
 });
 
-ipcMain.handle('add-to-history', async (event, url: string, title: string) => {
-  return Storage.addToHistory(url, title);
+ipcMain.handle('update-bookmark-folder', async (_event, id: string, name: string, parentId?: string | null) => {
+  return Storage.updateBookmarkFolder(id, name, parentId);
 });
 
-ipcMain.handle('clear-history', async () => {
-  Storage.clearHistory();
+ipcMain.handle('delete-bookmark-folder', async (_event, id: string) => Storage.deleteBookmarkFolder(id));
+
+ipcMain.handle('add-bookmark', async (_event, title: string, url: string, folderId: string | null = null, profileId = 'default', favicon?: string) => {
+  return Storage.addBookmark(title, url, folderId, profileId, favicon);
+});
+
+ipcMain.handle('update-bookmark', async (_event, id: string, patch: any) => Storage.updateBookmark(id, patch));
+ipcMain.handle('delete-bookmark', async (_event, id: string) => Storage.removeBookmark(id));
+
+ipcMain.handle('get-history', async (_event, limit?: number, profileId = 'default', query = '') => {
+  return Storage.getHistory(limit || 100, profileId, query);
+});
+
+ipcMain.handle('add-to-history', async (_event, url: string, title: string, profileId = 'default', favicon?: string) => {
+  return Storage.addToHistory(url, title, profileId, favicon);
+});
+
+ipcMain.handle('delete-history-entry', async (_event, id: string, profileId = 'default') => Storage.deleteHistoryEntry(id, profileId));
+ipcMain.handle('clear-history', async (_event, profileId = 'default', since?: number) => {
+  Storage.clearHistory(profileId, since);
   return true;
 });
 
@@ -246,14 +316,8 @@ ipcMain.handle('remove-tab-from-group', async (event, tabId: string) => {
   return TabGroupManager.removeTabFromGroup(tabId);
 });
 
-ipcMain.handle('pin-tab', async (event, tabId: string) => {
-  TabGroupManager.pinTab(tabId);
-  return true;
-});
-
-ipcMain.handle('unpin-tab', async (event, tabId: string) => {
-  TabGroupManager.unpinTab(tabId);
-  return true;
+ipcMain.handle('unpin-tab', async (_event, tabId: string) => {
+  return BrowserManager.setPinned(tabId, false);
 });
 
 ipcMain.handle('sleep-tab', async (event, tabId: string) => {

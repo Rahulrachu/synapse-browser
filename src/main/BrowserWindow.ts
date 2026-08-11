@@ -4,7 +4,6 @@ import path from 'path';
 const isDev = process.env.NODE_ENV === 'development';
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 
-import BrowserManager from './BrowserManager.js';
 // import DownloadManager from './DownloadManager.js';
 
 let mainWindow: BrowserWindow | null = null;
@@ -31,7 +30,7 @@ export function createWindow() {
 
   const startUrl = isDev
     ? 'http://localhost:5173'
-    : `file://${path.join(__dirname, '../../../dist/renderer/index.html')}`;
+    : `file://${path.join(__dirname, '../renderer/index.html')}`;
 
   mainWindow.loadURL(startUrl);
 
@@ -39,9 +38,7 @@ export function createWindow() {
     mainWindow.webContents.openDevTools();
   }
 
-  // setupIPC();
-  // setupContextMenu();
-  // DownloadManager.setupDownloadHandler(mainWindow);
+  setupContextMenu();
 
   mainWindow.on('closed', () => {
     mainWindow = null;
