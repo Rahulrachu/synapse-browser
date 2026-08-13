@@ -364,12 +364,25 @@ class BrowserManager {
     const mainWindow = getMainWindow();
     if (!mainWindow || mainWindow.isDestroyed()) return;
     const content = mainWindow.getContentBounds();
-    view.setBounds(this.currentBrowserBounds || {
+    view.setBounds(this.clampBrowserBounds(this.currentBrowserBounds || {
       x: 72,
       y: 96,
-      width: Math.max(320, content.width - 72 - 380),
-      height: Math.max(240, content.height - 96 - 32),
-    });
+      width: content.width - 72 - 380,
+      height: content.height - 96 - 32,
+    }, content));
+  }
+
+  private clampBrowserBounds(bounds: BrowserBounds, content: { width: number; height: number }): BrowserBounds {
+    const x = Math.max(72, Math.round(Number.isFinite(bounds.x) ? bounds.x : 72));
+    const y = Math.max(96, Math.round(Number.isFinite(bounds.y) ? bounds.y : 96));
+    const maxWidth = Math.max(320, content.width - x - 380);
+    const maxHeight = Math.max(240, content.height - y - 32);
+    return {
+      x,
+      y,
+      width: Math.min(maxWidth, Math.max(320, Math.round(bounds.width))),
+      height: Math.min(maxHeight, Math.max(240, Math.round(bounds.height))),
+    };
   }
 
   navigateTo(urlOrSearch: string, tabId = this.activeTabId): boolean {
@@ -562,9 +575,12 @@ class BrowserManager {
   }
 
   setBrowserAreaBounds(bounds: BrowserBounds): void {
-    this.currentBrowserBounds = bounds;
+    const mainWindow = getMainWindow();
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    const clamped = this.clampBrowserBounds(bounds, mainWindow.getContentBounds());
+    this.currentBrowserBounds = clamped;
     const activeView = this.activeTabId ? this.tabViews.get(this.activeTabId) : undefined;
-    if (activeView) activeView.setBounds(bounds);
+    if (activeView) activeView.setBounds(clamped);
   }
 
   setBrowserViewVisibility(visible: boolean): void {
