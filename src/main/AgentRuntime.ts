@@ -120,8 +120,17 @@ export class AgentRuntime {
       const messages: ChatMessage[] = [{ role: 'system', content: system }, { role: 'user', content: goal }]; log('plan', 'Closed-loop task plan created', PlanningEngine.createPlan(goal, ['Understand the goal and establish scope', 'Observe the current website and maintain task memory', 'Act with bounded recovery and verify each result', 'Confirm consequential actions and report verified completion'])); let completedByAssistant = false;
       for (let step = 0; step < MAX_STEPS; step++) {
         if (controller.signal.aborted) throw new Error('Agent run cancelled'); if (deadlineExceeded(state)) throw new Error('Agent task time budget exhausted'); state.remainingSteps = MAX_STEPS - step; if (state.status !== 'PLANNING') transitionTaskState(state, 'PLANNING'); state.phase = 'understand'; log('plan', `Step ${step + 1} of ${MAX_STEPS}`);
-        const response = await this.providerFetch(`${base.replace(/\/$/, '')}/chat/completions`, { method: 'POST', headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: request.model || 'gpt-4o-mini', messages, tools, tool_choice: 'auto', temperature: 0.2 }) }, controller.signal);
-        if (!response.ok) throw new Error(`AI provider error ${response.status}: ${trim(await response.text())}`); const data: any = await response.json(); const message = data?.choices?.[0]?.message; if (!message || typeof message !== 'object') throw new Error('AI provider returned a malformed message'); messages.push(message);
+        const response = await this.providerFetch(`${base.replace(/\/$/, '')}/chat/completions`, { method: 'POST', headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ model: request.model || process.env.OPENAI_MODEL || 'gpt-4.1-mini', messages, tools, tool_choice: 'auto', temperature: 0.2 }) }, controller.signal);
+        const rawBody = await response.text();
+        let data: any;
+        try { data = rawBody ? JSON.parse(rawBody) : {}; } catch { data = {}; }
+        if (!response.ok) {
+          const providerMessage = data?.error?.message || data?.error || rawBody || `HTTP ${response.status}`;
+          throw new Error(`AI provider error ${response.status}: ${trim(String(providerMessage))}`);
+        }
+        const message = data?.choices?.[0]?.message;
+        if (!message || typeof message !== 'object') throw new Error('AI provider returned no assistant message');
+        messages.push(message);
         if (!Array.isArray(message.tool_calls) || message.tool_calls.length === 0) { const answer = typeof message.content === 'string' && message.content.trim() ? message.content : ''; if (!answer) throw new Error('Agent returned no completion summary'); if (state.actions.some((a) => a.status === 'started')) throw new Error('Agent attempted to finish with an unverified action'); if (!state.completedMilestones.length && state.actions.length) throw new Error('Agent attempted to finish without a verified task milestone'); const sourceText = researchMode && sources.length ? `\n\nSources inspected (${sources.length}):\n${sources.map((source, index) => `${index + 1}. ${source.title} — ${source.url}`).join('\n')}` : ''; state.phase = 'complete'; transitionTaskState(state, 'COMPLETED'); state.confidence = Math.max(state.confidence, 0.85); log('assistant', answer + sourceText, researchMode ? { sources } : undefined); completedByAssistant = true; break; }
         for (const call of message.tool_calls) {
           if (!call?.id || call.type !== 'function' || !call.function?.name || typeof call.function.arguments !== 'string') throw new Error('AI provider returned a malformed tool call'); let args: any; try { args = JSON.parse(call.function.arguments || '{}'); } catch { throw new Error(`Malformed arguments for tool ${call.function.name}`); }

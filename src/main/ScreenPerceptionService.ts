@@ -63,7 +63,7 @@ export class UnavailableVisionProvider implements VisionProvider {
 
 export class OpenAIVisionProvider implements VisionProvider {
   readonly id = 'openai-vision';
-  constructor(private readonly apiKey: string, private readonly baseUrl = 'https://api.openai.com/v1', private readonly model = 'gpt-4o-mini') {}
+  constructor(private readonly apiKey: string, private readonly baseUrl = 'https://api.openai.com/v1', private readonly model = 'gpt-4.1-mini') {}
 
   async analyzeScreenshot(input: VisionInput) {
     const response = await fetch(`${this.baseUrl.replace(/\/$/, '')}/chat/completions`, {
@@ -100,7 +100,7 @@ export class OpenAIVisionProvider implements VisionProvider {
 
 export function createVisionProvider(): VisionProvider {
   const key = process.env.SYNAPSE_VISION_API_KEY || process.env.OPENAI_API_KEY;
-  return key ? new OpenAIVisionProvider(key, process.env.SYNAPSE_VISION_BASE_URL || process.env.OPENAI_API_BASE, process.env.SYNAPSE_VISION_MODEL || 'gpt-4o-mini') : new UnavailableVisionProvider();
+  return key ? new OpenAIVisionProvider(key, process.env.SYNAPSE_VISION_BASE_URL || process.env.OPENAI_API_BASE, process.env.SYNAPSE_VISION_MODEL || process.env.OPENAI_MODEL || 'gpt-4.1-mini') : new UnavailableVisionProvider();
 }
 
 export function newScreenshotId(): string { return `shot-${randomUUID()}`; }
