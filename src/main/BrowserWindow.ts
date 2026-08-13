@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, Menu, dialog, session } from 'electron';
 import path from 'path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
 // import { isDev, getDirname } from '../common/utils.js';
 const isDev = process.env.NODE_ENV === 'development';
 // `URL.pathname` leaves a leading slash on Windows (for example `/C:/...`).
@@ -17,13 +18,21 @@ let mainWindow: BrowserWindow | null = null;
  * @returns The created BrowserWindow instance.
  */
 export function createWindow() {
+  const packagedRoot = app.getAppPath();
+  const preloadPath = isDev
+    ? path.join(__dirname, '../preload/preload.cjs')
+    : path.join(packagedRoot, 'out/preload/preload.cjs');
+  const rendererPath = isDev
+    ? null
+    : path.join(packagedRoot, 'out/renderer/index.html');
+
   mainWindow = new BrowserWindow({
     width: 1600,
     height: 1000,
     minWidth: 800,
     minHeight: 600,
     webPreferences: {
-      preload: path.join(__dirname, '../preload/preload.cjs'),
+      preload: preloadPath,
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
@@ -31,11 +40,18 @@ export function createWindow() {
     icon: path.join(__dirname, '../../public/icon.png'),
   });
 
-  const startUrl = isDev
-    ? 'http://localhost:5173'
-    : pathToFileURL(path.join(__dirname, '../renderer/index.html')).toString();
+  if (isDev) {
+    void mainWindow.loadURL('http://localhost:5173');
+  } else {
+    if (!fs.existsSync(preloadPath) || !rendererPath || !fs.existsSync(rendererPath)) {
+      console.error('[Main] Packaged renderer assets missing', { preloadPath, rendererPath, appPath: packagedRoot });
+    }
+    void mainWindow.loadFile(rendererPath!);
+  }
 
-  mainWindow.loadURL(startUrl);
+  mainWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL) => {
+    console.error('[Main] Renderer failed to load', { errorCode, errorDescription, validatedURL });
+  });
 
   if (isDev) {
     mainWindow.webContents.openDevTools();

@@ -25,6 +25,17 @@ describe('workspaceStore', () => {
     expect(useWorkspaceStore.getState().isDarkMode).toBe(false);
   });
 
+  it('should not crash when the Electron bridge is unavailable', async () => {
+    const originalElectron = (global.window as any).electron;
+    delete (global.window as any).electron;
+
+    await useWorkspaceStore.getState().initialize();
+
+    expect(useWorkspaceStore.getState().isLoading).toBe(false);
+    expect(useWorkspaceStore.getState().error).toContain('Desktop bridge unavailable');
+    (global.window as any).electron = originalElectron;
+  });
+
   it('should add a note optimistically and invoke IPC', async () => {
     const { addNote } = useWorkspaceStore.getState();
     const title = 'Test Note';

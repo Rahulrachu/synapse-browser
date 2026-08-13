@@ -49,7 +49,15 @@ export const useWorkspaceStore = create<WorkspaceStore>((set, get) => ({
   error: null,
 
   initialize: async () => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
+    const bridge = typeof window !== 'undefined' ? window.electron : undefined;
+    if (!bridge?.invoke) {
+      set({
+        isLoading: false,
+        error: 'Desktop bridge unavailable. The workspace is running in preview mode.',
+      });
+      return;
+    }
     try {
       const [notes, prompts, layout] = await Promise.all([
         window.electron.invoke('get-notes'),

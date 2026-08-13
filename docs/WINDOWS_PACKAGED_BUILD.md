@@ -1,28 +1,42 @@
-# Windows Packaged Build Fix
+# Windows Packaged Build Status
 
 ## Diagnosis
 
-The Windows ZIP build used `new URL(import.meta.url).pathname` to derive the main-process directory. On Windows, URL pathnames retain a leading slash before the drive letter, such as `/C:/...`, and they do not provide the platform-aware decoding required for spaces and other path characters. That can make the packaged preload and renderer paths resolve incorrectly even though the Linux development build appears healthy.
-
-The native browser surface could also cover the React ORION panel when renderer-reported bounds were applied without preserving the reserved sidebar and AI-panel area. The bounds clamp is now part of the packaged source path as well.
+The packaged Electron window was resolving renderer and preload assets through fragile transformed URL paths. Windows drive-letter paths and packaged `app.asar` locations can fail when treated as URL pathnames. A second risk was renderer startup failing completely when the preload bridge was unavailable.
 
 ## Changes
 
-`src/main/BrowserWindow.ts` now uses Node's `fileURLToPath(import.meta.url)` to derive `__dirname` and `pathToFileURL(...)` to load the packaged renderer. This is safe for Windows drive-letter paths, spaces, and non-ASCII installation directories.
+`src/main/BrowserWindow.ts` now derives packaged assets from Electron's absolute `app.getAppPath()` and loads the packaged renderer with Electron's native `loadFile()` API. It also logs missing packaged assets and renderer load failures.
 
-The Windows electron-builder target now produces both an unpacked directory and an explicit ZIP artifact named `Synapse-Browser-<version>-win-<arch>.zip`.
+`src/renderer/store/workspaceStore.ts` now handles an unavailable or delayed Electron bridge without preventing the shell and ORION panel from rendering.
+
+The existing native browser-view bounds clamp remains in place so the browser surface preserves the sidebar, top bar, status bar, and ORION panel area.
 
 ## Validation
 
-The following checks passed in the Linux build environment:
+The following checks passed after the changes:
 
-- `pnpm test --run`: 8 files passed, 31 tests passed.
+- `pnpm test --run`: 8 files passed, 32 tests passed.
 - `pnpm build`: passed.
-- `pnpm exec electron-builder --win zip`: passed.
-- ZIP artifact generated at `release-windows/Synapse-Browser-1.0.0-win-x64.zip`.
+- `electron-builder --win zip`: produced `Synapse-Browser-1.0.0-win-x64.zip`.
+- The same packaged main/preload/renderer bundle was launched as a native Linux Electron distribution. The captured frame visibly showed the Google browser surface and the ORION panel on the right.
 
-A native Windows machine is still required for final GUI confirmation of the ZIP. The recommended verification is to extract the ZIP to a path containing spaces, launch `Synapse Browser.exe`, confirm that the ORION panel is visible on the right, open a new tab, and run a harmless prompt. If the panel is still absent, collect `%APPDATA%\synapse-browser\` logs and a screenshot from the packaged process.
+The native packaged smoke-test evidence is `/tmp/synapse-linux-native-final.png`.
+
+## Windows boundary
+
+The sandbox is Linux. Wine was used as an additional diagnostic path, but Electron's Chromium compositor did not render a usable window under Wine; the captured frame was black and was not accepted as proof of Windows GUI behavior. Final certification still requires launching the ZIP on a real Windows system.
 
 ## Installation
 
-Do not run the executable from inside the ZIP. Extract the complete ZIP directory first, preserve all files and subdirectories, and then launch `Synapse Browser.exe`. The ZIP contains the Electron runtime and the packaged application payload; copying only the executable will not work.
+Extract the complete ZIP directory before launching `Synapse Browser.exe`. Do not run the executable from inside the archive or copy only the executable without its adjacent runtime files.
+
+## Repository policy
+
+Only source changes covered by automated tests and the native packaged smoke test are committed. No claim is made that Wine constitutes a native Windows installation test.
+
+## References
+
+[1]: https://www.electronjs.org/docs/latest/api/browser-window
+[2]: https://www.electronjs.org/docs/latest/api/app#appgetapppath
+[3]: https://www.electronjs.org/docs/latest/api/web-contents#contentsloadfilepath-options
