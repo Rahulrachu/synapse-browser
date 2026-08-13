@@ -30,6 +30,12 @@ const MainLayout: React.FC = () => {
   const addressBarRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    if (!window.electron) {
+      const previewTab: Tab = { id: 'preview-tab', url: 'https://www.google.com', title: 'Preview', isLoading: false, canGoBack: false, canGoForward: false };
+      setTabs([previewTab]);
+      setActiveTabId(previewTab.id);
+      return;
+    }
     const init = async () => {
       const result = await window.electron.invoke('get-all-tabs');
       if (result.tabs?.length > 0) {

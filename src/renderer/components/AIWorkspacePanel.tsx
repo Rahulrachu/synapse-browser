@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Activity, Check, ChevronDown, Circle, Loader2, ShieldAlert, Square, Sparkles, X } from 'lucide-react';
+import { Activity, Check, ChevronDown, Circle, Loader2, ShieldAlert, Square, Sparkles } from 'lucide-react';
 
 type AgentEvent = { runId: string; type: string; message: string; data?: any; at: number };
 type TaskState = { phase?: string; currentOrigin?: string; confidence?: number; remainingSteps?: number; recoveryAttempts?: number };
@@ -21,13 +21,16 @@ export default function AIWorkspacePanel() {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [confirmation, setConfirmation] = useState<AgentEvent | null>(null);
 
-  useEffect(() => window.electron.on('agent:event', (event: AgentEvent) => {
-    if (runId && event.runId !== runId) return;
-    setRunId(current => current || event.runId);
-    setEvents(current => [...current.slice(-24), event]);
-    if (event.type === 'confirmation') setConfirmation(event);
-    if (event.type === 'done' || event.type === 'error') setRunning(false);
-  }), [runId]);
+  useEffect(() => {
+    if (!window.electron) return;
+    return window.electron.on('agent:event', (event: AgentEvent) => {
+      if (runId && event.runId !== runId) return;
+      setRunId(current => current || event.runId);
+      setEvents(current => [...current.slice(-24), event]);
+      if (event.type === 'confirmation') setConfirmation(event);
+      if (event.type === 'done' || event.type === 'error') setRunning(false);
+    });
+  }, [runId]);
 
   const latest = events[events.length - 1];
   const status = latest ? statusLabel[latest.type] || 'Working' : 'Ready when you are';
@@ -48,6 +51,11 @@ export default function AIWorkspacePanel() {
     setEvents([]);
     setConfirmation(null);
     setRunning(true);
+    if (!window.electron) {
+      setRunning(false);
+      setEvents([{ runId: 'preview', type: 'error', message: 'ORION is available in the Synapse desktop app.' , at: Date.now() }]);
+      return;
+    }
     const result = await window.electron.invoke('agent:run', { goal: trimmed });
     setRunId(result?.runId || null);
   };

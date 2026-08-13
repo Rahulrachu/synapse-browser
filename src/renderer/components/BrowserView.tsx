@@ -15,7 +15,7 @@ const BrowserView: React.FC<BrowserViewProps> = ({ tabId }) => {
       const next: BrowserBounds = { x: Math.round(rect.x), y: Math.round(rect.y), width: Math.round(rect.width), height: Math.round(rect.height) };
       if (next.x === lastBounds.current.x && next.y === lastBounds.current.y && next.width === lastBounds.current.width && next.height === lastBounds.current.height) return;
       lastBounds.current = next;
-      if (next.width > 0 && next.height > 0) void window.electron.invoke('set-browser-area-bounds', next);
+      if (next.width > 0 && next.height > 0 && window.electron) void window.electron.invoke('set-browser-area-bounds', next);
     };
     const frame = requestAnimationFrame(updateBounds);
     const delayedFrame = window.setTimeout(updateBounds, 100);
