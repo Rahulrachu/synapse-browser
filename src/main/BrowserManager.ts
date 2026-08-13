@@ -32,6 +32,20 @@ export interface ClosedTabInfo {
 
 type BrowserBounds = { x: number; y: number; width: number; height: number };
 
+export interface BrowserScreenshot {
+  tabId: string;
+  url: string;
+  timestamp: number;
+  viewportWidth: number;
+  viewportHeight: number;
+  devicePixelRatio: number;
+  scrollX: number;
+  scrollY: number;
+  width: number;
+  height: number;
+  data: string;
+}
+
 /**
  * Owns the actual Electron WebContentsView instance for every open tab.
  * Renderer state is only a projection of this manager; navigation is never simulated in React.
@@ -505,6 +519,30 @@ class BrowserManager {
 
   getWebContents(tabId: string): WebContentsView | undefined {
     return this.tabViews.get(tabId);
+  }
+
+  async captureScreenshot(tabId = this.activeTabId): Promise<BrowserScreenshot | null> {
+    const id = tabId || undefined;
+    const view = id ? this.tabViews.get(id) : undefined;
+    if (!id || !view || view.webContents.isDestroyed()) return null;
+    const state = await view.webContents.executeJavaScript('({ width: window.innerWidth, height: window.innerHeight, dpr: window.devicePixelRatio || 1, scrollX: window.scrollX, scrollY: window.scrollY })', true) as { width: number; height: number; dpr: number; scrollX: number; scrollY: number };
+    const image = await view.webContents.capturePage();
+    const size = image.getSize();
+    return { tabId: id, url: view.webContents.getURL() || '', timestamp: Date.now(), viewportWidth: Number(state?.width) || size.width, viewportHeight: Number(state?.height) || size.height, devicePixelRatio: Number(state?.dpr) || 1, scrollX: Number(state?.scrollX) || 0, scrollY: Number(state?.scrollY) || 0, width: size.width, height: size.height, data: image.toPNG().toString('base64') };
+  }
+
+  async clickAt(x: number, y: number, tabId = this.activeTabId): Promise<boolean> {
+    const id = tabId || undefined;
+    const view = id ? this.tabViews.get(id) : undefined;
+    if (!view || view.webContents.isDestroyed() || !Number.isFinite(x) || !Number.isFinite(y)) return false;
+    const bounds = await view.webContents.executeJavaScript('({ width: window.innerWidth, height: window.innerHeight })', true).catch(() => null) as { width: number; height: number } | null;
+    if (!bounds || x < 0 || y < 0 || x > bounds.width || y > bounds.height) return false;
+    const hit = await view.webContents.executeJavaScript(`(() => { const el = document.elementFromPoint(${x}, ${y}); if (!el) return false; const r = el.getBoundingClientRect(); const s = getComputedStyle(el); return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none'; })()`, true);
+    if (!hit) return false;
+    view.webContents.sendInputEvent({ type: 'mouseMove', x, y });
+    view.webContents.sendInputEvent({ type: 'mouseDown', x, y, button: 'left', clickCount: 1 });
+    view.webContents.sendInputEvent({ type: 'mouseUp', x, y, button: 'left', clickCount: 1 });
+    return true;
   }
 
   getAllTabs(): TabInfo[] {

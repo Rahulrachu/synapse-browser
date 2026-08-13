@@ -1,7 +1,10 @@
 import BrowserManager from './BrowserManager.js';
+import { clampVisualTarget, createVisionProvider, type VisualObservation, type VisualTarget } from './ScreenPerceptionService.js';
 
 export type BrowserAgentAction =
   | { type: 'inspect'; tabId?: string; includeHtml?: boolean }
+  | { type: 'observe_visual'; tabId?: string }
+  | { type: 'visual_click'; tabId?: string; target: VisualTarget; confirm?: boolean }
   | { type: 'click'; tabId?: string; target: BrowserAgentTarget; confirm?: boolean }
   | { type: 'fill'; tabId?: string; target: BrowserAgentTarget; value: string }
   | { type: 'press'; tabId?: string; target?: BrowserAgentTarget; key: string }
@@ -45,7 +48,8 @@ export interface BrowserAgentResult {
   message?: string;
   confirmationRequired?: boolean;
   confirmationReason?: string;
-  verification?: { verified: boolean; detail: string; snapshot?: BrowserAgentSnapshot };
+  verification?: { verified: boolean; detail: string; snapshot?: BrowserAgentSnapshot; visual?: VisualObservation }
+  visual?: VisualObservation
 }
 
 const SENSITIVE_WORDS = /\b(send|submit|purchase|buy|pay|checkout|delete|remove|publish|post|transfer|confirm|sign in|log in|create account)\b/i;
@@ -128,6 +132,33 @@ export class BrowserAgentController {
     if (action.type === 'inspect') {
       const snapshot = await view.webContents.executeJavaScript(INSPECT_SCRIPT(!!action.includeHtml), true) as BrowserAgentSnapshot;
       return { ok: true, action: action.type, snapshot };
+    }
+    if (action.type === 'observe_visual') {
+      const snapshot = await view.webContents.executeJavaScript(INSPECT_SCRIPT(false), true) as BrowserAgentSnapshot;
+      const screenshot = await BrowserManager.captureScreenshot(currentTabId(action.tabId));
+      if (!screenshot) return { ok: false, action: action.type, message: 'Screenshot capture failed.' };
+      const provider = createVisionProvider();
+      const baseObservation = { id: `visual-${screenshot.timestamp}`, available: true, provider: provider.id, screenshot: { ...screenshot, id: screenshot.tabId + '-' + screenshot.timestamp, mimeType: 'image/png' as const }, targets: [], text: [] };
+      try {
+        const result = await provider.analyzeScreenshot({ imageDataUrl: `data:image/png;base64,${screenshot.data}`, snapshot, screenshot: baseObservation.screenshot });
+        const targets = result.targets.map((target) => clampVisualTarget(target, screenshot.viewportWidth, screenshot.viewportHeight)).filter(Boolean) as VisualTarget[];
+        return { ok: true, action: action.type, snapshot, visual: { ...baseObservation, targets, text: result.text } };
+      } catch (error: any) {
+        return { ok: false, action: action.type, snapshot, visual: { ...baseObservation, available: false, error: error?.message || String(error) }, message: error?.message || 'Visual perception unavailable.' };
+      }
+    }
+    if (action.type === 'visual_click') {
+      if (!action.confirm && isSensitiveTarget({ name: action.target.description, text: action.target.nearbyText })) return { ok: false, action: action.type, confirmationRequired: true, confirmationReason: 'This visual target may cause an external side effect.' };
+      const screenshot = await BrowserManager.captureScreenshot(currentTabId(action.tabId));
+      if (!screenshot) return { ok: false, action: action.type, message: 'Screenshot capture failed.' };
+      const target = clampVisualTarget(action.target, screenshot.viewportWidth, screenshot.viewportHeight);
+      if (!target || target.confidence < 0.78 || !target.visible || !target.clickable) return { ok: false, action: action.type, message: 'Visual target was rejected because it is uncertain, invisible, or outside the viewport.' };
+      const clicked = await BrowserManager.clickAt(target.center.x, target.center.y, currentTabId(action.tabId));
+      if (!clicked) return { ok: false, action: action.type, message: 'Coordinate click was rejected by the browser interaction layer.' };
+      await new Promise((resolve) => setTimeout(resolve, 180));
+      const after = await view.webContents.executeJavaScript(INSPECT_SCRIPT(false), true) as BrowserAgentSnapshot;
+      const changed = after.url !== snapshot.url || after.text !== snapshot.text;
+      return { ok: changed, action: action.type, snapshot: after, message: changed ? 'Visual coordinate click dispatched and verified through a fresh observation.' : 'The click was dispatched, but no measurable page change was detected.', verification: { verified: changed, detail: changed ? 'Fresh DOM observation changed after the click.' : 'The click was dispatched, but no measurable page change was detected.' } };
     }
     if (action.type === 'scroll') {
       const before = await view.webContents.executeJavaScript('({ y: window.scrollY, height: document.documentElement.scrollHeight })', true) as { y: number; height: number };

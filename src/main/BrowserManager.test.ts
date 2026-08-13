@@ -21,6 +21,9 @@ vi.mock('electron', () => ({
       stop: vi.fn(),
       close: vi.fn(),
       isDestroyed: vi.fn().mockReturnValue(false),
+      executeJavaScript: vi.fn().mockImplementation((script: string) => script.includes('innerWidth') ? { width: 800, height: 600, dpr: 1, scrollX: 0, scrollY: 10 } : true),
+      capturePage: vi.fn().mockResolvedValue({ getSize: () => ({ width: 800, height: 600 }), toPNG: () => Buffer.from('png') }),
+      sendInputEvent: vi.fn(),
       getTitle: vi.fn().mockReturnValue('Mock Title'),
       getURL: vi.fn().mockReturnValue('https://mock.url'),
       session: {
@@ -158,6 +161,24 @@ describe('BrowserManager', () => {
   it('registers download sessions', () => {
     const tabId = BrowserManager.createTab('https://download.com');
     expect(DownloadManager.registerSession).toHaveBeenCalled();
+  });
+
+  it('captures screenshot metadata from the active WebContentsView', async () => {
+    const tabId = BrowserManager.createTab('https://screen.example');
+    const screenshot = await BrowserManager.captureScreenshot(tabId);
+    expect(screenshot?.tabId).toBe(tabId);
+    expect(screenshot?.viewportWidth).toBe(800);
+    expect(screenshot?.width).toBe(800);
+    expect(screenshot?.data).toBe(Buffer.from('png').toString('base64'));
+  });
+
+  it('dispatches coordinate input only for a visible in-viewport hit target', async () => {
+    const tabId = BrowserManager.createTab('https://screen.example');
+    const view = BrowserManager['tabViews'].get(tabId);
+    view.webContents.executeJavaScript.mockImplementation(async (script) => script.includes('elementFromPoint') ? true : { width: 800, height: 600 });
+    expect(await BrowserManager.clickAt(100, 120, tabId)).toBe(true);
+    expect(view.webContents.sendInputEvent).toHaveBeenCalledTimes(3);
+    expect(await BrowserManager.clickAt(900, 120, tabId)).toBe(false);
   });
 
   it('handles tab crash recovery state', () => {
