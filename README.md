@@ -14,6 +14,7 @@ Synapse Browser classifies capabilities into four distinct readiness tiers based
 | **Security & IPC** | Production-ready | Context isolation, sandboxing, strict IPC allowlists, and origin-scoped permission prompts. |
 | **Developer Workspace** | Production-ready | Real terminal sessions, file explorer, Monaco editor, and Git integration. |
 | **AI Workspace & Context Broker** | Beta | Controlled context sharing, page summarization, error explanation, and safe browser action execution. |
+| **Browser Agent Takeover** | Beta | Structured live-DOM inspection and user-like click, fill, keypress, scroll, and navigation actions with confirmation gates for external side effects. See [the browser-agent design](docs/BROWSER_AGENT.md). |
 | **Advanced Extensions** | Experimental | Browser extension loading and custom WebAssembly runtime hooks. |
 | **Cloud Sync** | Planned | Encrypted cross-device synchronization of bookmarks and settings. |
 

@@ -2,6 +2,7 @@ import { app, ipcMain } from 'electron';
 import { exec } from 'child_process';
 import { createWindow } from './BrowserWindow.js';
 import BrowserManager from './BrowserManager.js';
+import BrowserAgentController from './BrowserAgentController.js';
 import Storage from './Storage.js';
 import SearchEngine from './SearchEngine.js';
 import PlanningEngine from '../engine/PlanningEngine.js';
@@ -177,6 +178,9 @@ ipcMain.handle('get-user-data-path', () => {
 ipcMain.handle('navigate-to', async (event, url: string) => {
   return BrowserManager.navigateTo(url);
 });
+
+// Structured browser-agent takeover API. Actions are validated and executed in the main process.
+ipcMain.handle('browser-agent:run', async (_event, action) => BrowserAgentController.run(action));
 
 ipcMain.handle('go-back', async () => {
   return BrowserManager.goBack();

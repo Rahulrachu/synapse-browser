@@ -26,6 +26,7 @@ const ALLOWED_INVOKE_CHANNELS = [
   'update-context', 'get-context', 'get-context-summary',
   'create-plan', 'update-plan-task', 'get-current-plan',
   'terminal-execute', 'get-diagnostics', 'get-system-stats',
+  'browser-agent:run',
   'agent:run', 'agent:cancel', 'agent:history'
 ];
 
