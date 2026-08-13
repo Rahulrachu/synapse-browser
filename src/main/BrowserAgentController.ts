@@ -35,7 +35,8 @@ export interface BrowserAgentSnapshot {
   title: string;
   elements: BrowserAgentElement[];
   text: string;
-}
+  authRequired?: boolean;
+};
 
 export interface BrowserAgentResult {
   ok: boolean;
@@ -79,7 +80,8 @@ const INSPECT_SCRIPT = (includeHtml: boolean) => `(() => {
       value: 'value' in el ? clean(el.value) : null, placeholder: el.getAttribute('placeholder'), disabled: !!el.disabled,
       rect: { x: Math.round(r.x), y: Math.round(r.y), width: Math.round(r.width), height: Math.round(r.height) }
     }; });
-  return { url: location.href, title: document.title, elements, text: clean(document.body?.innerText).slice(0, 12000), html: ${includeHtml ? 'document.body?.innerHTML?.slice(0, 20000)' : 'undefined'} };
+  const authRequired = !!document.querySelector('input[type="password"], input[autocomplete="current-password"], input[autocomplete="username"]') || /\b(sign in|log in|authenticate|enter password|two-factor|verification code)\b/i.test(document.body?.innerText || '');
+  return { url: location.href, title: document.title, elements, text: clean(document.body?.innerText).slice(0, 12000), authRequired, html: ${includeHtml ? 'document.body?.innerHTML?.slice(0, 20000)' : 'undefined'} };
 })()`;
 
 const ACTION_SCRIPT = (target: BrowserAgentTarget, operation: 'click' | 'fill' | 'press', value?: string, key?: string) => `(() => {
