@@ -27,7 +27,7 @@ const ALLOWED_INVOKE_CHANNELS = [
   'create-plan', 'update-plan-task', 'get-current-plan',
   'terminal-execute', 'get-diagnostics', 'get-system-stats',
   'browser-agent:run',
-  'agent:run', 'agent:cancel', 'agent:history'
+  'agent:run', 'agent:cancel', 'agent:confirm', 'agent:history'
 ];
 
 const ALLOWED_RECEIVE_CHANNELS = [

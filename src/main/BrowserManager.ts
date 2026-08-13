@@ -349,11 +349,12 @@ class BrowserManager {
   private applyBounds(view: WebContentsView): void {
     const mainWindow = getMainWindow();
     if (!mainWindow || mainWindow.isDestroyed()) return;
+    const content = mainWindow.getContentBounds();
     view.setBounds(this.currentBrowserBounds || {
-      x: 0,
-      y: 0,
-      width: mainWindow.getContentBounds().width,
-      height: mainWindow.getContentBounds().height,
+      x: 72,
+      y: 96,
+      width: Math.max(320, content.width - 72 - 380),
+      height: Math.max(240, content.height - 96 - 32),
     });
   }
 

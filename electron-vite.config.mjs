@@ -1,6 +1,7 @@
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
   main: {
@@ -25,7 +26,7 @@ export default defineConfig({
         '@': resolve('src')
       }
     },
-    plugins: [react()],
+    plugins: [react(), tailwindcss()],
     build: {
       target: 'chrome120',
       rollupOptions: { input: resolve('src/renderer/index.html') }
