@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Activity, Check, ChevronDown, Circle, Loader2, ShieldAlert, Square, Sparkles, X } from 'lucide-react';
 
 type AgentEvent = { runId: string; type: string; message: string; data?: any; at: number };
+type TaskState = { phase?: string; currentOrigin?: string; confidence?: number; remainingSteps?: number; recoveryAttempts?: number };
 
 const statusLabel: Record<string, string> = {
   plan: 'Planning the next step',
@@ -31,6 +32,9 @@ export default function AIWorkspacePanel() {
   const latest = events[events.length - 1];
   const status = latest ? statusLabel[latest.type] || 'Working' : 'Ready when you are';
   const statusMessage = latest?.message || 'Tell ORION what you want to do on the current website.';
+  const taskState: TaskState = latest?.data?.state || {};
+  const confidence = typeof taskState.confidence === 'number' ? `${Math.round(taskState.confidence * 100)}%` : '—';
+  const originLabel = taskState.currentOrigin ? taskState.currentOrigin.replace(/^https?:\/\//, '').replace(/\/$/, '') : 'No origin yet';
   const confirmationAction = confirmation?.data?.action;
   const confirmationTarget = confirmationAction?.target;
   const confirmationText = useMemo(() => {
@@ -80,7 +84,7 @@ export default function AIWorkspacePanel() {
             <div className="mt-3 flex items-center justify-between border-t border-white/[0.07] pt-3"><span className="text-[10px] text-white/25">Enter to run · Shift + Enter for a new line</span><button aria-label={running ? 'Stop ORION' : 'Run ORION'} onClick={running ? handleStop : handleRun} disabled={!running && !goal.trim()} className={`flex items-center gap-2 rounded-lg px-3 py-2 text-[11px] font-medium transition ${running ? 'bg-white/10 text-white hover:bg-white/15' : goal.trim() ? 'bg-white text-black hover:bg-white/90' : 'bg-white/10 text-white/25'}`}>{running ? <><Square size={12} fill="currentColor" />Stop</> : <><Activity size={13} />Run</>}</button></div>
           </div>
 
-          <div className="mt-6 rounded-xl border border-white/[0.07] bg-white/[0.025] px-3 py-3"><div className="flex items-center gap-2 text-[11px] text-white/65">{running ? <Loader2 size={13} className="animate-spin text-white" /> : latest?.type === 'done' ? <Check size={13} className="text-emerald-400" /> : <Circle size={8} className="fill-white/30 text-white/30" />}<span>{status}</span><span className="ml-auto text-[10px] text-white/25">{events.length ? `${events.length} updates` : ''}</span></div><p className="mt-2 truncate text-[11px] text-white/40">{statusMessage}</p></div>
+          <div className="mt-6 rounded-xl border border-white/[0.07] bg-white/[0.025] px-3 py-3"><div className="flex items-center gap-2 text-[11px] text-white/65">{running ? <Loader2 size={13} className="animate-spin text-white" /> : latest?.type === 'done' ? <Check size={13} className="text-emerald-400" /> : <Circle size={8} className="fill-white/30 text-white/30" />}<span>{status}</span><span className="ml-auto text-[10px] text-white/25">{events.length ? `${events.length} updates` : ''}</span></div><p className="mt-2 truncate text-[11px] text-white/40">{statusMessage}</p><div className="mt-3 grid grid-cols-3 gap-2 border-t border-white/[0.06] pt-3 text-[9px] uppercase tracking-[0.12em] text-white/25"><span><span className="block text-white/55">Phase</span>{taskState.phase || 'ready'}</span><span><span className="block text-white/55">Confidence</span>{confidence}</span><span className="text-right"><span className="block text-white/55">Steps</span>{typeof taskState.remainingSteps === 'number' ? taskState.remainingSteps : '—'}</span></div><p className="mt-2 truncate text-[10px] text-white/25">{originLabel}</p></div>
 
           {confirmation && <div className="mt-4 rounded-xl border border-amber-300/25 bg-amber-300/[0.06] p-4"><div className="flex gap-3"><ShieldAlert size={16} className="mt-0.5 shrink-0 text-amber-200" /><div><p className="text-[12px] font-medium text-amber-100">Confirmation required</p><p className="mt-2 text-[11px] leading-5 text-white/55">ORION is ready to activate <span className="text-white/85">{confirmationText}</span>. This may cause an external side effect.</p><div className="mt-4 flex justify-end gap-2"><button onClick={() => void handleConfirmation(false)} className="rounded-lg px-3 py-2 text-[11px] text-white/55 hover:bg-white/10">Cancel</button><button onClick={() => void handleConfirmation(true)} className="rounded-lg bg-white px-3 py-2 text-[11px] font-medium text-black hover:bg-white/90">Confirm</button></div></div></div></div>}
 

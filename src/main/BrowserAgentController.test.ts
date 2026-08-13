@@ -36,8 +36,11 @@ describe('BrowserAgentController', () => {
   it('executes confirmed structured actions in the page', async () => {
     executeJavaScript.mockResolvedValue({ ok: true, message: 'Clicked matched element.' });
     const result = await BrowserAgentController.run({ type: 'click', tabId: 'tab-1', target: { role: 'button', name: 'Next' }, confirm: true });
-    expect(result).toEqual({ ok: true, action: 'click', message: 'Clicked matched element.' });
-    expect(executeJavaScript).toHaveBeenCalledOnce();
+    expect(result.ok).toBe(true);
+    expect(result.action).toBe('click');
+    expect(result.message).toContain('Verified against a fresh page observation');
+    expect(result.verification?.verified).toBe(true);
+    expect(executeJavaScript).toHaveBeenCalledTimes(2);
   });
 
   it('returns a useful error when no tab is available', async () => {
