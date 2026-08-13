@@ -38,8 +38,9 @@
       "output": "release"
     },
     "win": {
-      "target": "dir",
-      "icon": "public/icon.png"
+      "target": ["dir", "zip"],
+      "icon": "public/icon.png",
+      "artifactName": "Synapse-Browser-${version}-${os}-${arch}.${ext}"
     },
     "nsis": {
       "oneClick": false,

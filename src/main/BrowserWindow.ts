@@ -1,8 +1,11 @@
 import { app, BrowserWindow, ipcMain, Menu, dialog, session } from 'electron';
 import path from 'path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 // import { isDev, getDirname } from '../common/utils.js';
 const isDev = process.env.NODE_ENV === 'development';
-const __dirname = path.dirname(new URL(import.meta.url).pathname);
+// `URL.pathname` leaves a leading slash on Windows (for example `/C:/...`).
+// Convert the module URL with Node's platform-aware helper before joining paths.
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // import DownloadManager from './DownloadManager.js';
 
@@ -30,7 +33,7 @@ export function createWindow() {
 
   const startUrl = isDev
     ? 'http://localhost:5173'
-    : `file://${path.join(__dirname, '../renderer/index.html')}`;
+    : pathToFileURL(path.join(__dirname, '../renderer/index.html')).toString();
 
   mainWindow.loadURL(startUrl);
 
