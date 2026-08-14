@@ -52,7 +52,7 @@ export interface BrowserAgentResult {
   visual?: VisualObservation
 }
 
-const SENSITIVE_WORDS = /\b(send|submit|purchase|buy|pay|checkout|delete|remove|publish|post|transfer|confirm|sign in|log in|create account)\b/i;
+const SENSITIVE_WORDS = /\b(send|submit|purchase|buy|pay|checkout|delete|remove|publish|post|transfer|confirm|sign in|log in|create account|follow|like|comment|message|subscribe|connect|invite)\b/i;
 
 function targetLabel(target: BrowserAgentTarget): string {
   return [target.role, target.name, target.text, target.label, target.placeholder, target.selector]
@@ -153,11 +153,12 @@ export class BrowserAgentController {
       if (!screenshot) return { ok: false, action: action.type, message: 'Screenshot capture failed.' };
       const target = clampVisualTarget(action.target, screenshot.viewportWidth, screenshot.viewportHeight);
       if (!target || target.confidence < 0.78 || !target.visible || !target.clickable) return { ok: false, action: action.type, message: 'Visual target was rejected because it is uncertain, invisible, or outside the viewport.' };
+      const before = await view.webContents.executeJavaScript(INSPECT_SCRIPT(false), true) as BrowserAgentSnapshot;
       const clicked = await BrowserManager.clickAt(target.center.x, target.center.y, currentTabId(action.tabId));
       if (!clicked) return { ok: false, action: action.type, message: 'Coordinate click was rejected by the browser interaction layer.' };
       await new Promise((resolve) => setTimeout(resolve, 180));
       const after = await view.webContents.executeJavaScript(INSPECT_SCRIPT(false), true) as BrowserAgentSnapshot;
-      const changed = after.url !== snapshot.url || after.text !== snapshot.text;
+      const changed = after.url !== before.url || after.title !== before.title || after.text !== before.text;
       return { ok: changed, action: action.type, snapshot: after, message: changed ? 'Visual coordinate click dispatched and verified through a fresh observation.' : 'The click was dispatched, but no measurable page change was detected.', verification: { verified: changed, detail: changed ? 'Fresh DOM observation changed after the click.' : 'The click was dispatched, but no measurable page change was detected.' } };
     }
     if (action.type === 'scroll') {
@@ -171,16 +172,25 @@ export class BrowserAgentController {
     if (action.type === 'click' && isSensitiveTarget(action.target) && !action.confirm) {
       return { ok: false, action: action.type, confirmationRequired: true, confirmationReason: 'This target may submit, publish, delete, authenticate, or cause an external side effect.' };
     }
+    const before = await view.webContents.executeJavaScript(INSPECT_SCRIPT(false), true) as BrowserAgentSnapshot;
     const result = await view.webContents.executeJavaScript(
       ACTION_SCRIPT(action.target || {}, action.type, action.type === 'fill' ? action.value : undefined, action.type === 'press' ? action.key : undefined), true
     ) as { ok: boolean; message: string };
     if (!result.ok) return { ...result, action: action.type, verification: { verified: false, detail: result.message } };
-    await new Promise((resolve) => setTimeout(resolve, 120));
+    await new Promise((resolve) => setTimeout(resolve, 180));
     const snapshot = await view.webContents.executeJavaScript(INSPECT_SCRIPT(false), true) as BrowserAgentSnapshot;
     const wanted = [action.target?.name, action.target?.text, action.target?.label, action.target?.placeholder].filter(Boolean).join(' ').toLowerCase();
     const matched = Array.isArray(snapshot?.elements) ? snapshot.elements.find((element) => !wanted || `${element.name} ${element.text} ${element.placeholder || ''}`.toLowerCase().includes(wanted)) : undefined;
-    const verified = action.type !== 'fill' || !Array.isArray(snapshot?.elements) || matched?.value === action.value;
-    return { ...result, ok: verified, action: action.type, snapshot, message: verified ? `${result.message} Verified against a fresh page observation.` : 'Action ran, but verification did not confirm the expected result.', verification: { verified, detail: action.type === 'fill' ? `Expected field value to equal ${JSON.stringify(action.value)}.` : 'Fresh page observation completed.', snapshot } };
+    const beforeSignature = `${before?.url || ''}|${before?.title || ''}|${before?.text || ''}`;
+    const afterSignature = `${snapshot?.url || ''}|${snapshot?.title || ''}|${snapshot?.text || ''}`;
+    const pageChanged = beforeSignature !== afterSignature;
+    const verified = action.type === 'fill'
+      ? !!matched && matched.value === action.value
+      : pageChanged;
+    const detail = action.type === 'fill'
+      ? `Expected the matched field value to equal ${JSON.stringify(action.value)}.`
+      : pageChanged ? 'Fresh page observation changed after the action.' : 'The action ran, but the page did not measurably change.';
+    return { ...result, ok: verified, action: action.type, snapshot, message: verified ? `${result.message} Verified against a fresh page observation.` : `Action ran, but verification failed: ${detail}`, verification: { verified, detail, snapshot } };
   }
 }
 

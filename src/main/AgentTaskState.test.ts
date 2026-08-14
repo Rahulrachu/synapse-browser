@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { actionIdentity, addOrigin, canTransition, createTaskState, isDuplicateAction, isOriginApproved, isPromptInjection, recordAction, requestedOrigins, transitionTaskState, webContentForModel } from './AgentTaskState.js';
+import { actionIdentity, actionRisk, addOrigin, canTransition, createTaskState, isDuplicateAction, isOriginApproved, isPromptInjection, recordAction, requestedOrigins, transitionTaskState, webContentForModel } from './AgentTaskState.js';
 
 describe('AgentTaskState', () => {
   it('extracts explicitly requested origins and keeps unrequested origins gated', () => {
@@ -36,6 +36,11 @@ describe('AgentTaskState', () => {
     recordAction(state, { id: key, name: 'click_page', origin: 'https://example.com', expected: 'button changes page', status: 'verified', attempts: 1, idempotencyKey: key });
     expect(actionIdentity('click_page', 'https://example.com', { name: 'Continue' })).toBe(key);
     expect(isDuplicateAction(state, key)).toBe(true);
+  });
+
+  it('classifies social and messaging side effects as critical', () => {
+    expect(actionRisk('click_page', { name: 'Follow' })).toBe('critical');
+    expect(actionRisk('click_page', { name: 'Send message' })).toBe('critical');
   });
 
   it('detects obfuscated prompt-injection language', () => {

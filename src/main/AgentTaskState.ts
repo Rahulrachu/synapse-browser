@@ -129,7 +129,7 @@ export function addOrigin(state: AgentTaskState, origin: string): void { if (!or
 
 export function normalizeActionArgs(args: unknown): string { try { return JSON.stringify(args, Object.keys((args as any) || {}).sort()); } catch { return String(args); } }
 export function actionIdentity(name: string, origin: string, args: unknown): string { return createHash('sha256').update(`${name}|${origin}|${normalizeActionArgs(args)}`).digest('hex').slice(0, 24); }
-export function actionRisk(name: string, args: any = {}): ActionRisk { const text = `${name} ${JSON.stringify(args)}`.toLowerCase(); if (/payment|purchase|transfer|delete|credential|password|security|legal|publish|send|submit|post/.test(text)) return 'critical'; if (/write|fill|key|download|upload/.test(text)) return 'medium'; return 'low'; }
+export function actionRisk(name: string, args: any = {}): ActionRisk { const text = `${name} ${JSON.stringify(args)}`.toLowerCase(); if (/payment|purchase|transfer|delete|credential|password|security|legal|publish|send|submit|post|follow|like|comment|message|subscribe|connect|invite|share/.test(text)) return 'critical'; if (/write|fill|key|download|upload/.test(text)) return 'medium'; return 'low'; }
 export function isDuplicateAction(state: AgentTaskState, idempotencyKey: string): boolean { return state.actions.some((action) => action.idempotencyKey === idempotencyKey && action.status === 'verified'); }
 
 export function recordAction(state: AgentTaskState, action: Omit<TaskActionRecord, 'at'>): void {
