@@ -110,6 +110,15 @@ const MainLayout: React.FC = () => {
                 onNewTab={() => window.electron.invoke('create-tab', 'https://www.google.com')}
               />
             </div>
+            <button
+              type="button"
+              aria-label="Toggle ORION AI panel"
+              onClick={() => setIsAIPanelOpen((open) => !open)}
+              className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition ${isAIPanelOpen ? 'border-synapse-accent/50 bg-synapse-accent/15 text-white' : 'border-white/10 bg-white/5 text-gray-300 hover:bg-white/10'}`}
+            >
+              <Bot size={14} />
+              <span>AI Agent</span>
+            </button>
           </div>
 
           {/* Address Bar Area */}

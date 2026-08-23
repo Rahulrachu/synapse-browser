@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "synapse-browser",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "main": "out/main/background.cjs",
   "description": "AI-First Productivity Browser",
   "author": "Rahul S R <rahul.s.r@example.com>",
