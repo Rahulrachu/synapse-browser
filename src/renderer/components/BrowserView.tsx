@@ -25,7 +25,7 @@ const BrowserView: React.FC<BrowserViewProps> = ({ tabId }) => {
     return () => { cancelAnimationFrame(frame); window.clearTimeout(delayedFrame); resizeObserver.disconnect(); window.removeEventListener('resize', updateBounds); };
   }, []);
 
-  return <div ref={containerRef} className="relative flex-1 overflow-hidden bg-black">{!tabId && <div className="flex h-full items-center justify-center text-gray-400"><p>No active tab</p></div>}</div>;
+  return <div ref={containerRef} className="relative flex-1 min-h-0 min-w-0 overflow-hidden bg-black">{!tabId && <div className="flex h-full items-center justify-center text-gray-400"><p>No active tab</p></div>}</div>;
 };
 
 export default BrowserView;

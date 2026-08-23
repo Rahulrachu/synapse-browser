@@ -577,7 +577,11 @@ class BrowserManager {
   setBrowserAreaBounds(bounds: BrowserBounds): void {
     const mainWindow = getMainWindow();
     if (!mainWindow || mainWindow.isDestroyed()) return;
-    const clamped = this.clampBrowserBounds(bounds, mainWindow.getContentBounds());
+    const content = mainWindow.getContentBounds();
+    const normalized = bounds.height <= 240 && content.height > 400
+      ? { ...bounds, height: content.height - Math.max(96, bounds.y || 96) - 32 }
+      : bounds;
+    const clamped = this.clampBrowserBounds(normalized, content);
     this.currentBrowserBounds = clamped;
     const activeView = this.activeTabId ? this.tabViews.get(this.activeTabId) : undefined;
     if (activeView) activeView.setBounds(clamped);
