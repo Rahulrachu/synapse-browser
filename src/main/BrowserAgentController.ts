@@ -92,7 +92,9 @@ const INSPECT_SCRIPT = (includeHtml: boolean) => `(() => {
 })()`;
 
 const ACTION_SCRIPT = (target: BrowserAgentTarget, operation: 'click' | 'fill' | 'copy' | 'paste' | 'press', value?: string, key?: string) => `(() => {
+  try {
   const target = ${JSON.stringify(target)};
+  const operation = ${JSON.stringify(operation)};
   const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim().toLowerCase();
   const visible = (el) => { const r = el.getBoundingClientRect(); const s = getComputedStyle(el); return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none'; };
   const roleFor = (el) => el.getAttribute('role') || ({ BUTTON: 'button', A: 'link', INPUT: el.type === 'checkbox' ? 'checkbox' : el.type === 'radio' ? 'radio' : 'textbox', TEXTAREA: 'textbox', SELECT: 'combobox', SUMMARY: 'button' }[el.tagName] || null);
@@ -115,16 +117,19 @@ const ACTION_SCRIPT = (target: BrowserAgentTarget, operation: 'click' | 'fill' |
     return { ok: true, message: 'Copied matched text.', clipboardText: String(copied) };
   }
   if (operation === 'fill' || operation === 'paste') {
-    const proto = el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
-    const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
-    if ('value' in el && setter) setter.call(el, ${JSON.stringify(value || '')});
-    else if (el.isContentEditable) el.textContent = ${JSON.stringify(value || '')};
+    const nextValue = ${JSON.stringify(value || '')};
+    if ('value' in el) {
+      const proto = el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : el instanceof HTMLInputElement ? HTMLInputElement.prototype : null;
+      const setter = proto && Object.getOwnPropertyDescriptor(proto, 'value')?.set;
+      try { if (setter) setter.call(el, nextValue); else el.value = nextValue; } catch { try { el.value = nextValue; } catch { return { ok: false, message: 'Matched element value could not be updated.' }; } }
+    } else if (el.isContentEditable) el.textContent = nextValue;
     else return { ok: false, message: 'Matched element is not editable.' };
     el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true }));
     return { ok: true, message: operation === 'paste' ? 'Pasted clipboard text into matched field.' : 'Filled matched field.' };
   }
   el.focus(); el.dispatchEvent(new KeyboardEvent('keydown', { key: ${JSON.stringify(key || '')}, bubbles: true })); el.dispatchEvent(new KeyboardEvent('keyup', { key: ${JSON.stringify(key || '')}, bubbles: true }));
   return { ok: true, message: 'Pressed key on matched element.' };
+  } catch (error) { return { ok: false, message: 'Page action script failed: ' + String(error?.message || error) }; }
 })()`;
 
 export class BrowserAgentController {
