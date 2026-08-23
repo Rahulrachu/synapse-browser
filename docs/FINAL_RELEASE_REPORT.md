@@ -14,9 +14,9 @@ Windows and macOS execution environments were not available. The public release 
 
 ## 3. Fixes implemented
 
-The productization branch `productization/v1.0.5` adds functional button semantics and ARIA labels to the sidebar, toolbar, Settings, AI, tab, address-bar, and workspace controls. It adds a real Settings dialog with locally persisted preferences, workspace selection surfaces, consistent close/open behavior, and keyboard-focus styling. It corrects navigation IPC names to the allow-listed `go-back`, `go-forward`, and `reload` channels. It coordinates `set-browser-view-visibility` with the active workspace, Settings modal, and AI panel so native WebContentsView content is hidden whenever it could cover React controls. The AI Run, Stop, and confirmation paths now catch errors, restore loading state, and display a visible error event.
+The productization branch `productization/v1.0.5` adds functional button semantics and ARIA labels to the sidebar, toolbar, Settings, AI, tab, address-bar, and workspace controls. It adds a real Settings dialog with locally persisted preferences, functional project/file browsing through the existing secure IPC contracts, a file editor with read/write actions, a terminal command surface using the existing allow-listed handler, consistent close/open behavior, and keyboard-focus styling. It corrects navigation IPC names to the allow-listed `go-back`, `go-forward`, and `reload` channels. It coordinates `set-browser-view-visibility` with the active workspace, Settings modal, and AI panel so native WebContentsView content is hidden whenever it could cover React controls. The AI Run, Stop, and confirmation paths now catch errors, restore loading state, and display a visible error event.
 
-A restrained OLED/liquid-glass visual system was applied with a true black foundation, selective blur, subtle borders, focused controls, and reduced decorative noise. The project also adds Playwright as a development dependency and a real Electron smoke script, although CDP automation was not usable against this Electron build in the sandbox; desktop-level X11 interaction was used for the evidence below.
+A restrained OLED/liquid-glass visual system was applied with a true black foundation, selective blur, subtle borders, focused controls, and reduced decorative noise. The project also adds Playwright as a development dependency, a real Electron smoke script, and `.github/workflows/release-validation.yml` covering Windows, macOS, and Linux runners. CDP automation was not usable against this Electron build in the sandbox; desktop-level X11 interaction was used for the evidence below.
 
 ## 4. UI redesign
 
@@ -46,13 +46,13 @@ pnpm test --run      PASS: 9 files, 37 tests
 pnpm build           PASS
 ```
 
-The prior Linux package workflow also passed, and the final productization branch preserves that packaging configuration. The full Windows and macOS release artifacts were not generated.
+The final Linux packaging workflow passed with Electron Builder 26.15.3 and produced `Synapse Browser-1.0.5.AppImage` (SHA256 `6f0046695592002715b7cafe8d97e0789c5bcf40d50c03aebe18885c591fb404`) and `synapse-browser_1.0.5_amd64.deb` (SHA256 `b74aeaacd9e3a78b7e7163b96355e3a126ce8203fc400bcf8ee31bbe04a101a7`). The build used Node 22.13.0 in the sandbox, pnpm 11.21.0, Electron 43.2.0, and Electron Builder 26.15.3. The full Windows and macOS release artifacts were not generated locally; the CI workflow is prepared to produce them on their native runners.
 
 ## 9. Manual tests
 
 The real Linux desktop pass verified that the Settings icon responds to a pointer click, Settings renders as a modal, Settings checkboxes are visible and interactive, the Settings modal can be closed, the AI panel can be opened, the AI textarea accepts real keyboard input, and the Run button responds to a real pointer click by entering a live planning state. Browser content rendered in the packaged application, and the native browser surface did not cover the Settings modal after the visibility fix.
 
-The following remain incomplete: full tab switching and close/new-tab regression, complete browser navigation/back/forward/reload, complete file CRUD, Monaco save workflow, terminal process workflow, restart persistence, full shortcut matrix, and all Windows/macOS testing.
+The following remain incomplete: full multi-tab switching and rapid open/close regression, complete browser navigation/back/forward/reload, complete file CRUD including rename/delete and permission-failure cases, Monaco-specific save/dirty-state workflow, terminal process lifecycle and PowerShell workflow, restart persistence, full shortcut matrix, and all Windows/macOS testing. The Files, Editor, and Terminal surfaces now execute real IPC-backed actions, but they are not marked fully PASS without those complete acceptance sequences.
 
 ## 10. Screenshots
 
@@ -72,7 +72,7 @@ No final Windows screen recording was created. Producing one without a real Wind
 
 ## 12. Git commit
 
-The productization work is on branch `productization/v1.0.5`. It was not merged into `master` or tagged as a public release because Windows acceptance remains incomplete. A final commit should be created only after the remaining platform and functional tests pass.
+The productization work is on branch `productization/v1.0.5`, pushed to GitHub at commit `c190c8fc` plus the subsequent functional-workspace and CI changes. It was not merged into `master` or tagged as a public release because Windows acceptance remains incomplete.
 
 ## 13. GitHub release
 
@@ -86,7 +86,11 @@ The release-blocking issue is the absence of a real Windows acceptance environme
 
 ```text
 CODE: PASS
+TYPECHECK: PASS
+TESTS: PASS — 37 tests
+BUILD: PASS
 LINUX INTERACTION: PASS for Settings and AI Run evidence
+LINUX PACKAGING: PASS — AppImage and deb artifacts
 WINDOWS RELEASE: FAIL — not tested
 MACOS RELEASE: FAIL — not tested
 FULL USER ACCEPTANCE: FAIL

@@ -1,0 +1,68 @@
+name: Release validation
+
+on:
+  push:
+    branches: [master, 'productization/**']
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win
+            package_command: dist:win
+          - os: macos-latest
+            platform: mac
+            package_command: dist:mac
+          - os: ubuntu-22.04
+            platform: linux
+            package_command: dist:linux
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit and subsystem tests
+        run: pnpm test --run
+
+      - name: Build
+        run: pnpm build
+
+      - name: Package ${{ matrix.platform }}
+        run: pnpm run ${{ matrix.package_command }}
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: synapse-browser-${{ matrix.platform }}-${{ github.sha }}
+          path: release/**
+          if-no-files-found: error
+          retention-days: 14

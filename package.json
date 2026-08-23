@@ -2,6 +2,7 @@
   "type": "module",
   "name": "synapse-browser",
   "version": "1.0.5",
+  "desktopName": "synapse-browser",
   "main": "out/main/background.cjs",
   "description": "AI-First Productivity Browser",
   "author": "Rahul S R <rahul.s.r@example.com>",
@@ -16,7 +17,7 @@
     "preview": "electron-vite preview",
     "pack": "npm run build && electron-builder --dir",
     "dist:win": "npm run build && electron-builder --win",
-    "dist:mac": "npm run build && electron-builder --mac",
+    "dist:mac": "npm run build && electron-builder --mac --x64 --arm64",
     "dist:linux": "npm run build && electron-builder --linux",
     "dist:all": "npm run build && electron-builder -mwl",
     "postinstall": "electron-builder install-app-deps",
@@ -55,7 +56,7 @@
       "createStartMenuShortcut": true
     },
     "linux": {
-      "target": "dir",
+      "target": ["dir", "AppImage", "deb"],
       "icon": "public/icon.png",
       "category": "Utility"
     },
@@ -64,13 +65,15 @@
         {
           "target": "dmg",
           "arch": [
-            "x64"
+            "x64",
+            "arm64"
           ]
         },
         {
           "target": "zip",
           "arch": [
-            "x64"
+            "x64",
+            "arm64"
           ]
         }
       ],

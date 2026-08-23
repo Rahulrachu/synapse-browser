@@ -1,4 +1,4 @@
-# Synapse Browser v1.0.4
+# Synapse Browser v1.0.5 productization branch
 
 Synapse Browser is an AI-first productivity desktop browser and developer environment built with Electron, React, TypeScript, and TailwindCSS. It combines multi-process web rendering with an integrated workspace for browsing, notes, files, code, terminal workflows, and optional AI capabilities.
 
@@ -51,7 +51,7 @@ pnpm dist:mac
 pnpm dist:linux
 ```
 
-The architecture and privileged-process boundaries are described in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Common setup and platform limitations are described in [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
+The architecture and privileged-process boundaries are described in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Common setup and platform limitations are described in [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md). Platform evidence is maintained in [docs/RELEASE_ACCEPTANCE.md](docs/RELEASE_ACCEPTANCE.md), with the full decision record in [docs/FINAL_RELEASE_REPORT.md](docs/FINAL_RELEASE_REPORT.md). The native-runner workflow at `.github/workflows/release-validation.yml` typechecks, tests, builds, packages, and uploads Windows, macOS, and Linux artifacts; use it before publishing v1.0.5.
 
 ## License
 

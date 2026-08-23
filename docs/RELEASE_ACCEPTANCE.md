@@ -51,22 +51,22 @@ OVERALL: FAIL
 ## PLATFORM: Linux
 
 ```text
-INSTALLER: PASS — Electron Builder Linux directory package completed at release/linux-unpacked.
+INSTALLER: PASS — Electron Builder produced `Synapse Browser-1.0.5.AppImage` and `synapse-browser_1.0.5_amd64.deb`; the unpacked package was also produced.
 LAUNCH: PASS — Packaged Electron window launched under Xvfb.
 UI CLICKING: PASS — X11 mouse clicks interacted with Settings and AI controls.
 SETTINGS: PASS — Settings opened, rendered, and displayed interactive checkboxes.
 BROWSER: PASS — Packaged browser view rendered Google and responded to the visible runtime.
-TABS: PASS — A tab rendered and the tab strip was visible; full multi-tab regression remains incomplete.
+TABS: PARTIAL — A tab rendered and the tab strip was visible; full multi-tab regression remains incomplete.
 AI INPUT: PASS — Real X11 keyboard input appeared in the AI textarea.
 AI RUN: PASS — Real X11 click changed the button to Stop and the panel entered LIVE/planning state.
-FILES: PARTIAL — Files workspace surface renders; complete project/file CRUD was not manually exercised.
-EDITOR: PARTIAL — Editor surface renders; complete Monaco file workflow was not manually exercised.
-TERMINAL: PARTIAL — Terminal surface renders; Linux command workflow was not manually exercised in this pass.
+FILES: PARTIAL — Functional project-open and project-file listing actions are wired through secure IPC; complete CRUD, invalid-path, and permission-failure cases were not manually exercised.
+EDITOR: PARTIAL — Functional read/edit/save actions are wired through secure IPC; the complete Monaco, dirty-state, reopen, and invalid-file workflow was not manually exercised.
+TERMINAL: PARTIAL — Functional command input and output are wired to the existing constrained terminal handler; lifecycle and process tests were not manually exercised.
 POWERSHELL: FAIL — Windows-only and unavailable.
 DATABASE: PARTIAL — Existing unit coverage and build passed; full restart persistence was not manually exercised.
 SHORTCUTS: PARTIAL — Existing Electron menu accelerators remain; complete shortcut matrix was not manually exercised.
 RESTART: FAIL — Not completed in the interactive pass.
-SCREENSHOT: PASS — Real screenshots captured under artifacts/smoke.
+SCREENSHOT: PASS — Real Linux screenshots captured under artifacts/smoke.
 SCREEN RECORDING: FAIL — No final recording captured.
-OVERALL: FAIL — Windows and full release acceptance remain outstanding.
+OVERALL: FAIL — Windows/macOS acceptance and several complete Linux workflows remain outstanding.
 ```
