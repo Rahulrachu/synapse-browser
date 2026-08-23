@@ -53,7 +53,7 @@ export function createWindow() {
     console.error('[Main] Renderer failed to load', { errorCode, errorDescription, validatedURL });
   });
 
-  if (isDev) {
+  if (isDev && process.env.SYNAPSE_OPEN_DEVTOOLS === '1') {
     mainWindow.webContents.openDevTools();
   }
 

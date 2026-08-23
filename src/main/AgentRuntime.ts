@@ -27,7 +27,7 @@ function sanitizeConversation(messages: ChatMessage[]): ChatMessage[] {
   return sanitized;
 }
 
-export const MAX_STEPS = 24;
+export const MAX_STEPS = 40;
 export const MAX_RETRIES_PER_ACTION = 2;
 export const MAX_RECOVERY_ATTEMPTS = 8;
 export const TASK_TIMEOUT_MS = 10 * 60 * 1000;
