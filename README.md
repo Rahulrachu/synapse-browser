@@ -1,58 +1,57 @@
-# Synapse Browser v1.0.0
+# Synapse Browser v1.0.4
 
-Synapse Browser is an advanced, AI-first productivity desktop browser and developer environment built with Electron, React, TypeScript, and TailwindCSS. It combines a high-performance multi-process web rendering engine with an integrated AI workspace and full-featured developer toolset.
+Synapse Browser is an AI-first productivity desktop browser and developer environment built with Electron, React, TypeScript, and TailwindCSS. It combines multi-process web rendering with an integrated workspace for browsing, notes, files, code, terminal workflows, and optional AI capabilities.
 
-## Core Capabilities & Feature Readiness
+## Feature Readiness
 
-Synapse Browser classifies capabilities into four distinct readiness tiers based on real-world verification and testing:
-
-| Feature Category | Readiness Tier | Verification Summary |
+| Feature Category | Readiness | Notes |
 |---|---|---|
-| **Core Browser Engine & Tabs** | Production-ready | Native `WebContentsView` instances, multi-tab browsing, navigation, history, bookmarks, session restoration, and crash recovery. |
-| **Profiles & Private Browsing** | Production-ready | Isolated partition-backed profiles and strictly ephemeral private browsing sessions. |
-| **Downloads & Uploads** | Production-ready | Real-time session download management, progress tracking, file actions, and native file upload dialogs. |
-| **Security & IPC** | Production-ready | Context isolation, sandboxing, strict IPC allowlists, and origin-scoped permission prompts. |
-| **Developer Workspace** | Production-ready | Real terminal sessions, file explorer, Monaco editor, and Git integration. |
-| **AI Workspace & Context Broker** | Beta | Controlled context sharing, page summarization, error explanation, and safe browser action execution. |
-| **Browser Agent Takeover** | Beta | Structured live-DOM inspection and user-like click, fill, keypress, scroll, and navigation actions with confirmation gates for external side effects. See [the browser-agent design](docs/BROWSER_AGENT.md). |
-| **Advanced Extensions** | Experimental | Browser extension loading and custom WebAssembly runtime hooks. |
-| **Cloud Sync** | Planned | Encrypted cross-device synchronization of bookmarks and settings. |
+| Core browser engine and tabs | Production-oriented | Native `WebContentsView` lifecycle, multi-tab browsing, navigation, history, bookmarks, and session restoration are implemented. |
+| Profiles and private browsing | Production-oriented | Partition-backed profiles and ephemeral private sessions are implemented. |
+| Downloads and permissions | Production-oriented | Download tracking and origin-scoped permission prompts are implemented. |
+| Developer workspace | Production-oriented | File explorer, Monaco-related editor integration, terminal integration, and Git services are present. |
+| AI workspace and context broker | Beta/optional | AI providers are optional and must not prevent application startup. |
+| Browser agent | Beta | Structured browser-agent actions and confirmation gates are implemented. See [the browser-agent design](docs/BROWSER_AGENT.md). |
+| Cloud sync and advanced extensions | Planned/experimental | These capabilities are not required for core startup. |
 
-## Installation & Local Development
+## Requirements
 
-To run Synapse Browser locally from source, ensure Node.js (>=22.0.0) and pnpm are installed:
+Use Node.js `>=24.0.0` and pnpm `>=9.0.0`. The repository’s lockfile is authoritative; use a frozen install for reproducible setup.
+
+## Installation and Development
 
 ```bash
 git clone https://github.com/Rahulrachu/synapse-browser.git
 cd synapse-browser
-pnpm install
+pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-## Production Build & Packaging
+The development process starts the Vite renderer and Electron main process. AI provider credentials are optional; do not commit `.env` files or API keys.
 
-To compile the application for production distribution:
+## Validation and Build
 
 ```bash
+pnpm typecheck
+pnpm lint
+pnpm test --run
 pnpm build
-pnpm pack
 ```
 
-For platform-specific distribution bundles:
+`pnpm lint` currently runs strict TypeScript validation because the repository does not yet include an ESLint configuration. The detailed baseline and final audit are in [docs/FULL_AUDIT_BASELINE.md](docs/FULL_AUDIT_BASELINE.md) and [docs/FULL_AUDIT_FINAL_REPORT.md](docs/FULL_AUDIT_FINAL_REPORT.md).
+
+## Packaging
+
+Build a platform-specific Electron Builder artifact with the relevant command:
 
 ```bash
+pnpm run pack
 pnpm dist:win
 pnpm dist:mac
 pnpm dist:linux
 ```
 
-## Testing
-
-Synapse Browser includes an automated test suite powered by Vitest covering core manager logic, tab restoration, and workspace stores:
-
-```bash
-pnpm test -- --run
-```
+The architecture and privileged-process boundaries are described in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Common setup and platform limitations are described in [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
 
 ## License
 

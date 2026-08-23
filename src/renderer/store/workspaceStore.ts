@@ -9,6 +9,7 @@ declare global {
     electron: {
       invoke: (channel: string, ...args: any[]) => Promise<any>;
       on: (channel: string, fn: (...args: any[]) => void) => () => void;
+      send: (channel: string, ...args: any[]) => void;
     };
   }
 }

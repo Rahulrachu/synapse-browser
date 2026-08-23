@@ -1,5 +1,7 @@
 
 import { ipcMain } from 'electron';
+import EventBus from './EventBus.js';
+import PromptManager from './PromptManager.js';
 import { 
   AIProviderType, 
   AIModel, 
@@ -10,10 +12,6 @@ import {
   AIStreamChunk,
   AIProviderHealth
 } from '../common/types/ai.js';
-// Legacy imports removed to fix build errors
-// import EventBus from './EventBus.js';
-// import AIServiceManager from './AIServiceManager.js';
-// import PromptManager from './PromptManager.js';
 
 export abstract class BaseAIProvider {
   public abstract readonly type: AIProviderType;
@@ -72,7 +70,7 @@ class AIModelProviderManager {
 
   public async chatWithPrompt(providerId: string, promptId: string, variables: Record<string, string>, options?: AIChatOptions): Promise<AIChatResponse> {
     // Use the public method of PromptManager
-    const prompt = (PromptManager as any).getPromptById(promptId);
+    const prompt = PromptManager.getPromptById(promptId);
     if (!prompt) throw new Error(`Prompt ${promptId} not found`);
 
     let content = prompt.content;

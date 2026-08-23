@@ -1,0 +1,37 @@
+node_modules/
+out/
+dist/
+build/
+release/
+*.log
+logs/
+.tmp/
+.cache/
+.DS_Store
+Thumbs.db
+.env
+.env.*
+!.env.example
+*.db
+*.sqlite
+*.sqlite3
+coverage/
+.vite/
+
+# Local/editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Generated screenshots and reports from local smoke runs
+screenshots/
+artifacts/
+
+# Electron builder metadata
+builder-debug.yml
+builder-effective-config.yaml
+
+# Local test artifacts
+playwright-report/
+test-results/

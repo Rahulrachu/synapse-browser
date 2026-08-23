@@ -36,7 +36,7 @@ export default function ResearchCollectionsPanel() {
 
   const loadCollections = async () => {
     try {
-      const result = await window.electron.ipcRenderer.invoke(
+      const result = await window.electron.invoke(
         'get-research-collections'
       );
       if (result && result.collections) {
@@ -78,7 +78,7 @@ export default function ResearchCollectionsPanel() {
       setIsCreatingCollection(false);
 
       // Save to backend
-      await window.electron.ipcRenderer.invoke('create-research-collection', {
+      await window.electron.invoke('create-research-collection', {
         collection: newCollection,
       });
     } catch (err) {
@@ -99,7 +99,7 @@ export default function ResearchCollectionsPanel() {
         setSelectedCollectionId(null);
       }
 
-      await window.electron.ipcRenderer.invoke('delete-research-collection', id);
+      await window.electron.invoke('delete-research-collection', id);
     } catch (err) {
       console.error('Failed to delete collection:', err);
       // Rollback
@@ -135,7 +135,7 @@ export default function ResearchCollectionsPanel() {
         prev.map((c) => (c.id === selectedCollection.id ? updatedCollection : c))
       );
 
-      await window.electron.ipcRenderer.invoke('add-page-to-collection', {
+      await window.electron.invoke('add-page-to-collection', {
         collectionId: selectedCollection.id,
         page: newPage,
       });
@@ -162,7 +162,7 @@ export default function ResearchCollectionsPanel() {
         prev.map((c) => (c.id === selectedCollection.id ? updatedCollection : c))
       );
 
-      await window.electron.ipcRenderer.invoke('remove-page-from-collection', {
+      await window.electron.invoke('remove-page-from-collection', {
         collectionId: selectedCollection.id,
         pageId,
       });
@@ -175,7 +175,7 @@ export default function ResearchCollectionsPanel() {
   };
 
   const handleOpenPage = (url: string) => {
-    window.electron.ipcRenderer.send('open-url', url);
+    window.electron.send('open-url', url);
   };
 
   return (

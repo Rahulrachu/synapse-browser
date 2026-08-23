@@ -55,6 +55,7 @@ class BrowserManager {
   private readonly tabViews = new Map<string, WebContentsView>();
   private readonly recentlyClosed: ClosedTabInfo[] = [];
   private readonly permissionDecisions = new Map<string, boolean>();
+  private readonly permissionHandlerSessions = new WeakSet<Electron.Session>();
   private activeTabId: string | null = null;
   private currentBrowserBounds: BrowserBounds | null = null;
 
@@ -150,9 +151,8 @@ class BrowserManager {
   }
 
   private setupSessionHandlers(ses: Electron.Session): void {
-    const sessionKey = `permission-handler:${ses.partition || 'default'}`;
-    if ((ses as any)[sessionKey]) return;
-    (ses as any)[sessionKey] = true;
+    if (this.permissionHandlerSessions.has(ses)) return;
+    this.permissionHandlerSessions.add(ses);
     ses.setPermissionRequestHandler((webContents, permission, callback) => {
       const origin = webContents?.getURL() ? new URL(webContents.getURL()).origin : 'unknown-origin';
       const key = `${origin}:${permission}`;

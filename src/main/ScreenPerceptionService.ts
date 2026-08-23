@@ -89,12 +89,12 @@ export class OpenAIVisionProvider implements VisionProvider {
   async readText(input: VisionInput): Promise<VisualObservation['text']> { return (await this.analyzeScreenshot(input)).text; }
   async describeRegion(input: VisionInput, region: { x: number; y: number; width: number; height: number }): Promise<string> {
     const result = await this.analyzeScreenshot(input);
-    return result.targets.filter((target) => target.bounds.x < region.x + region.width && target.bounds.x + target.bounds.width > region.x && target.bounds.y < region.y + region.height && target.bounds.y + target.bounds.height > region.y).map((target) => target.description || target.nearbyText || target.type).join('; ') || 'No recognized target in region.';
+    return result.targets.filter((target: VisualTarget) => target.bounds.x < region.x + region.width && target.bounds.x + target.bounds.width > region.x && target.bounds.y < region.y + region.height && target.bounds.y + target.bounds.height > region.y).map((target: VisualTarget) => target.description || target.nearbyText || target.type).join('; ') || 'No recognized target in region.';
   }
   async localizeTarget(input: VisionInput, description: string): Promise<VisualTarget | null> {
     const result = await this.analyzeScreenshot(input);
     const wanted = description.toLowerCase();
-    return result.targets.filter((target) => `${target.description} ${target.nearbyText || ''} ${target.likelyAction || ''}`.toLowerCase().includes(wanted)).sort((a, b) => b.confidence - a.confidence)[0] || null;
+    return result.targets.filter((target: VisualTarget) => `${target.description} ${target.nearbyText || ''} ${target.likelyAction || ''}`.toLowerCase().includes(wanted)).sort((a: VisualTarget, b: VisualTarget) => b.confidence - a.confidence)[0] || null;
   }
 }
 

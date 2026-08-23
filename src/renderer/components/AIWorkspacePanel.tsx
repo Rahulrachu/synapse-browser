@@ -56,21 +56,28 @@ export default function AIWorkspacePanel() {
       setEvents([{ runId: 'preview', type: 'error', message: 'ORION is available in the Synapse desktop app.' , at: Date.now() }]);
       return;
     }
-    const result = await window.electron.invoke('agent:run', { goal: trimmed });
-    setRunId(result?.runId || null);
+    try {
+      const result = await window.electron.invoke('agent:run', { goal: trimmed });
+      setRunId(result?.runId || null);
+      if (!result?.runId) {
+        setRunning(false);
+        setEvents([{ runId: 'local', type: 'error', message: 'The agent did not return a run identifier. Please try again.', at: Date.now() }]);
+      }
+    } catch (error) {
+      setRunning(false);
+      setEvents([{ runId: 'local', type: 'error', message: error instanceof Error ? error.message : 'Unable to start the AI agent.', at: Date.now() }]);
+    }
   };
 
   const handleStop = async () => {
     if (!runId) return;
-    await window.electron.invoke('agent:cancel', runId);
-    setConfirmation(null);
-    setRunning(false);
+    try { await window.electron.invoke('agent:cancel', runId); } finally { setConfirmation(null); setRunning(false); }
   };
 
   const handleConfirmation = async (confirmed: boolean) => {
     if (!runId) return;
     setConfirmation(null);
-    await window.electron.invoke('agent:confirm', { runId, confirmed });
+    try { await window.electron.invoke('agent:confirm', { runId, confirmed }); } catch (error) { setRunning(false); setEvents(current => [...current, { runId, type: 'error', message: error instanceof Error ? error.message : 'Confirmation failed.', at: Date.now() }]); }
   };
 
   return (
