@@ -127,7 +127,11 @@ const ACTION_SCRIPT = (target: BrowserAgentTarget, operation: 'click' | 'fill' |
     el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true }));
     return { ok: true, message: operation === 'paste' ? 'Pasted clipboard text into matched field.' : 'Filled matched field.' };
   }
-  el.focus(); el.dispatchEvent(new KeyboardEvent('keydown', { key: ${JSON.stringify(key || '')}, bubbles: true })); el.dispatchEvent(new KeyboardEvent('keyup', { key: ${JSON.stringify(key || '')}, bubbles: true }));
+  el.focus();
+  const pressedKey = ${JSON.stringify(key || '')};
+  el.dispatchEvent(new KeyboardEvent('keydown', { key: pressedKey, bubbles: true }));
+  if (pressedKey === 'Enter' && 'value' in el) { const form = el.closest('form'); if (form && typeof form.requestSubmit === 'function') form.requestSubmit(); else if (form) form.submit(); }
+  el.dispatchEvent(new KeyboardEvent('keyup', { key: pressedKey, bubbles: true }));
   return { ok: true, message: 'Pressed key on matched element.' };
   } catch (error) { return { ok: false, message: 'Page action script failed: ' + String(error?.message || error) }; }
 })()`;
