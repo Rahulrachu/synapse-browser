@@ -185,12 +185,15 @@ ipcMain.handle('browser-agent:run', async (_event, action) => BrowserAgentContro
 ipcMain.handle('go-back', async () => {
   return BrowserManager.goBack();
 });
+ipcMain.handle('navigate-back', async () => BrowserManager.goBack());
 
 ipcMain.handle('go-forward', async () => {
   return BrowserManager.goForward();
 });
+ipcMain.handle('navigate-forward', async () => BrowserManager.goForward());
 
 ipcMain.handle('reload', async () => BrowserManager.reload());
+ipcMain.handle('reload-tab', async () => BrowserManager.reload());
 
 ipcMain.handle('stop-loading', async () => {
   return BrowserManager.stopLoading();

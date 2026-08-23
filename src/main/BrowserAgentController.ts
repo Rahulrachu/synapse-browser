@@ -1,3 +1,4 @@
+import { clipboard } from 'electron';
 import BrowserManager from './BrowserManager.js';
 import { clampVisualTarget, createVisionProvider, type VisualObservation, type VisualTarget } from './ScreenPerceptionService.js';
 
@@ -7,6 +8,8 @@ export type BrowserAgentAction =
   | { type: 'visual_click'; tabId?: string; target: VisualTarget; confirm?: boolean }
   | { type: 'click'; tabId?: string; target: BrowserAgentTarget; confirm?: boolean }
   | { type: 'fill'; tabId?: string; target: BrowserAgentTarget; value: string }
+  | { type: 'copy'; tabId?: string; target: BrowserAgentTarget }
+  | { type: 'paste'; tabId?: string; target: BrowserAgentTarget }
   | { type: 'press'; tabId?: string; target?: BrowserAgentTarget; key: string }
   | { type: 'scroll'; tabId?: string; direction?: 'up' | 'down'; amount?: number }
   | { type: 'navigate'; tabId?: string; url: string };
@@ -88,7 +91,7 @@ const INSPECT_SCRIPT = (includeHtml: boolean) => `(() => {
   return { url: location.href, title: document.title, elements, text: clean(document.body?.innerText).slice(0, 12000), authRequired, html: ${includeHtml ? 'document.body?.innerHTML?.slice(0, 20000)' : 'undefined'} };
 })()`;
 
-const ACTION_SCRIPT = (target: BrowserAgentTarget, operation: 'click' | 'fill' | 'press', value?: string, key?: string) => `(() => {
+const ACTION_SCRIPT = (target: BrowserAgentTarget, operation: 'click' | 'fill' | 'copy' | 'paste' | 'press', value?: string, key?: string) => `(() => {
   const target = ${JSON.stringify(target)};
   const clean = (v) => String(v || '').replace(/\\s+/g, ' ').trim().toLowerCase();
   const visible = (el) => { const r = el.getBoundingClientRect(); const s = getComputedStyle(el); return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none'; };
@@ -107,14 +110,18 @@ const ACTION_SCRIPT = (target: BrowserAgentTarget, operation: 'click' | 'fill' |
   if (!el) return { ok: false, message: 'No visible element matched the requested target.' };
   el.scrollIntoView({ block: 'center', inline: 'center' });
   if (operation === 'click') { el.click(); return { ok: true, message: 'Clicked matched element.' }; }
-  if (operation === 'fill') {
+  if (operation === 'copy') {
+    const copied = 'value' in el && typeof el.value === 'string' ? el.value : (el.innerText || el.textContent || '');
+    return { ok: true, message: 'Copied matched text.', clipboardText: String(copied) };
+  }
+  if (operation === 'fill' || operation === 'paste') {
     const proto = el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
     const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
     if ('value' in el && setter) setter.call(el, ${JSON.stringify(value || '')});
     else if (el.isContentEditable) el.textContent = ${JSON.stringify(value || '')};
     else return { ok: false, message: 'Matched element is not editable.' };
     el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true }));
-    return { ok: true, message: 'Filled matched field.' };
+    return { ok: true, message: operation === 'paste' ? 'Pasted clipboard text into matched field.' : 'Filled matched field.' };
   }
   el.focus(); el.dispatchEvent(new KeyboardEvent('keydown', { key: ${JSON.stringify(key || '')}, bubbles: true })); el.dispatchEvent(new KeyboardEvent('keyup', { key: ${JSON.stringify(key || '')}, bubbles: true }));
   return { ok: true, message: 'Pressed key on matched element.' };
@@ -173,9 +180,11 @@ export class BrowserAgentController {
       return { ok: false, action: action.type, confirmationRequired: true, confirmationReason: 'This target may submit, publish, delete, authenticate, or cause an external side effect.' };
     }
     const before = await view.webContents.executeJavaScript(INSPECT_SCRIPT(false), true) as BrowserAgentSnapshot;
+    const clipboardText = action.type === 'paste' ? clipboard.readText() : undefined;
     const result = await view.webContents.executeJavaScript(
-      ACTION_SCRIPT(action.target || {}, action.type, action.type === 'fill' ? action.value : undefined, action.type === 'press' ? action.key : undefined), true
-    ) as { ok: boolean; message: string };
+      ACTION_SCRIPT(action.target || {}, action.type, action.type === 'fill' ? action.value : clipboardText, action.type === 'press' ? action.key : undefined), true
+    ) as { ok: boolean; message: string; clipboardText?: string };
+    if (action.type === 'copy' && result.ok) clipboard.writeText(result.clipboardText || '');
     if (!result.ok) return { ...result, action: action.type, verification: { verified: false, detail: result.message } };
     await new Promise((resolve) => setTimeout(resolve, 180));
     const snapshot = await view.webContents.executeJavaScript(INSPECT_SCRIPT(false), true) as BrowserAgentSnapshot;
@@ -186,10 +195,18 @@ export class BrowserAgentController {
     const pageChanged = beforeSignature !== afterSignature;
     const verified = action.type === 'fill'
       ? !!matched && matched.value === action.value
-      : pageChanged;
+      : action.type === 'copy'
+        ? clipboard.readText() === (result.clipboardText || '')
+        : action.type === 'paste'
+          ? !!matched && matched.value === clipboardText
+          : pageChanged;
     const detail = action.type === 'fill'
       ? `Expected the matched field value to equal ${JSON.stringify(action.value)}.`
-      : pageChanged ? 'Fresh page observation changed after the action.' : 'The action ran, but the page did not measurably change.';
+      : action.type === 'copy'
+        ? 'Expected the system clipboard to equal the copied page text.'
+        : action.type === 'paste'
+          ? 'Expected the matched field value to equal the clipboard text.'
+          : pageChanged ? 'Fresh page observation changed after the action.' : 'The action ran, but the page did not measurably change.';
     return { ...result, ok: verified, action: action.type, snapshot, message: verified ? `${result.message} Verified against a fresh page observation.` : `Action ran, but verification failed: ${detail}`, verification: { verified, detail, snapshot } };
   }
 }
