@@ -1,17 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { actionIdentity, actionRisk, addOrigin, assertActionAllowed, canTransition, computeStateHash, createTaskState, isDuplicateAction, isOriginApproved, isPromptInjection, recordAction, recordProgress, transitionTaskState } from './AgentTaskState.js';
 
-describe('ORION 10,000-event resilience harness', () => {
+describe('ORION 100,000-event resilience harness', () => {
   it('processes varied browser-agent events without corrupting state or bypassing policy', () => {
-    const state = createTaskState('stress-run', 'Collect a value from https://source.test and prepare it for https://destination.test', 10000, 60_000);
+    const state = createTaskState('stress-run', 'Collect a value from https://source.test and prepare it for https://destination.test', 100000, 60_000);
     let cancelled = false;
     let handled = 0;
     const eventTypes = ['navigation', 'dom-mutation', 'click', 'fill', 'keyboard', 'scroll', 'delayed-element', 'stale-element', 'timeout', 'retry', 'recovery', 'popup', 'permission', 'redirect', 'tab-created', 'tab-closed', 'unexpected-navigation', 'confirmation', 'pause-resume', 'cross-origin', 'failed-action', 'successful-action', 'malformed-result'];
 
     transitionTaskState(state, 'PLANNING');
-    for (let index = 0; index < 10000; index += 1) {
+    for (let index = 0; index < 100000; index += 1) {
       const event = eventTypes[(index * 17 + 3) % eventTypes.length];
-      if (index === 8999) { cancelled = true; state.cancelled = true; state.status = 'CANCELLED'; }
+      if (index === 89999) { cancelled = true; state.cancelled = true; state.status = 'CANCELLED'; }
       if (cancelled) {
         expect(() => assertActionAllowed(state)).toThrow(/cancelled|CANCELLED/);
         continue;
@@ -33,7 +33,7 @@ describe('ORION 10,000-event resilience harness', () => {
       if (state.actions.length > 200) expect(state.actions.length).toBeLessThanOrEqual(200);
       expect(computeStateHash(state)).toHaveLength(24);
     }
-    expect(handled).toBe(8999);
+    expect(handled).toBe(89999);
     expect(state.status).toBe('CANCELLED');
     expect(state.actions.length).toBeLessThanOrEqual(200);
     expect(state.progressHashes.length).toBeLessThanOrEqual(20);
