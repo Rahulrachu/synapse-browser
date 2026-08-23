@@ -172,7 +172,7 @@ export class BrowserAgentController {
       const before = await view.webContents.executeJavaScript(INSPECT_SCRIPT(false), true) as BrowserAgentSnapshot;
       const clicked = await BrowserManager.clickAt(target.center.x, target.center.y, currentTabId(action.tabId));
       if (!clicked) return { ok: false, action: action.type, message: 'Coordinate click was rejected by the browser interaction layer.' };
-      await new Promise((resolve) => setTimeout(resolve, 180));
+      await new Promise((resolve) => setTimeout(resolve, 100));
       const after = await view.webContents.executeJavaScript(INSPECT_SCRIPT(false), true) as BrowserAgentSnapshot;
       const changed = after.url !== before.url || after.title !== before.title || after.text !== before.text;
       return { ok: changed, action: action.type, snapshot: after, message: changed ? 'Visual coordinate click dispatched and verified through a fresh observation.' : 'The click was dispatched, but no measurable page change was detected.', verification: { verified: changed, detail: changed ? 'Fresh DOM observation changed after the click.' : 'The click was dispatched, but no measurable page change was detected.' } };
@@ -195,7 +195,7 @@ export class BrowserAgentController {
     ) as { ok: boolean; message: string; clipboardText?: string };
     if (action.type === 'copy' && result.ok) clipboard.writeText(result.clipboardText || '');
     if (!result.ok) return { ...result, action: action.type, verification: { verified: false, detail: result.message } };
-    await new Promise((resolve) => setTimeout(resolve, 180));
+    await new Promise((resolve) => setTimeout(resolve, 100));
     const snapshot = await view.webContents.executeJavaScript(INSPECT_SCRIPT(false), true) as BrowserAgentSnapshot;
     const wanted = [action.target?.name, action.target?.text, action.target?.label, action.target?.placeholder].filter(Boolean).join(' ').toLowerCase();
     const matched = Array.isArray(snapshot?.elements) ? snapshot.elements.find((element) => !wanted || `${element.name} ${element.text} ${element.placeholder || ''}`.toLowerCase().includes(wanted)) : undefined;
