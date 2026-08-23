@@ -19,12 +19,19 @@ let mainWindow: BrowserWindow | null = null;
  */
 export function createWindow() {
   const packagedRoot = app.getAppPath();
-  const preloadPath = isDev
-    ? path.join(__dirname, '../preload/preload.cjs')
-    : path.join(packagedRoot, 'out/preload/preload.cjs');
-  const rendererPath = isDev
-    ? null
-    : path.join(packagedRoot, 'out/renderer/index.html');
+  // electron-vite emits out/main, out/preload, and out/renderer as siblings.
+  // In a packaged app app.getAppPath() is the app root, while launching the
+  // built main file directly makes it out/main. Resolve both layouts so the
+  // renderer and preload never silently disappear in a release or smoke run.
+  const assetPath = (relativeToRoot: string, relativeToMain: string) => {
+    const candidates = [
+      path.join(packagedRoot, relativeToRoot),
+      path.join(__dirname, relativeToMain),
+    ];
+    return candidates.find((candidate) => fs.existsSync(candidate)) || candidates[0];
+  };
+  const preloadPath = assetPath('out/preload/preload.cjs', '../preload/preload.cjs');
+  const rendererPath = isDev ? null : assetPath('out/renderer/index.html', '../renderer/index.html');
 
   mainWindow = new BrowserWindow({
     width: 1600,
@@ -44,9 +51,11 @@ export function createWindow() {
     void mainWindow.loadURL('http://localhost:5173');
   } else {
     if (!fs.existsSync(preloadPath) || !rendererPath || !fs.existsSync(rendererPath)) {
-      console.error('[Main] Packaged renderer assets missing', { preloadPath, rendererPath, appPath: packagedRoot });
+      console.error('[Main] Packaged renderer assets missing', { preloadPath, rendererPath, appPath: packagedRoot, mainDir: __dirname });
+      void mainWindow.loadURL('about:blank');
+    } else {
+      void mainWindow.loadFile(rendererPath);
     }
-    void mainWindow.loadFile(rendererPath!);
   }
 
   mainWindow.webContents.on('did-fail-load', (_event, errorCode, errorDescription, validatedURL) => {
