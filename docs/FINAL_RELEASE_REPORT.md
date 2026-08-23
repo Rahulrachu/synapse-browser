@@ -1,99 +1,156 @@
-# Synapse Browser Final Productization Report
+# Synapse Browser v1.0.5 Final Release Report
 
-## 1. Previous v1.0.4 status
+## Executive summary
 
-The public GitHub release is `v1.0.4`, pointing to commit `a4e829aa`. It contains the recent packaged-renderer startup, desktop-input, visible AI-control, app-icon, and browser-viewport fixes. The prior recovery work was not present as a separate commit or release: `antigravity/full-audit-fix` initially pointed at the same `a4e829aa` commit with recovery changes still in the working tree.
+The `productization/v1.0.5` branch preserves the prior recovery work and adds functional workspace surfaces, native-runner cross-platform CI, expanded Linux packaging, and updated acceptance evidence. The branch is pushed to GitHub at commit `779a88f3ee8e6e77d48128952f9c3fe7b233d6c5`.
 
-The previous recovery pass established strict application typechecking, 37 passing tests, a production build, Linux Electron Builder directory packaging, Electron startup under Xvfb, IPC allow-listing, and project filesystem confinement. It explicitly did not prove full interactive acceptance or Windows/macOS behavior.
+The code, typecheck, automated tests, production build, Linux packaging, and selected real Linux desktop interactions pass. Windows and macOS were unavailable for this task, so their runtime acceptance remains **FAIL**, not “untested pass.” The GitHub `v1.0.5` release was intentionally not created.
 
-## 2. Remaining problems discovered
+## Previous v1.0.4 problems
 
-The current renderer still contained visually present but dead sidebar controls. Settings had no interaction surface, and the Files, Editor, Terminal, History, Bookmarks, and Downloads icons did not select a workspace. Several navigation buttons used stale IPC channel names (`navigate-back`, `navigate-forward`, and `reload-tab`) that were not present in the preload allow-list. The browser view was left visible while overlays and alternate workspace surfaces were active, creating a credible native-view hit-testing risk. The AI Run flow did not catch IPC/provider startup failures, so a rejected request could leave the interface in an unreliable state.
+The prior productization report identified dead sidebar controls, missing Settings interaction, stale navigation IPC names, native `WebContentsView` hit-testing risk, incomplete workspace surfaces, and AI Run error paths that could leave the interface in an unreliable state. It also recorded that Windows and macOS had not been validated and that several Linux workflows were incomplete.
 
-Windows and macOS execution environments were not available. The public release has only a Windows zip asset, and no Windows installer execution, PowerShell test, macOS artifact, Windows screenshot, or real Windows recording could be honestly produced in this environment.
+## Productization fixes
 
-## 3. Fixes implemented
+The branch retains the prior fixes for button semantics, ARIA labels, keyboard focus, OLED black styling, restrained liquid glass, navigation IPC, native-view visibility coordination, project-root filesystem confinement, and AI Run/Stop error handling. This pass adds real Files, Editor, and Terminal surfaces. Files can open a project and list project-root files through secure IPC. Editor can read, edit, and save a selected relative file through secure IPC. Terminal can submit commands to the existing constrained terminal handler and display output or errors.
 
-The productization branch `productization/v1.0.5` adds functional button semantics and ARIA labels to the sidebar, toolbar, Settings, AI, tab, address-bar, and workspace controls. It adds a real Settings dialog with locally persisted preferences, functional project/file browsing through the existing secure IPC contracts, a file editor with read/write actions, a terminal command surface using the existing allow-listed handler, consistent close/open behavior, and keyboard-focus styling. It corrects navigation IPC names to the allow-listed `go-back`, `go-forward`, and `reload` channels. It coordinates `set-browser-view-visibility` with the active workspace, Settings modal, and AI panel so native WebContentsView content is hidden whenever it could cover React controls. The AI Run, Stop, and confirmation paths now catch errors, restore loading state, and display a visible error event.
+The renderer now hides the native browser view while Settings, AI, or another workspace is active, preventing an invisible native surface from covering React controls. A native-runner GitHub Actions workflow was added at `.github/workflows/release-validation.yml` for Windows, macOS, and Linux. It installs dependencies, typechecks, tests, builds, packages, and uploads native artifacts.
 
-A restrained OLED/liquid-glass visual system was applied with a true black foundation, selective blur, subtle borders, focused controls, and reduced decorative noise. The project also adds Playwright as a development dependency, a real Electron smoke script, and `.github/workflows/release-validation.yml` covering Windows, macOS, and Linux runners. CDP automation was not usable against this Electron build in the sandbox; desktop-level X11 interaction was used for the evidence below.
+## Visual design
 
-## 4. UI redesign
+The interface uses a true black OLED foundation with selective translucent surfaces on the sidebar, toolbar, tabs, AI panel, and Settings dialog. Borders are thin, secondary text is muted, active states are restrained, and focus rings remain visible. The design avoids excessive gradients, neon decoration, oversized shadows, and unnecessary cards. The visual changes were followed by real Linux Settings and AI interaction checks.
 
-The renderer now uses deep black surfaces with selective translucent sidebars, toolbars, panels, and AI surfaces. Typography remains near-white with muted secondary text, borders are thin and low contrast, active states are clear without bright gradients, and all major controls receive visible keyboard focus. The native browser view is deliberately hidden while Settings and AI surfaces are active to prevent pointer interception.
+## Windows validation
 
-## 5. Windows validation
+Windows validation could not be performed because no Windows VM, physical Windows host, or already-running Windows CI job was available in this environment. The repository now contains a native Windows GitHub Actions path that can produce and upload Windows artifacts, but adding a workflow is not evidence that the application executed successfully on Windows.
 
-Windows validation was not performed. No Windows execution environment, installer runner, PowerShell, Windows filesystem permission model, Windows shortcut test, or Windows screen recorder was available. Windows fields are therefore `FAIL` in [RELEASE_ACCEPTANCE.md](./RELEASE_ACCEPTANCE.md), not “untested pass.”
+Required Windows evidence still outstanding includes installation, launch, complete UI clicking, PowerShell execution, filesystem and SQLite persistence, restart behavior, native screenshots, and a real Windows screen recording. Windows is therefore marked `FAIL` in [RELEASE_ACCEPTANCE.md](./RELEASE_ACCEPTANCE.md).
 
-## 6. macOS validation
+## macOS validation
 
-macOS validation was not performed. No macOS artifact or runtime environment was available. macOS fields are therefore `FAIL` in the acceptance matrix.
+macOS validation could not be performed because no macOS runtime was available. The Builder configuration now requests both x64 and arm64 DMG/ZIP targets on a native macOS runner through `pnpm dist:mac`, and the CI workflow packages on `macos-latest`. No macOS artifact or screenshot is claimed locally. macOS is therefore marked `FAIL` in the acceptance matrix.
 
-## 7. Linux validation
+## Linux validation
 
-A real packaged Electron application was launched under Xvfb. The application window was located on the authenticated X11 display, a real permission dialog was dismissed, and real X11 mouse/keyboard events were used to open Settings, render and inspect the Settings dialog, open the AI panel, enter `Hello, test the Synapse Browser AI panel.`, and click Run. The AI UI visibly changed to `LIVE`, changed the action button to `Stop`, and displayed a planning event. Real screenshots were captured under `artifacts/smoke/`, including `rebuilt-settings-after-deny.png`, `ai-open.png`, `ai-filled.png`, and `ai-run-real.png`.
+The packaged Electron application launched under an authenticated Xvfb display. Real X11 mouse and keyboard input opened Settings, displayed the Settings dialog, opened the AI panel, entered `Hello, test the Synapse Browser AI panel.`, and clicked Run. The AI panel visibly entered `LIVE`, changed the action button to `Stop`, and displayed a planning event. The native browser view rendered Google content and was hidden when overlays were opened.
 
-The Playwright CDP smoke attempt failed because Electron’s exposed DevTools endpoint did not respond to the automation client in this environment. This limitation is documented rather than hidden. Desktop-level X11 interaction was successful for Settings and AI Run.
+Linux packaging completed successfully with Electron Builder `26.15.3`. Produced artifacts were:
 
-## 8. Automated tests
+| Artifact | Size | SHA256 |
+|---|---:|---|
+| `Synapse Browser-1.0.5.AppImage` | 175,148,342 bytes | `6f0046695592002715b7cafe8d97e0789c5bcf40d50c03aebe18885c591fb404` |
+| `synapse-browser_1.0.5_amd64.deb` | 135,298,792 bytes | `b74aeaacd9e3a78b7e7163b96355e3a126ce8203fc400bcf8ee31bbe04a101a7` |
 
-The following commands passed after the productization changes:
+The local Linux build used Node `22.13.0`, pnpm `11.21.0`, Electron `43.2.0`, and Electron Builder `26.15.3`. The repository requires Node `>=24.0.0`; the sandbox emitted an engine warning, but typecheck, tests, build, and packaging succeeded.
+
+## Browser validation
+
+The packaged browser view loaded Google over HTTPS and displayed the browser surface inside the Electron window. The address bar, tab strip, native view bounds, and visibility coordination are implemented. Complete manual Back → Forward → Reload, redirect, external-link, and link-click acceptance was not completed in this pass, so browser acceptance is not promoted beyond the evidence actually obtained.
+
+## Tab validation
+
+The tab strip and a live browser tab were visible in the packaged application. The repository retains the BrowserManager tab lifecycle and automated unit coverage. Complete creation of three tabs, independent navigation, rapid switching, active/background close, final-tab close, and orphan-view inspection were not completed manually. Tabs remain `PARTIAL` rather than `PASS`.
+
+## Workspace validation
+
+Files, Editor, and Terminal now have functional IPC-backed surfaces rather than placeholder cards. Files supports project path entry, project opening, file listing, and refresh. Editor supports project/file identifiers, read, edit, and save. Terminal supports command entry, execution through the existing constrained handler, output display, and error display.
+
+Complete CRUD, rename/delete, permission failures, Monaco dirty-state behavior, reopen persistence, terminal resize/process termination, and PowerShell acceptance were not completed. Workspace items remain `PARTIAL` in the matrix.
+
+## AI validation
+
+Real Linux desktop interaction verified prompt input, Run click handling, IPC initiation, LIVE/Stop state transition, and a planning event. This does **not** prove a successful provider response. Full provider invocation, returned response, provider-unavailable behavior, startup failure, repeated prompts, long prompts, cancellation completion, and Run reusability after a provider error remain incomplete. The report therefore does not claim that the complete AI system works.
+
+## Database and persistence
+
+The existing storage and project security tests passed, and the application uses the Electron user-data location for runtime persistence. Full close → relaunch verification of settings, open tabs, project state, and SQLite behavior was not completed manually. Database and restart acceptance remain `PARTIAL`/`FAIL` as recorded in the matrix.
+
+## Security
+
+The renderer continues to use the context-isolated preload bridge rather than unrestricted Node, filesystem, or Electron access. IPC remains allow-listed. Project file operations retain canonical-root confinement and regression tests for traversal and boundary behavior. No API keys, `.env` files, or secrets were added to the branch.
+
+## Performance and lifecycle
+
+Automated Agent stress coverage processed 100,000 varied events without corrupting state or bypassing policy. Existing BrowserManager and agent tests passed. A complete performance soak covering repeated tab creation/close, workspace switching, AI open/close, Settings open/close, terminal processes, memory growth, and orphan-process detection was not completed, so performance acceptance is not claimed as fully passed.
+
+## Real desktop automation and screenshots
+
+Playwright was added and a CDP smoke script was created. CDP did not connect reliably to this Electron build in the sandbox, so that failure is recorded rather than hidden. Real X11 desktop interaction was used instead. Actual application screenshots are stored under `artifacts/smoke/`, including `rebuilt-settings-after-deny.png`, `ai-open.png`, `ai-filled.png`, and `ai-run-real.png`. These are Linux screenshots and are not Windows evidence.
+
+No Windows screen recording was created. Creating one without a real Windows application would violate the acceptance requirements.
+
+## Exact validation commands
 
 ```text
-pnpm typecheck       PASS
-pnpm test --run      PASS: 9 files, 37 tests
-pnpm build           PASS
+pnpm typecheck
+pnpm test --run
+pnpm build
+pnpm dist:linux
 ```
 
-The final Linux packaging workflow passed with Electron Builder 26.15.3 and produced `Synapse Browser-1.0.5.AppImage` (SHA256 `6f0046695592002715b7cafe8d97e0789c5bcf40d50c03aebe18885c591fb404`) and `synapse-browser_1.0.5_amd64.deb` (SHA256 `b74aeaacd9e3a78b7e7163b96355e3a126ce8203fc400bcf8ee31bbe04a101a7`). The build used Node 22.13.0 in the sandbox, pnpm 11.21.0, Electron 43.2.0, and Electron Builder 26.15.3. The full Windows and macOS release artifacts were not generated locally; the CI workflow is prepared to produce them on their native runners.
+The final results were `PASS`, `PASS` with 9 files and 37 tests, `PASS`, and `PASS` respectively. `git diff --check` also passed. Native cross-platform packaging is defined in `.github/workflows/release-validation.yml` and must run on GitHub's Windows, macOS, and Linux runners before a public release.
 
-## 9. Manual tests
+## Commits and GitHub state
 
-The real Linux desktop pass verified that the Settings icon responds to a pointer click, Settings renders as a modal, Settings checkboxes are visible and interactive, the Settings modal can be closed, the AI panel can be opened, the AI textarea accepts real keyboard input, and the Run button responds to a real pointer click by entering a live planning state. Browser content rendered in the packaged application, and the native browser surface did not cover the Settings modal after the visibility fix.
-
-The following remain incomplete: full multi-tab switching and rapid open/close regression, complete browser navigation/back/forward/reload, complete file CRUD including rename/delete and permission-failure cases, Monaco-specific save/dirty-state workflow, terminal process lifecycle and PowerShell workflow, restart persistence, full shortcut matrix, and all Windows/macOS testing. The Files, Editor, and Terminal surfaces now execute real IPC-backed actions, but they are not marked fully PASS without those complete acceptance sequences.
-
-## 10. Screenshots
-
-Real screenshots captured in `artifacts/smoke/` include:
-
-| File | Evidence |
+| Commit | Description |
 |---|---|
-| `desktop-main.png` | Initial packaged application with browser content and AI panel. |
-| `rebuilt-settings-after-deny.png` | Settings dialog after a real X11 click. |
-| `ai-open.png` | AI panel opened after a real X11 click. |
-| `ai-filled.png` | Real prompt text visible in the AI textarea. |
-| `ai-run-real.png` | Real Run click produced LIVE/Stop/planning state. |
+| `3126195f` | Productize desktop interactions and release validation. |
+| `c190c8fc` | Advance productization release to v1.0.5. |
+| `779a88f3` | Complete v1.0.5 workspace and release validation, including CI and acceptance updates. |
 
-## 11. Screen recording
+The branch is pushed as `productization/v1.0.5` and the working tree is clean. The public GitHub release remains `v1.0.4`. No `v1.0.5` release was created because the acceptance evidence does not satisfy the Windows/macOS and complete workflow requirements.
 
-No final Windows screen recording was created. Producing one without a real Windows application would violate the acceptance requirements.
+## Remaining known issues
 
-## 12. Git commit
-
-The productization work is on branch `productization/v1.0.5`, pushed to GitHub at commit `c190c8fc` plus the subsequent functional-workspace and CI changes. It was not merged into `master` or tagged as a public release because Windows acceptance remains incomplete.
-
-## 13. GitHub release
-
-No new GitHub release was created. The public release remains `v1.0.4` with its existing Windows zip asset. Creating `v1.0.5` now would incorrectly imply Windows/macOS release readiness.
-
-## 14. Remaining issues
-
-The release-blocking issue is the absence of a real Windows acceptance environment. Additional major work includes completing installer execution, PowerShell, Windows filesystem and SQLite validation, full cross-platform packaging, full browser/workspace regression, and a reliable Electron automation harness. The current Linux evidence proves that the previously dead Settings and AI controls can be interacted with in the packaged application, but it does not prove all controls or platforms are release-ready.
+The principal release blocker is the lack of real Windows and macOS execution evidence. The remaining Linux gaps are complete multi-tab regression, full browser navigation, file CRUD and failure cases, Monaco save/dirty-state testing, terminal lifecycle, restart persistence, full shortcut coverage, and full provider-level AI lifecycle testing. The CI workflow provides a legitimate path for native builds but has not itself completed in this task.
 
 ## Final status
 
 ```text
 CODE: PASS
 TYPECHECK: PASS
-TESTS: PASS — 37 tests
+TESTS: PASS — 37 tests across 9 files
 BUILD: PASS
-LINUX INTERACTION: PASS for Settings and AI Run evidence
-LINUX PACKAGING: PASS — AppImage and deb artifacts
-WINDOWS RELEASE: FAIL — not tested
-MACOS RELEASE: FAIL — not tested
-FULL USER ACCEPTANCE: FAIL
+
+WINDOWS:
+INSTALLER: FAIL
+LAUNCH: FAIL
+UI: FAIL
+SETTINGS: FAIL
+BROWSER: FAIL
+TABS: FAIL
+AI: FAIL
+FILES: FAIL
+EDITOR: FAIL
+TERMINAL: FAIL
+POWERSHELL: FAIL
+DATABASE: FAIL
+SHORTCUTS: FAIL
+RESTART: FAIL
+SCREENSHOTS: FAIL
+RECORDING: FAIL
+
+MACOS:
+BUILD: FAIL — native macOS runner not executed
+RUNTIME: FAIL
+UI: FAIL
+BROWSER: FAIL
+AI: FAIL
+
+LINUX:
+BUILD: PASS
+RUNTIME: PASS
+UI: PASS
+BROWSER: PASS — basic packaged rendering verified
+TABS: PARTIAL
+FILES: PARTIAL
+EDITOR: PARTIAL
+TERMINAL: PARTIAL
+DATABASE: PARTIAL
+RESTART: FAIL
+
 GITHUB RELEASE: NOT CREATED
-OVERALL: FAIL — intentionally not released before Windows/macOS acceptance
+OVERALL: NOT RELEASE READY
 ```
+
+The branch is ready for native Windows/macOS CI execution and subsequent evidence-driven release review, but it is not honestly ready for public v1.0.5 release yet.
