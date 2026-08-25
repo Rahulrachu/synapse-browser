@@ -1,12 +1,12 @@
 # Release Acceptance Matrix
 
-The current productization work is on branch `productization/v1.0.5` and is **not released**. The public release remains `v1.0.4`. Linux validation was performed in the sandbox with a real packaged Electron window and X11 mouse/keyboard interaction. Windows and macOS environments were not available and are not marked as verified.
+The current productization work is on branch `productization/v1.0.5` and is **not released**. The public release remains `v1.0.4`. Linux validation was performed in the sandbox with a real packaged Electron window and X11 mouse/keyboard interaction. Native Windows and macOS packaging were verified by GitHub Actions; Windows executable launch was also smoke-tested natively. Full Windows/macOS UI acceptance remains incomplete.
 
 ## PLATFORM: Windows
 
 ```text
-INSTALLER: FAIL — Windows installer was not built or executed in this Linux environment.
-LAUNCH: FAIL — Not tested on Windows.
+INSTALLER: PASS — Native Windows packaging completed on GitHub Actions; Windows ZIP and unpacked executable were produced.
+LAUNCH: PASS — Native Windows packaged executable survived the 15-second launch smoke with `--no-sandbox --disable-gpu`.
 UI CLICKING: FAIL — Not tested on Windows.
 SETTINGS: FAIL — Not tested on Windows.
 BROWSER: FAIL — Not tested on Windows.

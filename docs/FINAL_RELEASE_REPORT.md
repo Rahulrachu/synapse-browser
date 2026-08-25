@@ -2,9 +2,9 @@
 
 ## Executive summary
 
-The `productization/v1.0.5` branch preserves the prior recovery work and adds functional workspace surfaces, native-runner cross-platform CI, expanded Linux packaging, and updated acceptance evidence. The branch is pushed to GitHub at commit `779a88f3ee8e6e77d48128952f9c3fe7b233d6c5`.
+The `productization/v1.0.5` branch preserves the prior recovery work and adds functional workspace surfaces, native-runner cross-platform CI, expanded Linux packaging, and updated acceptance evidence. The branch is pushed to GitHub at commit `5554170539bb1fa491de76b33cb1c71f19895395`.
 
-The code, typecheck, automated tests, production build, Linux packaging, and selected real Linux desktop interactions pass. Windows and macOS were unavailable for this task, so their runtime acceptance remains **FAIL**, not “untested pass.” The GitHub `v1.0.5` release was intentionally not created.
+The code, typecheck, automated tests, production build, Linux packaging, selected real Linux desktop interactions, native Windows packaging, and native Windows launch smoke pass. Windows end-to-end UI acceptance and macOS runtime interaction remain incomplete. The GitHub `v1.0.5` release was intentionally not created.
 
 ## Previous v1.0.4 problems
 
@@ -22,9 +22,9 @@ The interface uses a true black OLED foundation with selective translucent surfa
 
 ## Windows validation
 
-Windows validation could not be performed because no Windows VM, physical Windows host, or already-running Windows CI job was available in this environment. The repository now contains a native Windows GitHub Actions path that can produce and upload Windows artifacts, but adding a workflow is not evidence that the application executed successfully on Windows.
+A native Windows GitHub Actions runner executed the Windows matrix job. It typechecked, ran the tests, built the renderer, packaged `release\\win-unpacked`, created the Windows ZIP, and launched the packaged `Synapse Browser.exe` for a 15-second smoke using `--no-sandbox --disable-gpu`. This is actual Windows execution evidence, not Linux emulation. Full Windows UI click, Settings, browser, tabs, AI, Files, Editor, Terminal, PowerShell, persistence, screenshot, and recording acceptance remains outstanding.
 
-Required Windows evidence still outstanding includes installation, launch, complete UI clicking, PowerShell execution, filesystem and SQLite persistence, restart behavior, native screenshots, and a real Windows screen recording. Windows is therefore marked `FAIL` in [RELEASE_ACCEPTANCE.md](./RELEASE_ACCEPTANCE.md).
+Required Windows evidence still outstanding includes installer installation, complete UI clicking, PowerShell execution, filesystem and SQLite persistence, restart behavior, native screenshots, and a real Windows screen recording. Windows is therefore marked `PARTIAL` in [RELEASE_ACCEPTANCE.md](./RELEASE_ACCEPTANCE.md): packaging and launch pass, while end-to-end product acceptance remains incomplete.
 
 ## macOS validation
 
@@ -88,7 +88,7 @@ pnpm build
 pnpm dist:linux
 ```
 
-The final results were `PASS`, `PASS` with 9 files and 37 tests, `PASS`, and `PASS` respectively. `git diff --check` also passed. Native cross-platform packaging is defined in `.github/workflows/release-validation.yml` and must run on GitHub's Windows, macOS, and Linux runners before a public release.
+The final local results were `PASS`, `PASS` with 9 files and 37 tests, `PASS`, and `PASS` respectively. `git diff --check` also passed. Native run [32871796514](https://github.com/Rahulrachu/synapse-browser/actions/runs/32871796514) completed successfully for commit `c118709b`, proving Windows, macOS, and Linux packaging. Native run [32872335608](https://github.com/Rahulrachu/synapse-browser/actions/runs/32872335608) then completed successfully for commit `55541705`, including the Windows packaged-launch smoke step. These runs provide native Windows packaging and executable-launch evidence, but not full UI acceptance.
 
 ## Commits and GitHub state
 
@@ -102,7 +102,7 @@ The branch is pushed as `productization/v1.0.5` and the working tree is clean. T
 
 ## Remaining known issues
 
-The principal release blocker is the lack of real Windows and macOS execution evidence. The remaining Linux gaps are complete multi-tab regression, full browser navigation, file CRUD and failure cases, Monaco save/dirty-state testing, terminal lifecycle, restart persistence, full shortcut coverage, and full provider-level AI lifecycle testing. The CI workflow provides a legitimate path for native builds but has not itself completed in this task.
+The principal release blockers are incomplete Windows end-to-end UI evidence and the absence of macOS runtime interaction evidence. The remaining Linux gaps are complete multi-tab regression, full browser navigation, file CRUD and failure cases, Monaco save/dirty-state testing, terminal lifecycle, restart persistence, full shortcut coverage, and full provider-level AI lifecycle testing. Native Windows packaging and executable launch have now been verified by a successful GitHub Actions matrix run.
 
 ## Final status
 
@@ -113,8 +113,8 @@ TESTS: PASS — 37 tests across 9 files
 BUILD: PASS
 
 WINDOWS:
-INSTALLER: FAIL
-LAUNCH: FAIL
+INSTALLER: PASS — native Windows package created in GitHub Actions
+LAUNCH: PASS — packaged executable survived the 15-second native smoke
 UI: FAIL
 SETTINGS: FAIL
 BROWSER: FAIL
@@ -153,4 +153,4 @@ GITHUB RELEASE: NOT CREATED
 OVERALL: NOT RELEASE READY
 ```
 
-The branch is ready for native Windows/macOS CI execution and subsequent evidence-driven release review, but it is not honestly ready for public v1.0.5 release yet.
+The branch has now passed native Windows packaging and launch smoke as well as macOS/Linux packaging in GitHub Actions. It is still not honestly ready for public v1.0.5 release until full Windows UI acceptance, Windows evidence capture, and macOS runtime acceptance are completed.
