@@ -43,6 +43,7 @@
     "win": {
       "target": [
         "dir",
+        "nsis",
         "zip"
       ],
       "icon": "public/icon.png",
@@ -53,7 +54,11 @@
       "perMachine": true,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "createStartMenuShortcut": true,
+      "shortcutName": "Synapse Browser",
+      "uninstallDisplayName": "Synapse Browser",
+      "runAfterFinish": true,
+      "artifactName": "Synapse-Browser-${version}-Windows-${arch}-Setup.${ext}"
     },
     "linux": {
       "target": ["dir", "AppImage", "deb"],

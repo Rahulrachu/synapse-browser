@@ -15,7 +15,7 @@ Synapse Browser is an AI-first productivity desktop browser and developer enviro
 | ORION browser agent | Functional beta | Real provider-backed Linux proof completed visible navigation, confirmation approval, page reading, and rendered final responses for Wikipedia Bangalore and a Google-weather task with a wttr.in fallback. |
 | Cloud sync and advanced extensions | Planned/experimental | Not required for core startup and not part of the v1.0.5 acceptance claim. |
 
-> **Release honesty:** v1.0.5 is published at [GitHub Releases](https://github.com/Rahulrachu/synapse-browser/releases/tag/v1.0.5). The OLED/silver Windows ZIP is attached there. This sandbox cannot execute native Windows binaries; native Windows launch, onboarding, Settings, AI input, and running-state screenshots are available from CI, while provider-backed Windows ORION completion was not run to completion in CI. Please report issues found during real-world Windows testing.
+> **Release:** v1.0.5 is published at [GitHub Releases](https://github.com/Rahulrachu/synapse-browser/releases/tag/v1.0.5). Windows users should download `Synapse-Browser-1.0.5-Windows-x64-Setup.exe` for the normal install experience; the portable ZIP remains available as an optional download. Provider-backed Windows ORION completion was not run to completion in CI. Please report issues found during real-world Windows testing.
 
 ## Synapse product experience
 
@@ -68,11 +68,13 @@ pnpm build
 
 ## Packaging
 
+The public Windows distribution is a normal NSIS installer. Download the `Synapse-Browser-1.0.5-Windows-x64-Setup.exe` asset from the [v1.0.5 release](https://github.com/Rahulrachu/synapse-browser/releases/tag/v1.0.5), double-click it, choose an installation directory if desired, and let it create Start Menu and Desktop shortcuts. The installer registers Synapse Browser for Windows uninstall. The ZIP remains available for portable use and CI diagnostics.
+
 Build a platform-specific Electron Builder artifact with the relevant command:
 
 ```bash
 pnpm run pack
-pnpm dist:win
+pnpm dist:win   # NSIS installer + optional portable ZIP
 pnpm dist:mac
 pnpm dist:linux
 ```
