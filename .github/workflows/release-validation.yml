@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   validate:
@@ -68,6 +68,16 @@ jobs:
         with:
           name: windows-ui-evidence
           path: artifacts/windows-smoke
+
+      - name: Upload Windows installer to v1.0.5 release
+        if: matrix.platform == 'win' && github.ref == 'refs/heads/productization/v1.0.5'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $installer = Get-ChildItem -Path release -Filter '*-Windows-*-Setup.exe' | Select-Object -First 1
+          if (-not $installer) { throw 'NSIS installer artifact was not produced' }
+          gh release upload v1.0.5 $installer.FullName --repo Rahulrachu/synapse-browser --clobber
 
       - name: Upload release artifacts
         uses: actions/upload-artifact@v4
