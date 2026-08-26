@@ -13,6 +13,10 @@ const App = () => {
     initialize();
   }, [initialize]);
 
+  useEffect(() => {
+    if (window.electron) void window.electron.invoke('set-browser-view-visibility', !onboarding);
+  }, [onboarding]);
+
   return onboarding ? <Onboarding onComplete={() => setOnboarding(false)} /> : <MainLayout />;
 };
 

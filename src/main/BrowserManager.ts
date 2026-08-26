@@ -154,6 +154,7 @@ class BrowserManager {
     if (this.permissionHandlerSessions.has(ses)) return;
     this.permissionHandlerSessions.add(ses);
     ses.setPermissionRequestHandler((webContents, permission, callback) => {
+      if (process.env.SYNAPSE_E2E === '1') { callback(false); return; }
       const origin = webContents?.getURL() ? new URL(webContents.getURL()).origin : 'unknown-origin';
       const key = `${origin}:${permission}`;
       const remembered = this.permissionDecisions.get(key);
