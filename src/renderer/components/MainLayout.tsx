@@ -137,7 +137,7 @@ const MainLayout: React.FC = () => {
   }, [desktop]);
 
   useEffect(() => { const active = tabs.find(tab => tab.id === activeTabId); if (active) setAddressBarValue(active.url); }, [activeTabId, tabs]);
-  useEffect(() => { if (desktop) void window.electron.invoke('set-browser-view-visibility', panel === 'browser' && !isAIPanelOpen && !settingsOpen && !commandOpen); }, [desktop, panel, isAIPanelOpen, settingsOpen, commandOpen]);
+  useEffect(() => { if (desktop) void window.electron.invoke('set-browser-view-visibility', panel === 'browser' && !settingsOpen && !commandOpen); }, [desktop, panel, settingsOpen, commandOpen]);
   useEffect(() => { const onKeyDown = (event: KeyboardEvent) => { if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); setCommandOpen(value => !value); } if (event.key === 'Escape') setCommandOpen(false); }; window.addEventListener('keydown', onKeyDown); return () => window.removeEventListener('keydown', onKeyDown); }, []);
 
   const activeTab = tabs.find(tab => tab.id === activeTabId);
@@ -146,7 +146,7 @@ const MainLayout: React.FC = () => {
   const selectPanel = (next: Panel) => { setSettingsOpen(false); setPanel(next); };
   const sidebarButton = (next: Panel, icon: React.ReactNode, label: string) => <button type="button" aria-label={label} title={label} onClick={() => selectPanel(next)} className={`sidebar-icon synapse-icon-button ${panel === next ? 'active synapse-active-rail' : ''} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50`}>{icon}</button>;
   const navigate = () => { if (addressBarValue.trim()) void invoke('navigate-to', addressBarValue, activeTabId); };
-  const runCommand = (command: string) => { setCommandOpen(false); if (command === 'settings') setSettingsOpen(true); else if (command === 'new-tab') void invoke('create-tab', 'https://www.google.com'); else if (command === 'terminal') selectPanel('terminal'); else if (command === 'history') selectPanel('history'); else if (command === 'orion') { selectPanel('browser'); setIsAIPanelOpen(true); } };
+  const runCommand = (command: string) => { setCommandOpen(false); if (command === 'settings') setSettingsOpen(true); else if (command === 'new-tab') void invoke('create-tab', 'about:blank'); else if (command === 'terminal') selectPanel('terminal'); else if (command === 'history') selectPanel('history'); else if (command === 'orion') { selectPanel('browser'); setIsAIPanelOpen(true); } };
 
   return <div className="synapse-app-shell relative flex h-screen w-screen overflow-hidden text-white select-none">
     <aside className="glass-sidebar synapse-surface z-30 flex w-[72px] shrink-0 flex-col items-center border-y-0 border-l-0 py-5" aria-label="Main navigation">
@@ -170,7 +170,7 @@ const MainLayout: React.FC = () => {
       <header className="glass-toolbar synapse-toolbar relative z-20 shrink-0 border-b">
         <div className="relative flex h-12 items-center gap-3 px-4"><div className={`synapse-progress-line ${activeTab?.isLoading ? 'is-loading' : ''}`} aria-hidden="true" />
           <div className="flex items-center gap-2 text-xs text-white/45"><Activity size={13} className="text-emerald-300" /><span>{title}</span></div>
-          <div className="min-w-0 flex-1 overflow-hidden"><TabBar tabs={tabs} activeTabId={activeTabId} onSelectTab={id => void invoke('set-active-tab', id)} onCloseTab={id => void invoke('close-tab', id)} onNewTab={() => void invoke('create-tab', 'https://www.google.com')} /></div>
+          <div className="min-w-0 flex-1 overflow-hidden"><TabBar tabs={tabs} activeTabId={activeTabId} onSelectTab={id => void invoke('set-active-tab', id)} onCloseTab={id => void invoke('close-tab', id)} onNewTab={() => void invoke('create-tab', 'about:blank')} /></div>
           <button type="button" aria-label="Toggle AI panel" onClick={() => { selectPanel('browser'); setIsAIPanelOpen(open => !open); }} className={`synapse-ai-button rounded-lg border px-3 py-1.5 text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 ${isAIPanelOpen && panel === 'browser' ? 'border-white/25 bg-white text-black' : 'border-white/10 bg-white/[0.04] text-white/65 hover:bg-white/10'}`}><Bot size={14} className="inline mr-1.5" />AI</button>
         </div>
         <div className="flex items-center gap-3 px-4 pb-3">
@@ -178,7 +178,7 @@ const MainLayout: React.FC = () => {
           <div className="address-bar synapse-address flex min-w-0 flex-1 items-center gap-2"><Search size={14} className="shrink-0 text-white/35" /><input ref={addressBarRef} aria-label="Address bar" className="w-full bg-transparent text-xs text-white/80 outline-none" value={addressBarValue} onChange={event => setAddressBarValue(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); navigate(); } }} /><button type="button" aria-label="Bookmark current page" title="Bookmark current page" onClick={() => void invoke('add-bookmark', activeTabId)} className="text-white/35 hover:text-white"><Star size={14} /></button><button type="button" aria-label="More browser actions" title="More browser actions" className="text-white/35 hover:text-white"><MoreHorizontal size={14} /></button></div>
         </div>
       </header>
-      <div className="synapse-browser-stage relative min-h-0 flex-1 overflow-hidden">{panel === 'browser' ? <BrowserView tabId={activeTabId} /> : <div className="synapse-workspace h-full"><WorkspaceSurface panel={panel} /></div>}</div>
+      <div className="synapse-browser-stage relative min-h-0 flex-1 overflow-hidden">{panel === 'browser' ? <BrowserView tabId={activeTabId} isHome={activeTab?.url === 'about:blank'} /> : <div className="synapse-workspace h-full"><WorkspaceSurface panel={panel} /></div>}</div>
       <footer className="synapse-footer flex h-7 shrink-0 items-center justify-between border-t px-4 text-[10px] uppercase tracking-wider text-white/30"><span className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />Ready</span><span>Tabs: {tabs.length}</span></footer>
     </main>
     {isAIPanelOpen && panel === 'browser' && <aside className="synapse-surface synapse-orion-shell z-20 flex w-[380px] shrink-0 flex-col rounded-none border-y-0 border-r-0" aria-label="AI workspace"><AIWorkspacePanel /></aside>}

@@ -163,6 +163,25 @@ describe('BrowserManager', () => {
     expect(DownloadManager.registerSession).toHaveBeenCalled();
   });
 
+  it('keeps ORION-compatible native visibility across external and Home tabs', () => {
+    const externalTabId = BrowserManager.createTab('https://www.google.com');
+    const externalView = BrowserManager['tabViews'].get(externalTabId)!;
+    const homeTabId = BrowserManager.createTab('about:blank');
+    const homeView = BrowserManager['tabViews'].get(homeTabId)!;
+
+    BrowserManager.setActiveTab(externalTabId);
+    expect(externalView.setVisible).toHaveBeenLastCalledWith(true);
+    expect(homeView.setVisible).toHaveBeenLastCalledWith(false);
+
+    BrowserManager.setActiveTab(homeTabId);
+    expect(externalView.setVisible).toHaveBeenLastCalledWith(false);
+    expect(homeView.setVisible).toHaveBeenLastCalledWith(false);
+
+    BrowserManager.setActiveTab(externalTabId);
+    expect(externalView.setVisible).toHaveBeenLastCalledWith(true);
+    expect(homeView.setVisible).toHaveBeenLastCalledWith(false);
+  });
+
   it('clamps browser bounds so the native view cannot cover the AI panel', () => {
     const tabId = BrowserManager.createTab('https://layout.example');
     const view = BrowserManager['tabViews'].get(tabId);
