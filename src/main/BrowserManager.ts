@@ -350,13 +350,21 @@ class BrowserManager {
     this.broadcastTabsUpdate();
   }
 
+  private isHomeTab(tabId: string): boolean {
+    const tab = this.tabs.get(tabId);
+    return !tab || /^about:blank(?:#synapse-home)?$/i.test(tab.url);
+  }
+
   private updateActiveTabView(): void {
     const mainWindow = getMainWindow();
     if (!mainWindow || mainWindow.isDestroyed()) return;
     for (const [tabId, view] of this.tabViews) {
       const active = tabId === this.activeTabId;
-      view.setVisible(active);
-      if (active) this.applyBounds(view);
+      // Home is rendered by React. Never leave a native WebContentsView visible
+      // while Home (and therefore the ORION panel) is the active surface.
+      const shouldBeVisible = active && !this.isHomeTab(tabId);
+      view.setVisible(shouldBeVisible);
+      if (shouldBeVisible) this.applyBounds(view);
     }
   }
 
@@ -583,13 +591,18 @@ class BrowserManager {
       : bounds;
     const clamped = this.clampBrowserBounds(normalized, content);
     this.currentBrowserBounds = clamped;
-    const activeView = this.activeTabId ? this.tabViews.get(this.activeTabId) : undefined;
-    if (activeView) activeView.setBounds(clamped);
+    const activeTabId = this.activeTabId;
+    const activeView = activeTabId ? this.tabViews.get(activeTabId) : undefined;
+    if (activeView && activeTabId && !this.isHomeTab(activeTabId)) activeView.setBounds(clamped);
   }
 
   setBrowserViewVisibility(visible: boolean): void {
-    const activeView = this.activeTabId ? this.tabViews.get(this.activeTabId) : undefined;
-    if (activeView) activeView.setVisible(visible);
+    // Keep this legacy API safe as well: callers cannot reveal a native view
+    // for Home or reveal a stale view belonging to an inactive tab.
+    const activeTabId = this.activeTabId;
+    const activeView = activeTabId ? this.tabViews.get(activeTabId) : undefined;
+    if (activeView && activeTabId && !this.isHomeTab(activeTabId)) activeView.setVisible(visible);
+    else this.updateActiveTabView();
   }
 
   duplicateTab(tabId: string): string | null {

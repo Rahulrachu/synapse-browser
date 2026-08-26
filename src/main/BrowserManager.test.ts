@@ -163,6 +163,28 @@ describe('BrowserManager', () => {
     expect(DownloadManager.registerSession).toHaveBeenCalled();
   });
 
+  it('keeps the native view hidden on Home while ORION remains a renderer surface', () => {
+    const externalTabId = BrowserManager.createTab('https://www.google.com');
+    const externalView = BrowserManager['tabViews'].get(externalTabId);
+    const homeTabId = BrowserManager.createTab('about:blank');
+    const homeView = BrowserManager['tabViews'].get(homeTabId);
+
+    expect(externalView.setVisible).toHaveBeenLastCalledWith(false);
+    expect(homeView.setVisible).toHaveBeenLastCalledWith(false);
+
+    BrowserManager.setActiveTab(externalTabId);
+    expect(externalView.setVisible).toHaveBeenLastCalledWith(true);
+    expect(homeView.setVisible).toHaveBeenLastCalledWith(false);
+
+    BrowserManager.setActiveTab(homeTabId);
+    expect(homeView.setVisible).toHaveBeenLastCalledWith(false);
+    expect(externalView.setVisible).toHaveBeenLastCalledWith(false);
+
+    BrowserManager.setActiveTab(externalTabId);
+    expect(externalView.setVisible).toHaveBeenLastCalledWith(true);
+    expect(homeView.setVisible).toHaveBeenLastCalledWith(false);
+  });
+
   it('clamps browser bounds so the native view cannot cover the AI panel', () => {
     const tabId = BrowserManager.createTab('https://layout.example');
     const view = BrowserManager['tabViews'].get(tabId);

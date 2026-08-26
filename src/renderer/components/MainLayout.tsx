@@ -107,7 +107,7 @@ const MainLayout: React.FC = () => {
                 activeTabId={activeTabId} 
                 onSelectTab={(id) => window.electron.invoke('set-active-tab', id)}
                 onCloseTab={(id) => window.electron.invoke('close-tab', id)}
-                onNewTab={() => window.electron.invoke('create-tab', 'https://www.google.com')}
+                onNewTab={() => window.electron.invoke('create-tab', 'about:blank')}
               />
             </div>
             <button
@@ -154,7 +154,7 @@ const MainLayout: React.FC = () => {
 
         {/* Browser Surface */}
         <div className="flex-1 min-h-0 relative bg-black">
-          <BrowserView tabId={activeTabId} />
+          <BrowserView tabId={activeTabId} isHome={activeTab?.url === 'about:blank'} />
         </div>
 
         {/* Status Bar */}
