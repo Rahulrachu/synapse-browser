@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "synapse-browser",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "desktopName": "synapse-browser",
   "main": "out/main/background.cjs",
   "description": "AI-First Productivity Browser",
@@ -42,8 +42,14 @@
     },
     "win": {
       "target": [
-        "dir",
-        "zip"
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "zip",
+          "arch": ["x64"]
+        }
       ],
       "icon": "public/icon.png",
       "artifactName": "Synapse-Browser-${version}-${os}-${arch}.${ext}"
