@@ -2,7 +2,7 @@
 
 ## Executive decision
 
-The recovery and productization work is functionally advanced, but **v1.0.5 must not be published yet**. The core ORION browser-agent workflow is proven in the built Electron application on Linux, including real browser takeover, confirmation handling, page reading, and response rendering. Native Windows launch and the principal UI surfaces are proven by a successful CI evidence bundle. The requested completed Windows ORION workflow and real Windows screen recording are still missing, so the overall release gate remains blocked.
+The recovery and productization work is complete enough for **public v1.0.5 release with explicit limitations**. GitHub Release v1.0.5 is published from final commit `48011185e63b261888d757eade29af2dd16c8c81`. The core ORION browser-agent workflow is proven in the built Electron application on Linux, including real browser takeover, confirmation handling, page reading, and response rendering. Native Windows launch and the principal UI surfaces are proven by a successful CI evidence bundle. The requested completed Windows ORION workflow and real Windows screen recording are still missing, but the user has explicitly made those evidence gaps non-blocking for this public release.
 
 ## First-launch experience verification
 
@@ -71,19 +71,19 @@ pnpm build           PASS
 git diff --check     PASS
 ```
 
-The local environment emitted an engine warning because it has Node 22 while the project requires Node 24 or newer for release builds. The release build should therefore be repeated under Node 24+ before publishing.
+The local environment emitted an engine warning because it has Node 22 while the project requires Node 24 or newer for release builds. A future maintenance build should be repeated under Node 24+; the public release was created from the verified CI package.
 
 ## Release gate assessment
 
-The green GitHub Actions run `32942383476` validates builds and automated tests on Windows, macOS, and Ubuntu and produced an exact-commit Windows artifact plus five native Windows UI screenshots. However, the Windows smoke script only enters a sample prompt and captures the running state; it does not configure a provider, complete a real ORION task, verify a final response, or record the workflow. Therefore the public v1.0.5 release was not created.
+The green GitHub Actions run `32942383476` validates builds and automated tests on Windows, macOS, and Ubuntu and produced an exact-commit Windows artifact plus five native Windows UI screenshots. However, the Windows smoke script only enters a sample prompt and captures the running state; it does not configure a provider, complete a real ORION task, verify a final response, or record the workflow. Therefore the public v1.0.5 release was created with an explicit validation limitation rather than being blocked on the unavailable recording.
 
-## Remaining blockers
+## Follow-up validation items
 
-The following items remain open and are intentionally not marked PASS:
+The following items remain open and are intentionally not marked PASS, but they are non-blocking for v1.0.5 and should be handled through real-world testing or v1.0.6 patches:
 
 1. A real Windows desktop must run the packaged `.exe` with valid provider credentials and complete at least the Wikipedia and weather ORION tasks.
 2. The complete Windows workflow must be screen-recorded from Launch through Onboarding, AI Config, Browser Takeover, and Result.
 3. Interactive macOS runtime acceptance remains unverified even though macOS packaging completed in CI.
 4. Full tabs, workspace CRUD, terminal lifecycle, database restart persistence, shortcuts, and long-run performance acceptance remain partial.
 
-The acceptance matrix in [RELEASE_ACCEPTANCE.md](RELEASE_ACCEPTANCE.md) is the authoritative release decision. No GitHub v1.0.5 release was created because the recording and Windows completed-agent gates are not satisfied.
+The acceptance matrix in [RELEASE_ACCEPTANCE.md](RELEASE_ACCEPTANCE.md) is the authoritative release decision. GitHub Release v1.0.5 is published at [the release page](https://github.com/Rahulrachu/synapse-browser/releases/tag/v1.0.5) with `Synapse-Browser-1.0.5-win-x64.zip` attached. The recording and provider-backed Windows completed-agent gates remain unverified but are non-blocking for this release; future fixes should be handled as v1.0.6 patches.

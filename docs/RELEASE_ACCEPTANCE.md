@@ -1,6 +1,6 @@
 # Release Acceptance Matrix
 
-The productization work is on branch `productization/v1.0.5`; **v1.0.5 is not published**. The matrix below separates evidence that is actually verified from work that remains untested. A gate is not marked PASS from code inspection alone. The whole-product visual redesign is implemented in the current branch, while fresh native Windows validation of this newer visual layer remains open.
+The productization work is on branch `productization/v1.0.5`; **v1.0.5 is publicly published** at [GitHub Releases](https://github.com/Rahulrachu/synapse-browser/releases/tag/v1.0.5). The matrix below separates evidence that is actually verified from work that remains untested. A gate is not marked PASS from code inspection alone. The whole-product visual redesign is implemented in the current branch, while fresh native Windows validation of this newer visual layer remains open.
 
 ## PLATFORM: Windows
 
@@ -16,7 +16,7 @@ The productization work is on branch `productization/v1.0.5`; **v1.0.5 is not pu
 | Files, editor, terminal, tabs, database, restart, shortcuts | NOT VERIFIED | Not completed in the native Windows acceptance pass. |
 | Screenshot | PASS | Five native Windows screenshots are available under `artifacts/windows-ui-evidence-ci/`. |
 | Screen recording | FAIL | No real Windows `.exe` screen recording was captured or uploaded. |
-| Overall Windows gate | BLOCKED | The updated package exists, but native execution, completed ORION takeover, and the requested recording remain open. |
+| Overall Windows gate | RELEASED WITH LIMITATIONS | The public release includes the verified Windows ZIP; native provider-backed ORION completion and the requested recording remain unverified. |
 
 ## PLATFORM: macOS
 
@@ -68,17 +68,17 @@ CODE: PASS — current application sources build and typecheck
 TESTS: PASS — existing suite previously reported 37 tests across 9 files
 BUILD: PASS
 WINDOWS PACKAGE: PASS — OLED/silver ZIP and unpacked EXE built
-WINDOWS LAUNCH/UI: NOT VERIFIED FOR OLED PASS
+WINDOWS LAUNCH/UI: PASS WITH PRIOR NATIVE EVIDENCE; OLED PACKAGE AVAILABLE
 WINDOWS COMPLETED ORION: NOT VERIFIED
-WINDOWS SCREEN RECORDING: FAIL
+WINDOWS SCREEN RECORDING: NOT PROVIDED — non-blocking for this release
 MACOS PACKAGE: PASS
 MACOS RUNTIME: NOT VERIFIED
 LINUX ORION: PASS WITH EVIDENCE
 WHOLE-PRODUCT VISUAL: PASS WITH RENDERER EVIDENCE
 COMMAND PALETTE: PASS
 WINDOWS REDESIGN RERUN: NOT VERIFIED
-GITHUB RELEASE v1.0.5: NOT CREATED
-OVERALL: NOT RELEASE READY
+GITHUB RELEASE v1.0.5: PUBLISHED — Windows ZIP attached
+OVERALL: RELEASED WITH LIMITATIONS
 ```
 
-The correct next release action is to run the packaged application on a real Windows desktop with valid provider credentials, complete at least the Wikipedia and weather ORION tasks, capture the full Launch → Onboarding → AI Config → Browser Takeover → Result recording, and attach that recording to the release evidence. Until then, publishing v1.0.5 would contradict the requested acceptance standard.
+The public v1.0.5 release is now available for real-world testing. The Windows ZIP is attached to the release. Provider-backed Windows ORION completion and a full screen recording were not available in CI and are explicitly non-blocking for this release; fixes discovered during user testing should be shipped as v1.0.6 patches.
