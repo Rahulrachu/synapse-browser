@@ -57,23 +57,17 @@ jobs:
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
 
-      - name: Windows packaged UI smoke
+      - name: Windows packaged native UI smoke
         if: matrix.platform == 'win'
         shell: pwsh
-        run: |
-          $executable = Join-Path $pwd 'release\\win-unpacked\\Synapse Browser.exe'
-          if (-not (Test-Path $executable)) { throw "Packaged executable not found: $executable" }
-          $env:SYNAPSE_E2E = '1'
-          $process = Start-Process -FilePath $executable -ArgumentList '--no-sandbox', '--disable-gpu', '--remote-debugging-port=9222', '--remote-debugging-address=127.0.0.1' -PassThru
-          try {
-            Start-Sleep -Seconds 10
-            if ($process.HasExited) { throw "Synapse Browser exited during Windows launch smoke with code $($process.ExitCode)" }
-            $env:ELECTRON_CDP = 'http://127.0.0.1:9222'
-            $env:SMOKE_OUTPUT = 'artifacts/windows-smoke'
-            pnpm exec node scripts/electron-interaction-smoke.mjs
-          } finally {
-            if (-not $process.HasExited) { Stop-Process -Id $process.Id -Force }
-          }
+        run: ./scripts/windows-ui-smoke.ps1
+
+      - name: Upload Windows UI evidence
+        if: always() && matrix.platform == 'win'
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-ui-evidence
+          path: artifacts/windows-smoke
 
       - name: Upload release artifacts
         uses: actions/upload-artifact@v4
