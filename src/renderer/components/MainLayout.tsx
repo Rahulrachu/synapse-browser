@@ -20,6 +20,20 @@ const panelLabels: Record<Panel, string> = {
   history: 'History', bookmarks: 'Bookmarks', downloads: 'Downloads',
 };
 
+const searchEngineOptions = [
+  { value: 'google', label: 'Google', url: 'https://www.google.com/search?q=' },
+  { value: 'bing', label: 'Bing', url: 'https://www.bing.com/search?q=' },
+  { value: 'duckduckgo', label: 'DuckDuckGo', url: 'https://duckduckgo.com/?q=' },
+];
+
+function resolveSearchOrUrl(input: string, engine = localStorage.getItem('synapse.searchEngine') || 'google'): string {
+  const value = input.trim();
+  if (!value) return 'about:blank';
+  if (/^about:/i.test(value) || /^[a-z][a-z\\d+.-]*:\\/\\//i.test(value)) return value;
+  const selected = searchEngineOptions.find(option => option.value === engine) || searchEngineOptions[0];
+  return `${selected.url}${encodeURIComponent(value)}`;
+}
+
 type WorkspaceFile = { name?: string; path?: string; relativePath?: string; isDirectory?: boolean; type?: string };
 
 type ProviderOption = { value: string; label: string };
@@ -163,7 +177,9 @@ function SettingsPanel({ onClose }: { onClose: () => void }) {
   const [model, setModel] = useState('gpt-4.1-mini');
   const [aiConfigured, setAiConfigured] = useState(false);
   const [aiMessage, setAiMessage] = useState('');
+  const [searchEngine, setSearchEngine] = useState(() => localStorage.getItem('synapse.searchEngine') || 'google');
   const update = (key: string, value: boolean) => { localStorage.setItem(key, String(value)); };
+  const updateSearchEngine = (value: string) => { setSearchEngine(value); localStorage.setItem('synapse.searchEngine', value); };
   useEffect(() => {
     if (!window.electron) return;
     void window.electron.invoke('agent:get-config').then((config: { configured?: boolean; provider?: string; baseUrl?: string; model?: string }) => { setAiConfigured(Boolean(config?.configured)); setProvider(config?.provider || 'openai'); setBaseUrl(config?.baseUrl || 'https://api.openai.com/v1'); setModel(config?.model || 'gpt-4.1-mini'); }).catch(() => setAiMessage('Unable to read AI configuration.'));
@@ -182,6 +198,7 @@ function SettingsPanel({ onClose }: { onClose: () => void }) {
     <section className="synapse-surface-raised synapse-modal max-h-full w-full max-w-xl overflow-auto rounded-2xl p-6" onClick={event => event.stopPropagation()}>
       <div className="flex items-center justify-between border-b border-white/10 pb-4"><div><h2 className="text-base font-semibold text-white">Settings</h2><p className="mt-1 text-xs text-white/40">Preferences are saved locally for this profile.</p></div><button type="button" aria-label="Close Settings" onClick={onClose} className="rounded-lg p-2 text-white/50 hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50"><X size={16} /></button></div>
       <div className="space-y-3 pt-5">
+        <label className="flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.03] p-4"><span><span className="block text-sm text-white">Search engine</span><span className="mt-1 block text-xs text-white/40">Choose where address-bar and Home searches open.</span></span><select aria-label="Search engine" value={searchEngine} onChange={event => updateSearchEngine(event.target.value)} className="rounded-lg border border-white/10 bg-black/50 px-3 py-2 text-xs text-white outline-none">{searchEngineOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label>
         <label className="flex cursor-pointer items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.03] p-4"><span><span className="block text-sm text-white">Reduce motion</span><span className="mt-1 block text-xs text-white/40">Use shorter transitions throughout the workspace.</span></span><input aria-label="Reduce motion" type="checkbox" checked={reduceMotion} onChange={event => { setReduceMotion(event.target.checked); update('synapse.reduceMotion', event.target.checked); }} /></label>
         <label className="flex cursor-pointer items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.03] p-4"><span><span className="block text-sm text-white">Developer tools on startup</span><span className="mt-1 block text-xs text-white/40">Remember the developer-tools preference for the next launch.</span></span><input aria-label="Developer tools on startup" type="checkbox" checked={showDevtools} onChange={event => { setShowDevtools(event.target.checked); update('synapse.showDevtools', event.target.checked); }} /></label>
       </div>
@@ -227,8 +244,9 @@ const MainLayout: React.FC = () => {
   const invoke = async (channel: string, ...args: unknown[]) => { if (!desktop) return undefined; try { return await window.electron.invoke(channel, ...args); } catch (error) { console.error(`[Renderer] ${channel} failed`, error); return undefined; } };
   const selectPanel = (next: Panel) => { setSettingsOpen(false); setPanel(next); };
   const sidebarButton = (next: Panel, icon: React.ReactNode, label: string) => <button type="button" aria-label={label} title={label} onClick={() => selectPanel(next)} className={`sidebar-icon synapse-icon-button ${panel === next ? 'active synapse-active-rail' : ''} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50`}>{icon}</button>;
-  const navigate = () => { if (addressBarValue.trim()) void invoke('navigate-to', addressBarValue, activeTabId); };
-  const runCommand = (command: string) => { setCommandOpen(false); if (command === 'settings') setSettingsOpen(true); else if (command === 'new-tab') void invoke('create-tab', 'about:blank'); else if (command === 'terminal') selectPanel('terminal'); else if (command === 'history') selectPanel('history'); else if (command === 'orion') { selectPanel('browser'); setIsAIPanelOpen(true); } };
+  const navigate = () => { if (addressBarValue.trim()) void invoke('navigate-to', resolveSearchOrUrl(addressBarValue), activeTabId); };
+  const handleNewTab = () => { selectPanel('browser'); setIsAIPanelOpen(true); void invoke('create-tab', 'about:blank'); };
+  const runCommand = (command: string) => { setCommandOpen(false); if (command === 'settings') setSettingsOpen(true); else if (command === 'new-tab') handleNewTab(); else if (command === 'terminal') selectPanel('terminal'); else if (command === 'history') selectPanel('history'); else if (command === 'orion') { selectPanel('browser'); setIsAIPanelOpen(true); } };
 
   return <div className="synapse-app-shell relative flex h-screen w-screen overflow-hidden text-white select-none">
     <aside className="glass-sidebar synapse-surface z-30 flex w-[72px] shrink-0 flex-col items-center border-y-0 border-l-0 py-5" aria-label="Main navigation">
@@ -252,7 +270,7 @@ const MainLayout: React.FC = () => {
       <header className="glass-toolbar synapse-toolbar relative z-20 shrink-0 border-b">
         <div className="relative flex h-12 items-center gap-3 px-4"><div className={`synapse-progress-line ${activeTab?.isLoading ? 'is-loading' : ''}`} aria-hidden="true" />
           <div className="flex items-center gap-2 text-xs text-white/45"><Activity size={13} className="text-emerald-300" /><span>{title}</span></div>
-          <div className="min-w-0 flex-1 overflow-hidden"><TabBar tabs={tabs} activeTabId={activeTabId} onSelectTab={id => void invoke('set-active-tab', id)} onCloseTab={id => void invoke('close-tab', id)} onNewTab={() => void invoke('create-tab', 'about:blank')} /></div>
+          <div className="min-w-0 flex-1 overflow-hidden"><TabBar tabs={tabs} activeTabId={activeTabId} onSelectTab={id => void invoke('set-active-tab', id)} onCloseTab={id => void invoke('close-tab', id)} onNewTab={handleNewTab} /></div>
           <button type="button" aria-label="Toggle AI panel" onClick={() => { selectPanel('browser'); setIsAIPanelOpen(open => !open); }} className={`synapse-ai-button rounded-lg border px-3 py-1.5 text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 ${isAIPanelOpen && panel === 'browser' ? 'border-white/25 bg-white text-black' : 'border-white/10 bg-white/[0.04] text-white/65 hover:bg-white/10'}`}><Bot size={14} className="inline mr-1.5" />AI</button>
         </div>
         <div className="flex items-center gap-3 px-4 pb-3">
@@ -260,7 +278,7 @@ const MainLayout: React.FC = () => {
           <div className="address-bar synapse-address flex min-w-0 flex-1 items-center gap-2"><Search size={14} className="shrink-0 text-white/35" /><input ref={addressBarRef} aria-label="Address bar" className="w-full bg-transparent text-xs text-white/80 outline-none" value={addressBarValue} onChange={event => setAddressBarValue(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); navigate(); } }} /><button type="button" aria-label="Bookmark current page" title="Bookmark current page" onClick={() => void invoke('add-bookmark', activeTabId)} className="text-white/35 hover:text-white"><Star size={14} /></button><button type="button" aria-label="More browser actions" title="More browser actions" className="text-white/35 hover:text-white"><MoreHorizontal size={14} /></button></div>
         </div>
       </header>
-      <div className="synapse-browser-stage relative min-h-0 flex-1 overflow-hidden">{panel === 'browser' ? (isHome ? <HomePage onNavigate={url => void invoke('navigate-to', url, activeTabId)} /> : <BrowserView tabId={activeTabId} layoutKey={`${panel}:${isAIPanelOpen}`} />) : <div className="synapse-workspace h-full"><WorkspaceSurface panel={panel} /></div>}</div>
+      <div className="synapse-browser-stage relative min-h-0 flex-1 overflow-hidden">{panel === 'browser' ? (isHome ? <HomePage onNavigate={url => void invoke('navigate-to', resolveSearchOrUrl(url), activeTabId)} /> : <BrowserView tabId={activeTabId} layoutKey={`${panel}:${isAIPanelOpen}`} />) : <div className="synapse-workspace h-full"><WorkspaceSurface panel={panel} /></div>}</div>
       <footer className="synapse-footer flex h-7 shrink-0 items-center justify-between border-t px-4 text-[10px] uppercase tracking-wider text-white/30"><span className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />Ready</span><span>Tabs: {tabs.length}</span></footer>
     </main>
     {isAIPanelOpen && panel === 'browser' && <aside className="synapse-surface synapse-orion-shell z-20 flex w-[380px] shrink-0 flex-col rounded-none border-y-0 border-r-0" aria-label="AI workspace"><AIWorkspacePanel /></aside>}

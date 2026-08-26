@@ -15,6 +15,7 @@ const statusLabel: Record<string, string> = {
 
 export default function AIWorkspacePanel() {
   const [goal, setGoal] = useState('');
+  const [quickPrompt, setQuickPrompt] = useState('');
   const [runId, setRunId] = useState<string | null>(null);
   const [events, setEvents] = useState<AgentEvent[]>([]);
   const [answer, setAnswer] = useState('');
@@ -72,6 +73,14 @@ export default function AIWorkspacePanel() {
     }
   };
 
+  const handleQuickPrompt = (event: React.FormEvent) => {
+    event.preventDefault();
+    const prompt = quickPrompt.trim();
+    if (!prompt || running) return;
+    setGoal(prompt);
+    setQuickPrompt('');
+  };
+
   const handleStop = async () => {
     if (!runId) return;
     try { await window.electron.invoke('agent:cancel', runId); } finally { setConfirmation(null); setRunning(false); }
@@ -96,6 +105,11 @@ export default function AIWorkspacePanel() {
       <div className="flex-1 overflow-y-auto px-5 py-8">
         <div className="mx-auto max-w-[330px]">
           <div className="mb-8 text-center"><p className="text-[11px] uppercase tracking-[0.22em] text-white/35">What do you want me to do?</p><p className="mt-3 text-xs leading-5 text-white/45">ORION observes the current website, acts, verifies each step, and pauses when your approval is needed.</p></div>
+
+          <form onSubmit={handleQuickPrompt} className="mb-3 flex items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2 focus-within:border-white/25">
+            <input aria-label="Ask ORION a question" value={quickPrompt} onChange={e => setQuickPrompt(e.target.value)} disabled={running} placeholder="Ask ORION a question…" className="min-w-0 flex-1 bg-transparent text-[12px] text-white outline-none placeholder:text-white/25 disabled:opacity-50" />
+            <button type="submit" disabled={running || !quickPrompt.trim()} className="rounded-lg border border-white/10 px-2 py-1 text-[10px] text-white/55 hover:bg-white/10 disabled:opacity-25">Use prompt</button>
+          </form>
 
           <div className="synapse-surface-raised rounded-2xl p-3 focus-within:border-white/25">
             <textarea aria-label="What do you want me to do?" value={goal} onChange={e => setGoal(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void handleRun(); } }} rows={4} disabled={running} placeholder="Tell me what you want to do…" className="w-full resize-none bg-transparent px-1 py-1 text-[13px] leading-6 text-white outline-none placeholder:text-white/25 disabled:opacity-50" />
