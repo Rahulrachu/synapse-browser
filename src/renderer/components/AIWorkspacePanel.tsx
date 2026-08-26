@@ -17,6 +17,7 @@ export default function AIWorkspacePanel() {
   const [goal, setGoal] = useState('');
   const [runId, setRunId] = useState<string | null>(null);
   const [events, setEvents] = useState<AgentEvent[]>([]);
+  const [answer, setAnswer] = useState('');
   const [running, setRunning] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [confirmation, setConfirmation] = useState<AgentEvent | null>(null);
@@ -27,6 +28,7 @@ export default function AIWorkspacePanel() {
       if (runId && event.runId !== runId) return;
       setRunId(current => current || event.runId);
       setEvents(current => [...current.slice(-24), event]);
+      if (event.type === 'assistant') setAnswer(event.message);
       if (event.type === 'confirmation') setConfirmation(event);
       if (event.type === 'done' || event.type === 'error') setRunning(false);
     });
@@ -49,6 +51,7 @@ export default function AIWorkspacePanel() {
     const trimmed = goal.trim();
     if (!trimmed || running) return;
     setEvents([]);
+    setAnswer('');
     setConfirmation(null);
     setRunning(true);
     if (!window.electron) {
@@ -98,6 +101,8 @@ export default function AIWorkspacePanel() {
             <textarea aria-label="What do you want me to do?" value={goal} onChange={e => setGoal(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void handleRun(); } }} rows={4} disabled={running} placeholder="Tell me what you want to do…" className="w-full resize-none bg-transparent px-1 py-1 text-[13px] leading-6 text-white outline-none placeholder:text-white/25 disabled:opacity-50" />
             <div className="mt-3 flex items-center justify-between border-t border-white/[0.07] pt-3"><span className="text-[10px] text-white/25">Enter to run · Shift + Enter for a new line</span><button aria-label={running ? 'Stop ORION' : 'Run ORION'} onClick={running ? handleStop : handleRun} disabled={!running && !goal.trim()} className={`flex items-center gap-2 rounded-lg px-3 py-2 text-[11px] font-medium transition ${running ? 'bg-white/10 text-white hover:bg-white/15' : goal.trim() ? 'bg-white text-black hover:bg-white/90' : 'bg-white/10 text-white/25'}`}>{running ? <><Square size={12} fill="currentColor" />Stop</> : <><Activity size={13} />Run</>}</button></div>
           </div>
+
+          {answer && <div className="mt-4 rounded-xl border border-emerald-300/15 bg-emerald-300/[0.04] p-4" aria-label="ORION response"><p className="text-[10px] uppercase tracking-[0.15em] text-emerald-200/70">ORION response</p><p className="mt-2 whitespace-pre-wrap text-[12px] leading-5 text-white/75">{answer}</p></div>}
 
           <div className="mt-6 rounded-xl border border-white/[0.07] bg-white/[0.025] px-3 py-3"><div className="flex items-center gap-2 text-[11px] text-white/65">{running ? <Loader2 size={13} className="animate-spin text-white" /> : latest?.type === 'done' ? <Check size={13} className="text-emerald-400" /> : <Circle size={8} className="fill-white/30 text-white/30" />}<span>{status}</span><span className="ml-auto text-[10px] text-white/25">{events.length ? `${events.length} updates` : ''}</span></div><p className="mt-2 truncate text-[11px] text-white/40">{statusMessage}</p><div className="mt-3 grid grid-cols-3 gap-2 border-t border-white/[0.06] pt-3 text-[9px] uppercase tracking-[0.12em] text-white/25"><span><span className="block text-white/55">Phase</span>{taskState.phase || 'ready'}</span><span><span className="block text-white/55">Confidence</span>{confidence}</span><span className="text-right"><span className="block text-white/55">Steps</span>{typeof taskState.remainingSteps === 'number' ? taskState.remainingSteps : '—'}</span></div><p className="mt-2 truncate text-[10px] text-white/25">{originLabel}</p></div>
 

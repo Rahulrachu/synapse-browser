@@ -1,24 +1,40 @@
 # Synapse Browser v1.0.5 productization branch
 
-Synapse Browser is an AI-first productivity desktop browser and developer environment built with Electron, React, TypeScript, and TailwindCSS. It combines multi-process web rendering with an integrated workspace for browsing, notes, files, code, terminal workflows, and optional AI capabilities.
+Synapse Browser is an AI-first productivity desktop browser and developer environment built with Electron 43, React 19, TypeScript, Vite, Zustand, SQLite, and TailwindCSS. It combines multi-process web rendering with an integrated workspace for browsing, notes, files, code, terminal workflows, and optional AI capabilities.
 
-## Feature Readiness
+## Verified feature readiness
 
-| Feature Category | Readiness | Notes |
+| Feature category | Status | Verified scope |
 |---|---|---|
-| Core browser engine and tabs | Production-oriented | Native `WebContentsView` lifecycle, multi-tab browsing, navigation, history, bookmarks, and session restoration are implemented. |
+| Core browser engine and tabs | Production-oriented | Native `WebContentsView` lifecycle, browser rendering, tab strip, navigation surface, history, bookmarks, and session-restoration code are present. |
 | Profiles and private browsing | Production-oriented | Partition-backed profiles and ephemeral private sessions are implemented. |
 | Downloads and permissions | Production-oriented | Download tracking and origin-scoped permission prompts are implemented. |
-| Developer workspace | Production-oriented | File explorer, Monaco-related editor integration, terminal integration, and Git services are present. |
-| AI workspace and context broker | Beta/optional | AI providers are optional and must not prevent application startup. |
-| Browser agent | Beta | Structured browser-agent actions and confirmation gates are implemented. See [the browser-agent design](docs/BROWSER_AGENT.md). |
-| Cloud sync and advanced extensions | Planned/experimental | These capabilities are not required for core startup. |
+| Developer workspace | Production-oriented | File explorer, editor integration, terminal integration, and Git services are wired through secure IPC. |
+| First-launch onboarding | Verified | Native Windows CI evidence shows the onboarding card, Skip Setup transition, and browser shell. |
+| AI provider setup | Verified UI | Settings contains provider, API-key, base URL, model, save, test, and reset controls; credentials remain in the main process. |
+| ORION browser agent | Functional beta | Real provider-backed Linux proof completed visible navigation, confirmation approval, page reading, and rendered final responses for Wikipedia Bangalore and a Google-weather task with a wttr.in fallback. |
+| Cloud sync and advanced extensions | Planned/experimental | Not required for core startup and not part of the v1.0.5 acceptance claim. |
+
+> **Release honesty:** v1.0.5 is not published. Native Windows launch, onboarding, Settings, AI input, and running-state screenshots are available from CI, but a completed Windows ORION workflow and the requested real Windows screen recording are not yet available. The release remains blocked rather than being marked PASS without evidence.
+
+## ORION browser agent
+
+ORION observes the active website, plans bounded actions, uses semantic browser tools, verifies important results, and pauses for confirmation before consequential or cross-origin actions. Provider configuration is optional at startup and can be completed during onboarding or later in Settings. Supported provider families include OpenAI-compatible endpoints, Google, Anthropic, OpenRouter, Groq, Ollama, and custom OpenAI-compatible services.
+
+The following real browser-agent proofs were completed against the built Electron application through its local DevTools endpoint:
+
+| Proof | Result | Evidence |
+|---|---|---|
+| Wikipedia Bangalore | PASS | Navigated to `en.wikipedia.org/wiki/Bengaluru`, approved the confirmation gate, read the visible page, and rendered an answer identifying the article title and a fact. Screenshots: `artifacts/real-orion-wikipedia-confirmed/`. |
+| Google weather with fallback | PASS | Navigated Google, detected the CAPTCHA/unusual-traffic page, opened `https://wttr.in/Bangalore?format=3`, read `+28°C`, and rendered the answer. Screenshots: `artifacts/real-orion-weather-wttr/`. |
+
+The proof scripts are `scripts/real-orion-wikipedia-test.mjs` and `scripts/real-orion-weather-test.mjs`. They require a running Electron instance with a configured provider and a DevTools endpoint, for example `ELECTRON_CDP=http://127.0.0.1:9666`.
 
 ## Requirements
 
-Use Node.js `>=24.0.0` and pnpm `>=9.0.0`. The repository’s lockfile is authoritative; use a frozen install for reproducible setup.
+Use Node.js `>=24.0.0` and pnpm `>=9.0.0`. The repository lockfile is authoritative; use a frozen install for reproducible setup. The current sandbox build completed under Node 22 with an engine warning, so Node 24 or newer should be used for release builds.
 
-## Installation and Development
+## Installation and development
 
 ```bash
 git clone https://github.com/Rahulrachu/synapse-browser.git
@@ -27,9 +43,9 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-The development process starts the Vite renderer and Electron main process. AI provider credentials are optional; do not commit `.env` files or API keys.
+AI provider credentials are optional during startup. Do not commit `.env` files, API keys, or user-data directories.
 
-## Validation and Build
+## Validation and build
 
 ```bash
 pnpm typecheck
@@ -51,7 +67,11 @@ pnpm dist:mac
 pnpm dist:linux
 ```
 
-The architecture and privileged-process boundaries are described in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Common setup and platform limitations are described in [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md). Platform evidence is maintained in [docs/RELEASE_ACCEPTANCE.md](docs/RELEASE_ACCEPTANCE.md), with the full decision record in [docs/FINAL_RELEASE_REPORT.md](docs/FINAL_RELEASE_REPORT.md). The native-runner workflow at `.github/workflows/release-validation.yml` typechecks, tests, builds, packages, and uploads Windows, macOS, and Linux artifacts; use it before publishing v1.0.5.
+The architecture and privileged-process boundaries are described in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Common setup and platform limitations are described in [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md). The current acceptance matrix is [docs/RELEASE_ACCEPTANCE.md](docs/RELEASE_ACCEPTANCE.md), and the decision record is [docs/FINAL_RELEASE_REPORT.md](docs/FINAL_RELEASE_REPORT.md). The GitHub Actions workflow at `.github/workflows/release-validation.yml` typechecks, tests, builds, packages, and uploads Windows, macOS, and Linux artifacts.
+
+## Native evidence
+
+The successful Windows UI evidence bundle is available in CI and has been copied to `artifacts/windows-ui-evidence-ci/`. It contains native screenshots for launch/onboarding, post-onboarding browser UI, Settings, ORION input, and the ORION running/attention state. The bundle does not contain the requested Windows screen recording or a completed Windows provider-backed browser-agent result. Linux ORION screenshots and final response surfaces are stored under `artifacts/real-orion-wikipedia-confirmed/` and `artifacts/real-orion-weather-wttr/`.
 
 ## License
 

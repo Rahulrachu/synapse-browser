@@ -1,72 +1,75 @@
 # Release Acceptance Matrix
 
-The current productization work is on branch `productization/v1.0.5` and is **not released**. The public release remains `v1.0.4`. Linux validation was performed in the sandbox with a real packaged Electron window and X11 mouse/keyboard interaction. Native Windows and macOS packaging were verified by GitHub Actions; Windows executable launch was also smoke-tested natively. Full Windows/macOS UI acceptance remains incomplete.
+The productization work is on branch `productization/v1.0.5`; **v1.0.5 is not published**. The matrix below separates evidence that is actually verified from work that remains untested. A gate is not marked PASS from code inspection alone.
 
 ## PLATFORM: Windows
 
-```text
-INSTALLER: PASS — Native Windows packaging completed on GitHub Actions; Windows ZIP and unpacked executable were produced.
-LAUNCH: PASS — Native Windows packaged executable survived the 15-second launch smoke with `--no-sandbox --disable-gpu`.
-UI CLICKING: FAIL — Not tested on Windows.
-SETTINGS: FAIL — Not tested on Windows.
-BROWSER: FAIL — Not tested on Windows.
-TABS: FAIL — Not tested on Windows.
-AI INPUT: FAIL — Not tested on Windows.
-AI RUN: FAIL — Not tested on Windows.
-FILES: FAIL — Not tested on Windows.
-EDITOR: FAIL — Not tested on Windows.
-TERMINAL: FAIL — Not tested on Windows.
-POWERSHELL: FAIL — Not tested on Windows.
-DATABASE: FAIL — Not tested on Windows.
-SHORTCUTS: FAIL — Not tested on Windows.
-RESTART: FAIL — Not tested on Windows.
-SCREENSHOT: FAIL — No Windows screenshot.
-SCREEN RECORDING: FAIL — No Windows recording.
-OVERALL: FAIL
-```
+| Gate | Status | Evidence or limitation |
+|---|---|---|
+| Installer/package | PASS | Native GitHub Actions packaging produced Windows artifacts. |
+| Launch | PASS | Native Windows packaged executable survived the launch smoke. |
+| Onboarding and browser shell | PASS | Native Windows UI Automation run `32935389959` produced `artifacts/windows-ui-evidence-ci/01-launch.png` and `02-after-skip.png`. |
+| Settings and provider setup UI | PASS | Native Windows evidence `03-settings.png` visibly shows provider, key, base URL, model, save, and reset controls. Provider-backed Windows connection was not tested. |
+| AI input | PASS | Native Windows evidence `04-ai-input.png` shows the ORION panel and prompt control. |
+| ORION running state | PASS | Native Windows evidence `05-ai-running.png` shows a submitted prompt and the agent attention/failure state. |
+| Completed ORION takeover | NOT VERIFIED | No native Windows provider-backed task reached a completed, rendered result in the available evidence bundle. |
+| Files, editor, terminal, tabs, database, restart, shortcuts | NOT VERIFIED | Not completed in the native Windows acceptance pass. |
+| Screenshot | PASS | Five native Windows screenshots are available under `artifacts/windows-ui-evidence-ci/`. |
+| Screen recording | FAIL | No real Windows `.exe` screen recording was captured or uploaded. |
+| Overall Windows gate | BLOCKED | Native launch and core UI are evidenced; full ORION completion and the requested recording remain open. |
 
 ## PLATFORM: macOS
 
-```text
-INSTALLER: FAIL — macOS artifact and runtime were not built or tested.
-LAUNCH: FAIL — Not tested on macOS.
-UI CLICKING: FAIL — Not tested on macOS.
-SETTINGS: FAIL — Not tested on macOS.
-BROWSER: FAIL — Not tested on macOS.
-TABS: FAIL — Not tested on macOS.
-AI INPUT: FAIL — Not tested on macOS.
-AI RUN: FAIL — Not tested on macOS.
-FILES: FAIL — Not tested on macOS.
-EDITOR: FAIL — Not tested on macOS.
-TERMINAL: FAIL — Not tested on macOS.
-POWERSHELL: FAIL — Not applicable; no macOS shell validation was performed.
-DATABASE: FAIL — Not tested on macOS.
-SHORTCUTS: FAIL — Not tested on macOS.
-RESTART: FAIL — Not tested on macOS.
-SCREENSHOT: FAIL — No macOS screenshot.
-SCREEN RECORDING: FAIL — No macOS recording.
-OVERALL: FAIL
-```
+| Gate | Status | Evidence or limitation |
+|---|---|---|
+| Package artifact | PASS | GitHub Actions produced a macOS artifact in the successful release-validation run. |
+| Runtime, UI, browser, AI, workspace, restart | NOT VERIFIED | No interactive macOS runtime acceptance evidence was captured. |
+| Overall macOS gate | BLOCKED | Package creation alone is not runtime acceptance. |
 
 ## PLATFORM: Linux
 
+| Gate | Status | Evidence or limitation |
+|---|---|---|
+| Installer/package | PASS | Electron Builder produced the AppImage, deb, and unpacked package. |
+| Launch and browser shell | PASS | Built Electron application launched under Xvfb and rendered Google. |
+| Onboarding, Settings, AI input | PASS | Real renderer interaction and screenshots are available in `artifacts/smoke/`. |
+| ORION Wikipedia takeover | PASS | Real provider-backed run approved the cross-origin confirmation, navigated to `https://en.wikipedia.org/wiki/Bengaluru`, read the visible page, and rendered a final answer. Evidence: `artifacts/real-orion-wikipedia-confirmed/04-final.png`. |
+| ORION weather takeover | PASS | Real provider-backed run searched Google, detected the CAPTCHA page, navigated to `https://wttr.in/Bangalore?format=3`, read `+28°C`, and rendered a final answer. Evidence: `artifacts/real-orion-weather-wttr/04-final.png`. |
+| Tabs | PARTIAL | A browser tab and tab strip are verified; full multi-tab regression remains incomplete. |
+| Files and editor | PARTIAL | Secure IPC handlers are wired; complete CRUD, dirty-state, reopen, and failure cases were not manually exercised. |
+| Terminal | PARTIAL | Constrained terminal integration is wired; lifecycle and process tests were not manually exercised. |
+| Database and restart | PARTIAL | Unit/build coverage passed; full close/relaunch persistence was not manually exercised. |
+| Screen recording | FAIL | No Linux recording was requested as a substitute for the native Windows recording. |
+| Overall Linux gate | PASS WITH LIMITATIONS | The core ORION proof is complete on Linux; broader workspace and lifecycle acceptance remains partial. |
+
+## Automated validation
+
+The verified local commands are:
+
 ```text
-INSTALLER: PASS — Electron Builder produced `Synapse Browser-1.0.5.AppImage` and `synapse-browser_1.0.5_amd64.deb`; the unpacked package was also produced.
-LAUNCH: PASS — Packaged Electron window launched under Xvfb.
-UI CLICKING: PASS — X11 mouse clicks interacted with Settings and AI controls.
-SETTINGS: PASS — Settings opened, rendered, and displayed interactive checkboxes.
-BROWSER: PASS — Packaged browser view rendered Google and responded to the visible runtime.
-TABS: PARTIAL — A tab rendered and the tab strip was visible; full multi-tab regression remains incomplete.
-AI INPUT: PASS — Real X11 keyboard input appeared in the AI textarea.
-AI RUN: PASS — Real X11 click changed the button to Stop and the panel entered LIVE/planning state.
-FILES: PARTIAL — Functional project-open and project-file listing actions are wired through secure IPC; complete CRUD, invalid-path, and permission-failure cases were not manually exercised.
-EDITOR: PARTIAL — Functional read/edit/save actions are wired through secure IPC; the complete Monaco, dirty-state, reopen, and invalid-file workflow was not manually exercised.
-TERMINAL: PARTIAL — Functional command input and output are wired to the existing constrained terminal handler; lifecycle and process tests were not manually exercised.
-POWERSHELL: FAIL — Windows-only and unavailable.
-DATABASE: PARTIAL — Existing unit coverage and build passed; full restart persistence was not manually exercised.
-SHORTCUTS: PARTIAL — Existing Electron menu accelerators remain; complete shortcut matrix was not manually exercised.
-RESTART: FAIL — Not completed in the interactive pass.
-SCREENSHOT: PASS — Real Linux screenshots captured under artifacts/smoke.
-SCREEN RECORDING: FAIL — No final recording captured.
-OVERALL: FAIL — Windows/macOS acceptance and several complete Linux workflows remain outstanding.
+pnpm typecheck
+pnpm test --run
+pnpm build
+git diff --check
 ```
+
+The current local build completed successfully, and the test suite previously reported 37 tests across 9 files. The successful native release-validation run produced Windows, macOS, and Linux package artifacts. The Windows UI evidence run is `32935389959`; the package validation run is `32872335608`.
+
+## Release decision
+
+```text
+CODE: PASS — current application sources build and typecheck
+TESTS: PASS — existing suite previously reported 37 tests across 9 files
+BUILD: PASS
+WINDOWS PACKAGE: PASS
+WINDOWS LAUNCH/UI: PASS WITH EVIDENCE
+WINDOWS COMPLETED ORION: NOT VERIFIED
+WINDOWS SCREEN RECORDING: FAIL
+MACOS PACKAGE: PASS
+MACOS RUNTIME: NOT VERIFIED
+LINUX ORION: PASS WITH EVIDENCE
+GITHUB RELEASE v1.0.5: NOT CREATED
+OVERALL: NOT RELEASE READY
+```
+
+The correct next release action is to run the packaged application on a real Windows desktop with valid provider credentials, complete at least the Wikipedia and weather ORION tasks, capture the full Launch → Onboarding → AI Config → Browser Takeover → Result recording, and attach that recording to the release evidence. Until then, publishing v1.0.5 would contradict the requested acceptance standard.
