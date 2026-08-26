@@ -56,6 +56,10 @@ The successful Windows UI automation run `32935389959` produced and the project 
 
 This is genuine native Windows evidence from CI, not a Linux rendering relabeled as Windows. It does not prove a completed Windows provider-backed ORION task, and it is not a screen recording.
 
+## Repository branch state
+
+The remote `productization/v1.0.5` branch matches the locked OLED/silver commit `8359fd469cab13f182d2b9a2c98f6a719870601c`. `master` is behind by 25 commits. `pr/restore-workflow2` is divergent and has three commits not present by SHA in the final branch, so it was preserved rather than deleted. This satisfies the history-preservation rule; branch simplification must wait until those unique changes are reviewed or intentionally archived.
+
 ## Local validation
 
 The final local validation completed successfully:
@@ -68,6 +72,10 @@ git diff --check     PASS
 ```
 
 The local environment emitted an engine warning because it has Node 22 while the project requires Node 24 or newer for release builds. The release build should therefore be repeated under Node 24+ before publishing.
+
+## Release gate assessment
+
+The green GitHub Actions run `32942383476` validates builds and automated tests on Windows, macOS, and Ubuntu and produced an exact-commit Windows artifact plus five native Windows UI screenshots. However, the Windows smoke script only enters a sample prompt and captures the running state; it does not configure a provider, complete a real ORION task, verify a final response, or record the workflow. Therefore the public v1.0.5 release was not created.
 
 ## Remaining blockers
 

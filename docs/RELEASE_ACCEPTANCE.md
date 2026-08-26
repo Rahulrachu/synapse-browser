@@ -44,6 +44,10 @@ The productization work is on branch `productization/v1.0.5`; **v1.0.5 is not pu
 | Command palette | PASS | Ctrl/Cmd+K opened the floating command surface with Open Settings, New Tab, Open Terminal, Ask ORION, and Search History commands. |
 | Overall Linux gate | PASS WITH LIMITATIONS | The core ORION proof and current whole-product renderer styling are complete on Linux; broader workspace and lifecycle acceptance remains partial. |
 
+## Repository branch state
+
+The final productization branch is `productization/v1.0.5` at commit `8359fd469cab13f182d2b9a2c98f6a719870601c`, and the remote branch matches it. `master` is 25 commits behind the productization branch. `pr/restore-workflow2` is divergent and contains three commits not present by SHA in the final branch (`854ee993`, `1d80f33c`, and `6f5dc85d`); those commits must be preserved until their changes are explicitly confirmed as unnecessary. No obsolete branch was deleted.
+
 ## Automated validation
 
 The verified local commands are:
