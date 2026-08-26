@@ -135,7 +135,7 @@ class BrowserManager {
     if (this.tabs.size > 0) return;
     const restorable = savedTabs.filter((tab) => !tab.isPrivate && tab.url);
     if (!restorable.length) {
-      this.createTab('https://www.google.com');
+      this.createTab('about:blank');
       return;
     }
     restorable.forEach((tab, index) => {
@@ -241,7 +241,7 @@ class BrowserManager {
 
     wc.on('did-finish-load', () => {
       const currentUrl = wc.getURL() || this.tabs.get(tabId)?.url || 'about:blank';
-      const currentTitle = wc.getTitle() || this.tabs.get(tabId)?.title || 'New Tab';
+      const currentTitle = currentUrl === 'about:blank' ? 'New Tab' : (wc.getTitle() || this.tabs.get(tabId)?.title || 'New Tab');
       const tab = this.tabs.get(tabId);
       this.updateTab(tabId, {
         url: currentUrl,

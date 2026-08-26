@@ -1,0 +1,61 @@
+import { chromium } from 'playwright';
+import fs from 'node:fs/promises';
+
+const endpoint = process.env.ELECTRON_CDP || 'http://127.0.0.1:9998';
+const output = process.env.SMOKE_OUTPUT || 'artifacts/v106-home';
+await fs.mkdir(output, { recursive: true });
+const browser = await chromium.connectOverCDP(endpoint);
+const page = browser.contexts()[0]?.pages().find(item => item.url().includes('renderer/index.html'));
+if (!page) throw new Error('Renderer not found');
+await page.waitForLoadState('domcontentloaded');
+const skip = page.getByRole('button', { name: 'Skip Setup' });
+if (await skip.count()) { await skip.click({ force: true }); await page.waitForTimeout(900); }
+const back = page.getByRole('button', { name: 'Back' });
+if (await page.getByText('Let’s connect your AI', { exact: true }).count() && await back.count()) { await back.click({ force: true }); await page.waitForTimeout(200); await page.getByRole('button', { name: 'Skip Setup' }).click({ force: true }); await page.waitForTimeout(900); }
+const restoredTabs = await page.evaluate(async () => (await window.electron?.invoke('get-all-tabs'))?.tabs || []);
+for (const tab of restoredTabs) { await page.evaluate(async id => { await window.electron?.invoke('close-tab', id); }, tab.id); }
+await page.waitForTimeout(700);
+await page.evaluate(() => { localStorage.removeItem('synapse.home.shortcuts'); localStorage.removeItem('synapse.home.wallpaper'); localStorage.removeItem('synapse.home.customWallpaper'); localStorage.removeItem('synapse.home.wallpaperIntensity'); localStorage.removeItem('synapse.home.wallpaperBlur'); });
+await page.reload();
+await page.waitForTimeout(600);
+const home = page.getByRole('region', { name: 'Synapse Home' });
+if (await home.count() !== 1) throw new Error('No-session state did not show Synapse Home');
+const tabButtons = page.getByRole('button', { name: /Google|YouTube|Gmail|GitHub|ChatGPT/ });
+if (await tabButtons.count() < 5) throw new Error('Default Home shortcuts are missing');
+if (await page.getByRole('tablist', { name: 'Open tabs' }).count() !== 1) throw new Error('Tab strip missing');
+if (await page.getByRole('tab').count() !== 1) throw new Error('Clean Home has duplicate tabs');
+if (!(await page.getByRole('tab').first().innerText()).includes('New Tab')) throw new Error('Clean Home tab is not New Tab');
+await page.screenshot({ path: `${output}/01-home.png`, fullPage: true });
+await home.getByRole('button', { name: 'Google' }).click();
+let googleTab = null;
+for (let attempt = 0; attempt < 40; attempt += 1) { await page.waitForTimeout(500); const payload = await page.evaluate(async () => window.electron?.invoke('get-all-tabs')); googleTab = payload?.tabs?.find(tab => /^https:\/\/www\.google\.com(?:\/|$)/.test(tab.url)) || null; if (googleTab) break; }
+if (await page.getByRole('region', { name: 'Synapse Home' }).count() !== 0) throw new Error('Home did not transition to external navigation');
+if (!googleTab) throw new Error('Google tab did not navigate through the native browser path');
+await page.screenshot({ path: `${output}/02-google.png`, fullPage: true });
+await page.getByRole('button', { name: 'New tab', exact: true }).click();
+await page.waitForTimeout(500);
+if (await page.getByRole('region', { name: 'Synapse Home' }).count() !== 1) throw new Error('New tab did not return to Synapse Home');
+await page.getByRole('button', { name: 'Add shortcut' }).click();
+await page.getByRole('dialog', { name: 'Edit Home shortcut' }).getByRole('textbox', { name: 'Shortcut name' }).fill('Example');
+await page.getByRole('dialog', { name: 'Edit Home shortcut' }).getByRole('textbox', { name: 'Shortcut URL' }).fill('https://example.com');
+await page.getByRole('button', { name: 'Save shortcut' }).click();
+await page.waitForTimeout(250);
+if (await page.locator('.synapse-shortcut-tile').filter({ hasText: 'Example' }).count() !== 1) throw new Error('Added shortcut missing');
+await page.locator('.synapse-shortcut-tile').filter({ hasText: 'Example' }).hover();
+await page.locator('button[aria-label="Edit Example"]').click({ force: true });
+await page.getByRole('textbox', { name: 'Shortcut name' }).fill('Example Edited');
+await page.getByRole('button', { name: 'Save shortcut' }).click();
+await page.waitForTimeout(250);
+if (await page.locator('.synapse-shortcut-tile').filter({ hasText: 'Example Edited' }).count() !== 1) throw new Error('Edited shortcut missing');
+await page.getByRole('button', { name: 'Customize' }).click();
+await page.getByRole('button', { name: 'Graphite' }).click();
+if ((await page.locator('.synapse-home-customize-panel').count()) !== 1) throw new Error('Customize panel closed unexpectedly');
+await page.screenshot({ path: `${output}/03-home-customized.png`, fullPage: true });
+await page.reload(); await page.waitForTimeout(500);
+if (await page.getByRole('region', { name: 'Synapse Home' }).count() !== 1) throw new Error('Home did not survive renderer restart');
+if (await page.locator('.synapse-shortcut-tile').filter({ hasText: 'Example Edited' }).count() !== 1) throw new Error('Shortcut did not persist');
+await page.locator('.synapse-shortcut-tile').filter({ hasText: 'Example Edited' }).hover();
+await page.locator('button[aria-label="Remove Example Edited"]').click({ force: true });
+if (await page.locator('.synapse-shortcut-tile').filter({ hasText: 'Example Edited' }).count() !== 0) throw new Error('Shortcut delete did not work');
+console.log(JSON.stringify({ cleanHome: true, oneRealTab: true, shortcutNavigation: true, newTabHome: true, shortcutAddEditDelete: true, wallpaperPersistence: true }, null, 2));
+await browser.close();

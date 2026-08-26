@@ -171,3 +171,25 @@
   .synapse-provider-option[aria-selected='true'] { color: var(--synapse-silver-highlight); background: rgba(174,180,185,.075); }
   @media (prefers-reduced-motion: reduce) { .synapse-provider-trigger, .synapse-provider-option { transition: none; } }
 }
+
+/* v1.0.6 Synapse Home material system. */
+@layer components {
+  .synapse-home { background-color: #000; isolation: isolate; }
+  .synapse-home::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 50% 38%, rgba(205,210,214,.08), transparent 34%), linear-gradient(180deg, rgba(255,255,255,.025), transparent 34%); z-index: 0; }
+  .synapse-home-overlay { background: #000; pointer-events: none; mix-blend-mode: multiply; z-index: 1; }
+  .synapse-home-content { animation: synapse-home-reveal .65s var(--synapse-ease, cubic-bezier(.2,.8,.2,1)) both; }
+  .synapse-home-mark { background: linear-gradient(145deg,#f5f6f6,#8f969b 58%,#42484c); box-shadow: 0 0 28px rgba(214,219,222,.12), inset 0 1px rgba(255,255,255,.8); }
+  .synapse-home-search { border: 1px solid var(--synapse-line-strong); background: rgba(8,8,8,.78); box-shadow: 0 16px 48px rgba(0,0,0,.45), inset 0 1px rgba(255,255,255,.05); transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
+  .synapse-home-search:focus-within { border-color: rgba(224,228,230,.55); box-shadow: 0 0 0 3px rgba(224,228,230,.07), 0 20px 58px rgba(0,0,0,.55); transform: translateY(-1px); }
+  .synapse-home-customize { color: var(--synapse-muted); border: 1px solid var(--synapse-line); background: rgba(255,255,255,.025); }
+  .synapse-home-customize:hover { color: var(--synapse-ink); border-color: var(--synapse-line-strong); background: rgba(255,255,255,.08); }
+  .synapse-shortcut-tile { border: 1px solid var(--synapse-line); background: rgba(10,10,10,.72); box-shadow: inset 0 1px rgba(255,255,255,.025); transition: border-color .2s ease, background .2s ease, transform .2s ease; }
+  .synapse-shortcut-tile:hover { border-color: var(--synapse-line-strong); background: rgba(174,180,185,.08); transform: translateY(-2px); }
+  .synapse-shortcut-glyph { display: flex; width: 26px; height: 26px; align-items: center; justify-content: center; border-radius: 9px; border: 1px solid rgba(218,222,224,.28); color: var(--synapse-silver-highlight); background: linear-gradient(145deg,rgba(255,255,255,.15),rgba(255,255,255,.025)); font-size: 11px; font-weight: 600; }
+  .synapse-shortcut-actions button { color: var(--synapse-muted); }
+  .synapse-shortcut-actions button:hover:not(:disabled) { color: var(--synapse-ink); }
+  .synapse-shortcut-actions button:disabled { opacity: .25; }
+  .synapse-home-customize-panel { border: 1px solid var(--synapse-line-strong); background: rgba(5,5,5,.94); box-shadow: 0 24px 70px rgba(0,0,0,.7), inset 0 1px rgba(255,255,255,.05); backdrop-filter: blur(18px); }
+  @keyframes synapse-home-reveal { from { opacity: 0; transform: translateY(10px) scale(.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  @media (prefers-reduced-motion: reduce) { .synapse-home-content, .synapse-home-search, .synapse-shortcut-tile { animation: none; transition: none; } }
+}
