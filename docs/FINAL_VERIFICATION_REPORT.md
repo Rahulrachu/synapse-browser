@@ -4,6 +4,12 @@
 
 The recovery and productization work is functionally advanced, but **v1.0.5 must not be published yet**. The core ORION browser-agent workflow is proven in the built Electron application on Linux, including real browser takeover, confirmation handling, page reading, and response rendering. Native Windows launch and the principal UI surfaces are proven by a successful CI evidence bundle. The requested completed Windows ORION workflow and real Windows screen recording are still missing, so the overall release gate remains blocked.
 
+## First-launch experience verification
+
+The basic Welcome card was redesigned into a first-launch-only cinematic flow. The implementation now includes a short Synapse boot stage with logo/orbit motion and staged readiness indicators, an ambient dark welcome reveal, a dedicated provider-selection and configuration screen, animated selected states, secure connection status messaging, and a final ORION-ready transition. Existing `synapse.onboardingComplete` persistence, Skip Setup semantics, provider IPC channels, main-process credential handling, accessible button/input labels, keyboard focus behavior, and reduced-motion fallbacks were retained.
+
+The built Electron renderer was visually inspected under `artifacts/onboarding-visual/`. The welcome and provider setup states rendered correctly, and the provider setup smoke confirmed the expected region and Save and Continue control. The persistence smoke confirmed the boot stage, Welcome stage, keyboard focus on Skip Setup, Skip Setup completion, persisted local-storage state, browser tabs after transition, and no onboarding screen after reload. The earliest boot frame was not captured by the current renderer-attached smoke because the app had already reached the renderer by connection time; a true process-launch recording remains a native desktop follow-up.
+
 ## ORION proof results
 
 ### Wikipedia Bangalore
@@ -25,6 +31,8 @@ Evidence is stored in `artifacts/real-orion-weather-wttr/`, including `04-final.
 These results verify the previously missing response surface: the AI panel visibly renders `ORION RESPONSE`, the final answer, `Finished`, update count, completion phase, confidence, and verified-evidence status.
 
 ## Native Windows evidence
+
+The previous successful Windows UI automation bundle predates the cinematic onboarding redesign. It remains valid evidence for the underlying native launch, browser, Settings, provider, ORION input, and running-state surfaces, but it must not be presented as visual acceptance of the new animation layer. A fresh packaged Windows run is required to validate the redesigned first-launch timing, DPI behavior, browser layering, and recording requirements.
 
 The successful Windows UI automation run `32935389959` produced and the project now contains `artifacts/windows-ui-evidence-ci/` with five 1024×720 screenshots:
 

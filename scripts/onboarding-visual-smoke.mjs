@@ -1,0 +1,17 @@
+import { chromium } from 'playwright';
+import fs from 'node:fs/promises';
+const endpoint = process.env.ELECTRON_CDP || 'http://127.0.0.1:9777';
+const output = process.env.SMOKE_OUTPUT || 'artifacts/onboarding-visual';
+await fs.mkdir(output, { recursive: true });
+const browser = await chromium.connectOverCDP(endpoint);
+const pages = browser.contexts()[0]?.pages() || [];
+const page = pages.find(item => item.url().includes('/out/renderer/index.html') || item.url().includes('renderer/index.html')) || pages.find(item => item.url().startsWith('file://'));
+if (!page) throw new Error('Renderer not found');
+await page.screenshot({ path: `${output}/01-boot.png`, fullPage: true });
+await page.waitForTimeout(2500);
+await page.screenshot({ path: `${output}/02-welcome.png`, fullPage: true });
+await page.getByRole('button', { name: 'Get Started' }).click();
+await page.waitForTimeout(300);
+await page.screenshot({ path: `${output}/03-provider-setup.png`, fullPage: true });
+console.log(JSON.stringify({ url: page.url(), title: await page.title(), welcome: await page.getByText('Welcome to Synapse Browser', { exact: true }).count(), provider: await page.getByRole('region', { name: 'Connect an AI provider' }).count(), controls: await page.getByRole('button', { name: 'Save and Continue' }).count() }, null, 2));
+await browser.close();

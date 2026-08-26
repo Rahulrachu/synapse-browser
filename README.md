@@ -17,6 +17,12 @@ Synapse Browser is an AI-first productivity desktop browser and developer enviro
 
 > **Release honesty:** v1.0.5 is not published. Native Windows launch, onboarding, Settings, AI input, and running-state screenshots are available from CI, but a completed Windows ORION workflow and the requested real Windows screen recording are not yet available. The release remains blocked rather than being marked PASS without evidence.
 
+## First Launch Experience
+
+Synapse provides a guided first-launch experience for configuring AI and introducing ORION. A short cinematic boot sequence establishes the Synapse core, then transitions into the Welcome screen and a dedicated provider setup flow. Users can choose a provider, test a connection, save credentials securely, or use Skip Setup and configure AI later from Settings. The experience respects reduced-motion preferences, keeps keyboard focus and accessible labels, and leaves returning launches fast by preserving the existing onboarding-completion flag.
+
+The cinematic implementation has been visually inspected in the built Electron renderer under `artifacts/onboarding-visual/`. The native Windows evidence bundle currently attached to CI was captured before this visual redesign; a fresh Windows packaged-app run is still required before claiming Windows visual acceptance for the new animation layer.
+
 ## ORION browser agent
 
 ORION observes the active website, plans bounded actions, uses semantic browser tools, verifies important results, and pauses for confirmation before consequential or cross-origin actions. Provider configuration is optional at startup and can be completed during onboarding or later in Settings. Supported provider families include OpenAI-compatible endpoints, Google, Anthropic, OpenRouter, Groq, Ollama, and custom OpenAI-compatible services.
