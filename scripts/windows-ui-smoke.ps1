@@ -41,7 +41,7 @@ function Capture($window, [string]$name) {
   $graphics.Dispose(); $bitmap.Dispose()
 }
 
-$process = Start-Process -FilePath $exe -ArgumentList '--no-sandbox','--disable-gpu' -PassThru
+$process = Start-Process -FilePath $exe -ArgumentList '--no-sandbox','--disable-gpu','--e2e' -PassThru
 try {
   Start-Sleep -Seconds 8
   $window = Get-AppWindow
