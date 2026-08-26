@@ -163,11 +163,11 @@ describe('BrowserManager', () => {
     expect(DownloadManager.registerSession).toHaveBeenCalled();
   });
 
-  it('clamps browser bounds so the native view cannot cover the AI panel', () => {
+  it('clamps browser bounds to the measured renderer container without a fixed AI-panel reserve', () => {
     const tabId = BrowserManager.createTab('https://layout.example');
     const view = BrowserManager['tabViews'].get(tabId);
     BrowserManager.setBrowserAreaBounds({ x: 0, y: 0, width: 1600, height: 1000 });
-    expect(view.setBounds).toHaveBeenCalledWith(expect.objectContaining({ x: 72, y: 96, width: 572, height: 640 }));
+    expect(view.setBounds).toHaveBeenCalledWith(expect.objectContaining({ x: 72, y: 96, width: 952, height: 640 }));
   });
 
   it('captures screenshot metadata from the active WebContentsView', async () => {

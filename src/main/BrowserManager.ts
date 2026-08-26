@@ -368,7 +368,7 @@ class BrowserManager {
     view.setBounds(this.clampBrowserBounds(this.currentBrowserBounds || {
       x: 72,
       y: 96,
-      width: content.width - 72 - 380,
+      width: content.width - 72,
       height: content.height - 96 - 32,
     }, content));
   }
@@ -376,7 +376,7 @@ class BrowserManager {
   private clampBrowserBounds(bounds: BrowserBounds, content: { width: number; height: number }): BrowserBounds {
     const x = Math.max(72, Math.round(Number.isFinite(bounds.x) ? bounds.x : 72));
     const y = Math.max(96, Math.round(Number.isFinite(bounds.y) ? bounds.y : 96));
-    const maxWidth = Math.max(320, content.width - x - 380);
+    const maxWidth = Math.max(320, content.width - x);
     const maxHeight = Math.max(240, content.height - y - 32);
     return {
       x,

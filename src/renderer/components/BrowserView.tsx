@@ -1,9 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 
-interface BrowserViewProps { tabId: string | null; }
+interface BrowserViewProps { tabId: string | null; layoutKey?: string; }
 type BrowserBounds = { x: number; y: number; width: number; height: number };
 
-const BrowserView: React.FC<BrowserViewProps> = ({ tabId }) => {
+const BrowserView: React.FC<BrowserViewProps> = ({ tabId, layoutKey = '' }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const lastBounds = useRef<BrowserBounds>({ x: -1, y: -1, width: -1, height: -1 });
 
@@ -23,7 +23,7 @@ const BrowserView: React.FC<BrowserViewProps> = ({ tabId }) => {
     resizeObserver.observe(container);
     window.addEventListener('resize', updateBounds);
     return () => { cancelAnimationFrame(frame); window.clearTimeout(delayedFrame); resizeObserver.disconnect(); window.removeEventListener('resize', updateBounds); };
-  }, []);
+  }, [tabId, layoutKey]);
 
   return <div ref={containerRef} className="relative flex-1 min-h-0 min-w-0 overflow-hidden bg-black">{!tabId && <div className="flex h-full items-center justify-center text-gray-400"><p>No active tab</p></div>}</div>;
 };

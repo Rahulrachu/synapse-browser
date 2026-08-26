@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "synapse-browser",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "desktopName": "synapse-browser",
   "main": "out/main/background.cjs",
   "description": "AI-First Productivity Browser",

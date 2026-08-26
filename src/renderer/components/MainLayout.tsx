@@ -22,6 +22,38 @@ const panelLabels: Record<Panel, string> = {
 
 type WorkspaceFile = { name?: string; path?: string; relativePath?: string; isDirectory?: boolean; type?: string };
 
+type ProviderOption = { value: string; label: string };
+const providerOptions: ProviderOption[] = [
+  { value: 'openai', label: 'OpenAI' }, { value: 'google', label: 'Google Gemini' },
+  { value: 'anthropic', label: 'Anthropic Claude' }, { value: 'openrouter', label: 'OpenRouter' },
+  { value: 'groq', label: 'Groq' }, { value: 'ollama', label: 'Ollama / local model' },
+  { value: 'custom', label: 'Custom OpenAI-compatible' },
+];
+
+function ProviderSelect({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const selectedIndex = Math.max(0, providerOptions.findIndex(option => option.value === value));
+  const selected = providerOptions[selectedIndex] || providerOptions[0];
+  useEffect(() => {
+    if (!open) return;
+    const close = (event: MouseEvent) => { if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false); };
+    document.addEventListener('mousedown', close);
+    return () => document.removeEventListener('mousedown', close);
+  }, [open]);
+  const choose = (next: string) => { onChange(next); setOpen(false); };
+  return <div ref={rootRef} className="synapse-provider-select relative">
+    <button type="button" role="combobox" aria-label="AI provider" aria-expanded={open} aria-controls="synapse-provider-options" onClick={() => setOpen(current => !current)} onKeyDown={event => {
+      if (event.key === 'Escape') { event.preventDefault(); setOpen(false); }
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') { event.preventDefault(); const direction = event.key === 'ArrowDown' ? 1 : -1; choose(providerOptions[(selectedIndex + direction + providerOptions.length) % providerOptions.length].value); }
+      if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); setOpen(current => !current); }
+    }} className="synapse-provider-trigger flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs text-white outline-none focus-visible:ring-2 focus-visible:ring-white/40"><span>{selected.label}</span><ChevronRight size={13} className={`transition-transform ${open ? 'rotate-90' : ''}`} /></button>
+    {open && <div id="synapse-provider-options" role="listbox" aria-label="AI provider options" className="synapse-provider-menu absolute left-0 right-0 top-[calc(100%+6px)] z-50 rounded-xl p-1">
+      {providerOptions.map(option => <button type="button" role="option" aria-selected={option.value === value} key={option.value} onClick={() => choose(option.value)} className="synapse-provider-option flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs"><span>{option.label}</span>{option.value === value && <span aria-hidden="true">✓</span>}</button>)}
+    </div>}
+  </div>;
+}
+
 function FilesWorkspace() {
   const [projectPath, setProjectPath] = useState(localStorage.getItem('synapse.projectPath') || '');
   const [projectId, setProjectId] = useState(localStorage.getItem('synapse.projectId') || '');
@@ -103,7 +135,7 @@ function SettingsPanel({ onClose }: { onClose: () => void }) {
         <label className="flex cursor-pointer items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.03] p-4"><span><span className="block text-sm text-white">Reduce motion</span><span className="mt-1 block text-xs text-white/40">Use shorter transitions throughout the workspace.</span></span><input aria-label="Reduce motion" type="checkbox" checked={reduceMotion} onChange={event => { setReduceMotion(event.target.checked); update('synapse.reduceMotion', event.target.checked); }} /></label>
         <label className="flex cursor-pointer items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.03] p-4"><span><span className="block text-sm text-white">Developer tools on startup</span><span className="mt-1 block text-xs text-white/40">Remember the developer-tools preference for the next launch.</span></span><input aria-label="Developer tools on startup" type="checkbox" checked={showDevtools} onChange={event => { setShowDevtools(event.target.checked); update('synapse.showDevtools', event.target.checked); }} /></label>
       </div>
-      <div className="mt-6 rounded-xl border border-white/[0.08] bg-white/[0.03] p-4"><div className="flex items-center justify-between"><div><h3 className="text-sm text-white">AI provider</h3><p className="mt-1 text-xs text-white/40">{aiConfigured ? 'Configured. Enter a new key only when replacing it.' : 'Add an OpenAI-compatible API key to run ORION.'}</p></div><span className={`text-[10px] uppercase tracking-wider ${aiConfigured ? 'text-emerald-300' : 'text-amber-200'}`}>{aiConfigured ? 'Configured' : 'Needs setup'}</span></div><div className="mt-4 space-y-2"><select aria-label="AI provider" value={provider} onChange={event => setProvider(event.target.value)} className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-white outline-none"><option value="openai">OpenAI</option><option value="google">Google Gemini</option><option value="anthropic">Anthropic Claude</option><option value="openrouter">OpenRouter</option><option value="groq">Groq</option><option value="ollama">Ollama / local model</option><option value="custom">Custom OpenAI-compatible</option></select><input aria-label="OpenAI API key" type="password" autoComplete="off" value={apiKey} onChange={event => setApiKey(event.target.value)} placeholder={aiConfigured ? '••••••••  (saved key)' : 'sk-…'} className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-white outline-none focus:border-white/30" /><input aria-label="AI base URL" value={baseUrl} onChange={event => setBaseUrl(event.target.value)} placeholder="https://api.openai.com/v1" className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-white outline-none focus:border-white/30" /><input aria-label="AI model" value={model} onChange={event => setModel(event.target.value)} placeholder="gpt-4.1-mini" className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-white outline-none focus:border-white/30" /></div><div className="mt-3 flex items-center justify-between"><span className="text-[10px] text-white/35">The key is never returned to the renderer.</span><div className="flex gap-2"><button type="button" onClick={() => void resetAIConfig()} className="rounded-lg border border-white/10 px-3 py-2 text-[11px] text-white/60 hover:bg-white/10">Reset</button><button type="button" onClick={() => void saveAIConfig()} className="rounded-lg bg-white px-3 py-2 text-[11px] font-medium text-black hover:bg-white/90">Save AI settings</button></div></div>{aiMessage && <p className="mt-3 text-[11px] text-white/55">{aiMessage}</p>}</div>
+      <div className="mt-6 rounded-xl border border-white/[0.08] bg-white/[0.03] p-4"><div className="flex items-center justify-between"><div><h3 className="text-sm text-white">AI provider</h3><p className="mt-1 text-xs text-white/40">{aiConfigured ? 'Configured. Enter a new key only when replacing it.' : 'Add an OpenAI-compatible API key to run ORION.'}</p></div><span className={`text-[10px] uppercase tracking-wider ${aiConfigured ? 'text-emerald-300' : 'text-amber-200'}`}>{aiConfigured ? 'Configured' : 'Needs setup'}</span></div><div className="mt-4 space-y-2"><ProviderSelect value={provider} onChange={setProvider} /><input aria-label="OpenAI API key" type="password" autoComplete="off" value={apiKey} onChange={event => setApiKey(event.target.value)} placeholder={aiConfigured ? '••••••••  (saved key)' : 'sk-…'} className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-white outline-none focus:border-white/30" /><input aria-label="AI base URL" value={baseUrl} onChange={event => setBaseUrl(event.target.value)} placeholder="https://api.openai.com/v1" className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-white outline-none focus:border-white/30" /><input aria-label="AI model" value={model} onChange={event => setModel(event.target.value)} placeholder="gpt-4.1-mini" className="w-full rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-xs text-white outline-none focus:border-white/30" /></div><div className="mt-3 flex items-center justify-between"><span className="text-[10px] text-white/35">The key is never returned to the renderer.</span><div className="flex gap-2"><button type="button" onClick={() => void resetAIConfig()} className="rounded-lg border border-white/10 px-3 py-2 text-[11px] text-white/60 hover:bg-white/10">Reset</button><button type="button" onClick={() => void saveAIConfig()} className="rounded-lg bg-white px-3 py-2 text-[11px] font-medium text-black hover:bg-white/90">Save AI settings</button></div></div>{aiMessage && <p className="mt-3 text-[11px] text-white/55">{aiMessage}</p>}</div>
       <div className="mt-6 flex justify-end"><button type="button" onClick={onClose} className="rounded-lg bg-white px-4 py-2 text-xs font-medium text-black hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50">Done</button></div>
     </section>
   </div>;
@@ -137,7 +169,7 @@ const MainLayout: React.FC = () => {
   }, [desktop]);
 
   useEffect(() => { const active = tabs.find(tab => tab.id === activeTabId); if (active) setAddressBarValue(active.url); }, [activeTabId, tabs]);
-  useEffect(() => { if (desktop) void window.electron.invoke('set-browser-view-visibility', panel === 'browser' && !isAIPanelOpen && !settingsOpen && !commandOpen); }, [desktop, panel, isAIPanelOpen, settingsOpen, commandOpen]);
+  useEffect(() => { if (desktop) void window.electron.invoke('set-browser-view-visibility', panel === 'browser' && !settingsOpen && !commandOpen); }, [desktop, panel, settingsOpen, commandOpen]);
   useEffect(() => { const onKeyDown = (event: KeyboardEvent) => { if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') { event.preventDefault(); setCommandOpen(value => !value); } if (event.key === 'Escape') setCommandOpen(false); }; window.addEventListener('keydown', onKeyDown); return () => window.removeEventListener('keydown', onKeyDown); }, []);
 
   const activeTab = tabs.find(tab => tab.id === activeTabId);
@@ -178,7 +210,7 @@ const MainLayout: React.FC = () => {
           <div className="address-bar synapse-address flex min-w-0 flex-1 items-center gap-2"><Search size={14} className="shrink-0 text-white/35" /><input ref={addressBarRef} aria-label="Address bar" className="w-full bg-transparent text-xs text-white/80 outline-none" value={addressBarValue} onChange={event => setAddressBarValue(event.target.value)} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); navigate(); } }} /><button type="button" aria-label="Bookmark current page" title="Bookmark current page" onClick={() => void invoke('add-bookmark', activeTabId)} className="text-white/35 hover:text-white"><Star size={14} /></button><button type="button" aria-label="More browser actions" title="More browser actions" className="text-white/35 hover:text-white"><MoreHorizontal size={14} /></button></div>
         </div>
       </header>
-      <div className="synapse-browser-stage relative min-h-0 flex-1 overflow-hidden">{panel === 'browser' ? <BrowserView tabId={activeTabId} /> : <div className="synapse-workspace h-full"><WorkspaceSurface panel={panel} /></div>}</div>
+      <div className="synapse-browser-stage relative min-h-0 flex-1 overflow-hidden">{panel === 'browser' ? <BrowserView tabId={activeTabId} layoutKey={`${panel}:${isAIPanelOpen}`} /> : <div className="synapse-workspace h-full"><WorkspaceSurface panel={panel} /></div>}</div>
       <footer className="synapse-footer flex h-7 shrink-0 items-center justify-between border-t px-4 text-[10px] uppercase tracking-wider text-white/30"><span className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />Ready</span><span>Tabs: {tabs.length}</span></footer>
     </main>
     {isAIPanelOpen && panel === 'browser' && <aside className="synapse-surface synapse-orion-shell z-20 flex w-[380px] shrink-0 flex-col rounded-none border-y-0 border-r-0" aria-label="AI workspace"><AIWorkspacePanel /></aside>}
