@@ -73,30 +73,33 @@
 
 /* Synapse product design system: one restrained visual language across browser, workspace, and ORION. */
 :root {
-  --synapse-ink: #f4f7fb;
-  --synapse-muted: rgba(226, 235, 248, .48);
-  --synapse-dim: rgba(226, 235, 248, .28);
-  --synapse-line: rgba(197, 219, 250, .11);
-  --synapse-line-strong: rgba(197, 219, 250, .22);
-  --synapse-surface: rgba(13, 17, 24, .82);
-  --synapse-surface-raised: rgba(21, 27, 37, .88);
-  --synapse-blue: #b7d2f8;
+  --synapse-ink: #e8eaec;
+  --synapse-muted: rgba(205, 210, 214, .52);
+  --synapse-dim: rgba(157, 163, 169, .34);
+  --synapse-line: rgba(151, 157, 163, .16);
+  --synapse-line-strong: rgba(190, 196, 201, .34);
+  --synapse-surface: rgba(3, 4, 5, .94);
+  --synapse-surface-raised: rgba(10, 11, 12, .96);
+  --synapse-silver-dark: #72777d;
+  --synapse-silver: #aeb4b9;
+  --synapse-silver-highlight: #d0d4d7;
+  --synapse-blue: #c7dcf8;
   --synapse-success: #9fe0bd;
   --synapse-warning: #f0c782;
   --synapse-ease: cubic-bezier(.2, .8, .2, 1);
 }
 
 @layer components {
-  .synapse-app-shell { background: radial-gradient(circle at 72% -10%, rgba(103, 143, 201, .13), transparent 32%), #030405; }
-  .synapse-surface { border: 1px solid var(--synapse-line); background: var(--synapse-surface); box-shadow: 0 18px 60px rgba(0,0,0,.34), inset 0 1px rgba(255,255,255,.035); backdrop-filter: blur(22px) saturate(125%); }
-  .synapse-surface-raised { border: 1px solid var(--synapse-line); background: var(--synapse-surface-raised); box-shadow: 0 24px 80px rgba(0,0,0,.42), inset 0 1px rgba(255,255,255,.05); backdrop-filter: blur(26px) saturate(130%); }
+  .synapse-app-shell { background: radial-gradient(circle at 72% -10%, rgba(126, 151, 178, .055), transparent 30%), #000; }
+  .synapse-surface { border: 1px solid var(--synapse-line); background: var(--synapse-surface); box-shadow: 0 18px 60px rgba(0,0,0,.52), inset 0 1px rgba(208,212,215,.035); }
+  .synapse-surface-raised { border: 1px solid var(--synapse-line); background: var(--synapse-surface-raised); box-shadow: 0 24px 80px rgba(0,0,0,.64), inset 0 1px rgba(208,212,215,.055); }
   .synapse-icon-button { display: inline-flex; align-items: center; justify-content: center; border: 1px solid transparent; border-radius: 10px; color: var(--synapse-dim); transition: transform .2s var(--synapse-ease), color .2s ease, background .2s ease, border-color .2s ease, box-shadow .2s ease; }
   .synapse-icon-button:hover, .synapse-icon-button.active { color: var(--synapse-ink); border-color: var(--synapse-line); background: rgba(173, 207, 255, .08); box-shadow: 0 0 24px rgba(130, 174, 239, .08); transform: translateY(-1px); }
   .synapse-icon-button:active { transform: scale(.96); }
   .synapse-active-rail { position: relative; }
   .synapse-active-rail::before { content: ''; position: absolute; left: -9px; top: 8px; bottom: 8px; width: 2px; border-radius: 99px; background: var(--synapse-blue); box-shadow: 0 0 14px rgba(183,210,248,.7); }
-  .synapse-toolbar { background: rgba(8, 11, 16, .78); border-color: var(--synapse-line); backdrop-filter: blur(24px) saturate(130%); }
-  .synapse-browser-stage { background: radial-gradient(circle at 50% 0%, rgba(44, 71, 110, .1), transparent 42%), #020304; }
+  .synapse-toolbar { background: rgba(0, 0, 0, .94); border-color: var(--synapse-line); }
+  .synapse-browser-stage { background: radial-gradient(circle at 50% 0%, rgba(112, 127, 142, .035), transparent 38%), #000; }
   .synapse-address { border: 1px solid var(--synapse-line); background: rgba(255,255,255,.035); box-shadow: inset 0 1px rgba(255,255,255,.025); transition: border-color .25s ease, background .25s ease, box-shadow .25s ease; }
   .synapse-address:focus-within { border-color: var(--synapse-line-strong); background: rgba(173,207,255,.065); box-shadow: 0 0 28px rgba(100, 147, 214, .1), inset 0 1px rgba(255,255,255,.06); }
   .synapse-tab { position: relative; border: 1px solid transparent; border-radius: 10px 10px 7px 7px; color: var(--synapse-dim); transition: transform .25s var(--synapse-ease), background .25s ease, color .25s ease, border-color .25s ease; }
@@ -108,11 +111,11 @@
   .synapse-workspace { animation: synapse-surface-enter .32s var(--synapse-ease) both; }
   .synapse-modal-backdrop { background: rgba(0,0,0,.66); backdrop-filter: blur(14px); animation: onboarding-fade-in .25s ease both; }
   .synapse-modal { animation: onboarding-card-in .32s var(--synapse-ease) both; }
-  .synapse-orion-shell { background: radial-gradient(circle at 50% 0%, rgba(105, 151, 222, .1), transparent 40%), rgba(8, 11, 16, .9); }
+  .synapse-orion-shell { background: radial-gradient(circle at 50% 0%, rgba(173, 191, 210, .07), transparent 38%), #020303; }
   .synapse-orion-presence { animation: synapse-breathe 4s ease-in-out infinite; } .synapse-orion-presence.is-active { animation-duration: 1.3s; box-shadow: 0 0 32px rgba(183,210,248,.2); }
   .synapse-orion-response { border-color: rgba(159,224,189,.22); background: linear-gradient(135deg, rgba(159,224,189,.075), rgba(255,255,255,.02)); animation: synapse-surface-enter .35s var(--synapse-ease) both; }
   .synapse-timeline-item { animation: synapse-timeline-in .32s var(--synapse-ease) both; }
-  .synapse-command { border: 1px solid var(--synapse-line-strong); background: rgba(12,16,23,.92); box-shadow: 0 30px 110px rgba(0,0,0,.58); backdrop-filter: blur(30px); }
+  .synapse-command { border: 1px solid var(--synapse-line-strong); background: rgba(2,2,2,.97); box-shadow: 0 30px 110px rgba(0,0,0,.58); backdrop-filter: blur(30px); }
 }
 
 @keyframes synapse-progress { from { transform: translateX(-120%); } to { transform: translateX(560%); } }
@@ -139,4 +142,20 @@
   [role="tab"]:focus-visible { outline: 2px solid rgba(183,210,248,.7); outline-offset: 2px; }
   [role="dialog"] input, [role="dialog"] select { border-color: var(--synapse-line) !important; background: rgba(255,255,255,.025) !important; }
   [role="dialog"] input:focus, [role="dialog"] select:focus { border-color: var(--synapse-line-strong) !important; box-shadow: 0 0 24px rgba(100,147,214,.1); }
+}
+
+/* OLED + natural aluminum material pass */
+@layer components {
+  .synapse-app-shell .synapse-icon-button:hover, .synapse-app-shell .synapse-icon-button.active { background: rgba(174, 180, 185, .075); box-shadow: 0 0 24px rgba(174,180,185,.07); }
+  .synapse-app-shell .synapse-active-rail::before { background: var(--synapse-silver-highlight); box-shadow: 0 0 12px rgba(208,212,215,.48); }
+  .synapse-app-shell .synapse-address:focus-within { background: rgba(174,180,185,.045); box-shadow: 0 0 22px rgba(174,180,185,.06), inset 0 1px rgba(208,212,215,.07); }
+  .synapse-app-shell .synapse-tab:hover { background: rgba(174,180,185,.035); }
+  .synapse-app-shell .synapse-tab.active { background: linear-gradient(180deg, rgba(174,180,185,.1), rgba(255,255,255,.025)); }
+  .synapse-app-shell .synapse-tab.active::before { background: linear-gradient(90deg, var(--synapse-silver-dark), var(--synapse-silver-highlight), var(--synapse-silver-dark)); box-shadow: 0 0 10px rgba(208,212,215,.46); }
+  .synapse-brand-mark, .onboarding-logo { background: linear-gradient(145deg, var(--synapse-silver-highlight), var(--synapse-silver), var(--synapse-silver-dark)); color: #050505; box-shadow: 0 0 30px rgba(174,180,185,.12); }
+  .onboarding-button-primary { color: #080808; background: linear-gradient(145deg, var(--synapse-silver-highlight), var(--synapse-silver), var(--synapse-silver-dark)); box-shadow: 0 10px 28px rgba(174,180,185,.1); }
+  .onboarding-button-primary:hover { box-shadow: 0 12px 34px rgba(208,212,215,.18); }
+  .onboarding-provider.is-selected { border-color: rgba(208,212,215,.54); background: rgba(174,180,185,.08); box-shadow: inset 0 0 0 1px rgba(208,212,215,.06), 0 8px 24px rgba(0,0,0,.2); }
+  .onboarding-provider-icon { color: var(--synapse-silver-highlight); background: rgba(174,180,185,.1); }
+  .onboarding-stage::before { background: radial-gradient(circle at 50% 45%, rgba(174,180,185,.07), transparent 34%), radial-gradient(circle at 15% 10%, rgba(255,255,255,.025), transparent 25%), #000; }
 }

@@ -6,9 +6,9 @@ The productization work is on branch `productization/v1.0.5`; **v1.0.5 is not pu
 
 | Gate | Status | Evidence or limitation |
 |---|---|---|
-| Installer/package | PASS | Native GitHub Actions packaging produced Windows artifacts. |
+| Installer/package | PASS | `pnpm dist:win` produced `release/Synapse-Browser-1.0.5-win-x64.zip` (177 MB) and `release/win-unpacked/Synapse Browser.exe` (216 MB, PE32+ x64). |
 | Launch | PASS | Native Windows packaged executable survived the launch smoke. |
-| Onboarding and browser shell | PASS WITH PRIOR EVIDENCE | Native Windows UI Automation run `32935389959` produced `artifacts/windows-ui-evidence-ci/01-launch.png` and `02-after-skip.png`; those screenshots predate the whole-product visual redesign. |
+| Onboarding and browser shell | NOT VERIFIED FOR OLED PASS | Prior native Windows UI Automation screenshots exist, but they predate the OLED/silver redesign. The current sandbox cannot execute the new Windows binary. |
 | Settings and provider setup UI | PASS | Native Windows evidence `03-settings.png` visibly shows provider, key, base URL, model, save, and reset controls. Provider-backed Windows connection was not tested. |
 | AI input | PASS | Native Windows evidence `04-ai-input.png` shows the ORION panel and prompt control. |
 | ORION running state | PASS | Native Windows evidence `05-ai-running.png` shows a submitted prompt and the agent attention/failure state. |
@@ -16,7 +16,7 @@ The productization work is on branch `productization/v1.0.5`; **v1.0.5 is not pu
 | Files, editor, terminal, tabs, database, restart, shortcuts | NOT VERIFIED | Not completed in the native Windows acceptance pass. |
 | Screenshot | PASS | Five native Windows screenshots are available under `artifacts/windows-ui-evidence-ci/`. |
 | Screen recording | FAIL | No real Windows `.exe` screen recording was captured or uploaded. |
-| Overall Windows gate | BLOCKED | Native launch and core UI are evidenced; full ORION completion and the requested recording remain open. |
+| Overall Windows gate | BLOCKED | The updated package exists, but native execution, completed ORION takeover, and the requested recording remain open. |
 
 ## PLATFORM: macOS
 
@@ -63,8 +63,8 @@ The current local build completed successfully, and the test suite previously re
 CODE: PASS — current application sources build and typecheck
 TESTS: PASS — existing suite previously reported 37 tests across 9 files
 BUILD: PASS
-WINDOWS PACKAGE: PASS
-WINDOWS LAUNCH/UI: PASS WITH EVIDENCE
+WINDOWS PACKAGE: PASS — OLED/silver ZIP and unpacked EXE built
+WINDOWS LAUNCH/UI: NOT VERIFIED FOR OLED PASS
 WINDOWS COMPLETED ORION: NOT VERIFIED
 WINDOWS SCREEN RECORDING: FAIL
 MACOS PACKAGE: PASS

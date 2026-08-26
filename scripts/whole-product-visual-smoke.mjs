@@ -9,7 +9,7 @@ const page = pages.find(item => item.url().includes('/out/renderer/index.html') 
 if (!page) throw new Error('Renderer not found');
 await page.waitForLoadState('domcontentloaded');
 const onboarding = page.getByText('Welcome to Synapse Browser', { exact: true });
-if (await onboarding.count()) { await page.getByRole('button', { name: 'Skip Setup' }).click({ force: true }); await page.waitForTimeout(1600); }
+if (await onboarding.count()) { await page.getByRole('button', { name: 'Skip Setup' }).click({ force: true }); await page.waitForTimeout(1600); } else if (await page.getByText('Let’s connect your AI', { exact: true }).count()) { await page.getByRole('button', { name: 'Back' }).click({ force: true }); await page.waitForTimeout(250); await page.getByRole('button', { name: 'Skip Setup' }).click({ force: true }); await page.waitForTimeout(1600); }
 await page.screenshot({ path: `${output}/01-browser-shell.png`, fullPage: true });
 await page.getByRole('button', { name: 'Toggle AI panel' }).click(); await page.waitForTimeout(250); await page.screenshot({ path: `${output}/02-orion.png`, fullPage: true });
 await page.getByRole('button', { name: 'Files' }).click(); await page.waitForTimeout(250); await page.screenshot({ path: `${output}/03-files.png`, fullPage: true });

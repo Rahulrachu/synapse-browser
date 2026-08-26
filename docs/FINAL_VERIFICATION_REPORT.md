@@ -36,9 +36,13 @@ Evidence is stored in `artifacts/real-orion-weather-wttr/`, including `04-final.
 
 These results verify the previously missing response surface: the AI panel visibly renders `ORION RESPONSE`, the final answer, `Finished`, update count, completion phase, confidence, and verified-evidence status.
 
+## OLED/silver Windows package
+
+The updated branch was packaged successfully with `pnpm dist:win`. The generated artifacts are `release/Synapse-Browser-1.0.5-win-x64.zip` (177 MB) and `release/win-unpacked/Synapse Browser.exe` (216 MB, PE32+ x64). The sandbox contains no Wine, PowerShell, or native Windows runtime, so the new `.exe` could not be launched here. The package build is verified; native Windows execution, DPI, WebContentsView layering, provider-backed ORION completion, and the requested recording remain unverified.
+
 ## Native Windows evidence
 
-The previous successful Windows UI automation bundle predates the cinematic onboarding redesign. It remains valid evidence for the underlying native launch, browser, Settings, provider, ORION input, and running-state surfaces, but it must not be presented as visual acceptance of the new animation layer. A fresh packaged Windows run is required to validate the redesigned first-launch timing, DPI behavior, browser layering, and recording requirements.
+The previous successful Windows UI automation bundle predates both the whole-product visual redesign and the OLED/silver material pass. It remains valid evidence for the underlying native launch, browser, Settings, provider, ORION input, and running-state surfaces, but it must not be presented as visual acceptance of the new material layer. A fresh packaged Windows run is required to validate the updated first-launch timing, DPI behavior, browser layering, and recording requirements.
 
 The successful Windows UI automation run `32935389959` produced and the project now contains `artifacts/windows-ui-evidence-ci/` with five 1024×720 screenshots:
 

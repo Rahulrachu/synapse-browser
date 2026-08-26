@@ -15,7 +15,7 @@ Synapse Browser is an AI-first productivity desktop browser and developer enviro
 | ORION browser agent | Functional beta | Real provider-backed Linux proof completed visible navigation, confirmation approval, page reading, and rendered final responses for Wikipedia Bangalore and a Google-weather task with a wttr.in fallback. |
 | Cloud sync and advanced extensions | Planned/experimental | Not required for core startup and not part of the v1.0.5 acceptance claim. |
 
-> **Release honesty:** v1.0.5 is not published. Native Windows launch, onboarding, Settings, AI input, and running-state screenshots are available from CI, but a completed Windows ORION workflow and the requested real Windows screen recording are not yet available. The release remains blocked rather than being marked PASS without evidence.
+> **Release honesty:** v1.0.5 is not published. The OLED/silver Windows package is now built at `release/Synapse-Browser-1.0.5-win-x64.zip`, but this sandbox cannot execute native Windows binaries. Native Windows launch, onboarding, Settings, AI input, and running-state screenshots are available from CI; a completed Windows ORION workflow and the requested real Windows screen recording are not yet available. The release remains blocked rather than being marked PASS without evidence.
 
 ## Synapse product experience
 
