@@ -49,10 +49,22 @@ try {
   Capture $window '01-launch'
 
   $skip = Find-Name $window 'Skip Setup' 3
-  if ($skip) { $skip.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke(); Start-Sleep -Seconds 2; Capture $window '02-after-skip' }
   $getStarted = Find-Name $window 'Get Started' 2
-  if ($getStarted) { $getStarted.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke(); Start-Sleep -Seconds 1; $skip = Find-Name $window 'Skip Setup'; if ($skip) { $skip.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke(); Start-Sleep -Seconds 2 } }
+  if ($getStarted) {
+    $getStarted.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke(); Start-Sleep -Seconds 1
+    $back = Find-Name $window 'Back' 2
+    if ($back) { $back.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke(); Start-Sleep -Seconds 1 }
+    $skip = Find-Name $window 'Skip Setup' 2
+  }
+  if ($skip) { $skip.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke(); Start-Sleep -Seconds 2; Capture $window '02-after-skip' }
 
+  foreach ($surface in @(@('Files','Files workspace'), @('Editor','Editor workspace'), @('Terminal','Terminal workspace'), @('History','History workspace'), @('Bookmarks','Bookmarks workspace'), @('Downloads','Downloads workspace'))) {
+    Invoke-Name $window $surface[0]
+    Start-Sleep -Milliseconds 300
+    if (-not (Find-Name $window $surface[1] 2)) { throw "Sidebar surface did not open: $($surface[0])" }
+  }
+  Invoke-Name $window 'Browser and AI'
+  Start-Sleep -Milliseconds 300
   Invoke-Name $window 'Open Settings'
   Start-Sleep -Milliseconds 500
   Capture $window '03-settings'
