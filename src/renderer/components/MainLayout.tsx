@@ -29,7 +29,7 @@ const searchEngineOptions = [
 function resolveSearchOrUrl(input: string, engine = localStorage.getItem('synapse.searchEngine') || 'google'): string {
   const value = input.trim();
   if (!value) return 'about:blank';
-  if (/^about:/i.test(value) || /^[a-z][a-z\\d+.-]*:\\/\\//i.test(value)) return value;
+  if (/^about:/i.test(value) || /^[a-z][a-z\d+.-]*:\/\//i.test(value)) return value;
   const selected = searchEngineOptions.find(option => option.value === engine) || searchEngineOptions[0];
   return `${selected.url}${encodeURIComponent(value)}`;
 }
