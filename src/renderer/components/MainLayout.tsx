@@ -146,7 +146,8 @@ const MainLayout: React.FC = () => {
   const selectPanel = (next: Panel) => { setSettingsOpen(false); setPanel(next); };
   const sidebarButton = (next: Panel, icon: React.ReactNode, label: string) => <button type="button" aria-label={label} title={label} onClick={() => selectPanel(next)} className={`sidebar-icon synapse-icon-button ${panel === next ? 'active synapse-active-rail' : ''} focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50`}>{icon}</button>;
   const navigate = () => { if (addressBarValue.trim()) void invoke('navigate-to', addressBarValue, activeTabId); };
-  const runCommand = (command: string) => { setCommandOpen(false); if (command === 'settings') setSettingsOpen(true); else if (command === 'new-tab') void invoke('create-tab', 'about:blank'); else if (command === 'terminal') selectPanel('terminal'); else if (command === 'history') selectPanel('history'); else if (command === 'orion') { selectPanel('browser'); setIsAIPanelOpen(true); } };
+  const handleNewTab = () => { selectPanel('browser'); setIsAIPanelOpen(true); void invoke('create-tab', 'about:blank'); };
+  const runCommand = (command: string) => { setCommandOpen(false); if (command === 'settings') setSettingsOpen(true); else if (command === 'new-tab') handleNewTab(); else if (command === 'terminal') selectPanel('terminal'); else if (command === 'history') selectPanel('history'); else if (command === 'orion') { selectPanel('browser'); setIsAIPanelOpen(true); } };
 
   return <div className="synapse-app-shell relative flex h-screen w-screen overflow-hidden text-white select-none">
     <aside className="glass-sidebar synapse-surface z-30 flex w-[72px] shrink-0 flex-col items-center border-y-0 border-l-0 py-5" aria-label="Main navigation">
@@ -170,7 +171,7 @@ const MainLayout: React.FC = () => {
       <header className="glass-toolbar synapse-toolbar relative z-20 shrink-0 border-b">
         <div className="relative flex h-12 items-center gap-3 px-4"><div className={`synapse-progress-line ${activeTab?.isLoading ? 'is-loading' : ''}`} aria-hidden="true" />
           <div className="flex items-center gap-2 text-xs text-white/45"><Activity size={13} className="text-emerald-300" /><span>{title}</span></div>
-          <div className="min-w-0 flex-1 overflow-hidden"><TabBar tabs={tabs} activeTabId={activeTabId} onSelectTab={id => void invoke('set-active-tab', id)} onCloseTab={id => void invoke('close-tab', id)} onNewTab={() => void invoke('create-tab', 'about:blank')} /></div>
+          <div className="min-w-0 flex-1 overflow-hidden"><TabBar tabs={tabs} activeTabId={activeTabId} onSelectTab={id => void invoke('set-active-tab', id)} onCloseTab={id => void invoke('close-tab', id)} onNewTab={handleNewTab} /></div>
           <button type="button" aria-label="Toggle AI panel" onClick={() => { selectPanel('browser'); setIsAIPanelOpen(open => !open); }} className={`synapse-ai-button rounded-lg border px-3 py-1.5 text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 ${isAIPanelOpen && panel === 'browser' ? 'border-white/25 bg-white text-black' : 'border-white/10 bg-white/[0.04] text-white/65 hover:bg-white/10'}`}><Bot size={14} className="inline mr-1.5" />AI</button>
         </div>
         <div className="flex items-center gap-3 px-4 pb-3">
