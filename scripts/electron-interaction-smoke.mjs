@@ -12,6 +12,13 @@ const page = pages[0];
 await page.waitForLoadState('domcontentloaded');
 await page.screenshot({ path: `${outputDir}/main.png`, fullPage: true });
 
+const onboarding = page.getByRole('main', { name: 'Welcome to Synapse Browser' });
+if (await onboarding.count()) {
+  await page.screenshot({ path: `${outputDir}/onboarding.png`, fullPage: true });
+  await page.getByRole('button', { name: 'Skip Setup' }).click();
+  await page.getByRole('button', { name: 'Open Settings' }).waitFor();
+}
+
 const settingsButton = page.getByRole('button', { name: 'Open Settings' });
 await settingsButton.click();
 await page.getByRole('dialog', { name: 'Settings' }).waitFor();
@@ -30,5 +37,5 @@ await page.screenshot({ path: `${outputDir}/ai-running.png`, fullPage: true });
 await page.waitForTimeout(1500);
 const aiState = await page.getByRole('button', { name: /Run ORION|Stop ORION/ }).getAttribute('aria-label');
 await page.screenshot({ path: `${outputDir}/ai-result.png`, fullPage: true });
-console.log(JSON.stringify({ pageUrl: page.url(), title: await page.title(), settings: 'PASS', aiInput: 'PASS', aiRunButton: 'PASS', aiButtonStateAfterRun: aiState }, null, 2));
+console.log(JSON.stringify({ pageUrl: page.url(), title: await page.title(), onboarding: 'PASS_OR_ALREADY_COMPLETE', settings: 'PASS', aiInput: 'PASS', aiRunButton: 'PASS', aiButtonStateAfterRun: aiState }, null, 2));
 await browser.close();
