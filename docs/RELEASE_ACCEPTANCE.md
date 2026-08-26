@@ -1,6 +1,6 @@
 # Release Acceptance Matrix
 
-The productization work is on branch `productization/v1.0.5`; **v1.0.5 is not published**. The matrix below separates evidence that is actually verified from work that remains untested. A gate is not marked PASS from code inspection alone.
+The productization work is on branch `productization/v1.0.5`; **v1.0.5 is not published**. The matrix below separates evidence that is actually verified from work that remains untested. A gate is not marked PASS from code inspection alone. The whole-product visual redesign is implemented in the current branch, while fresh native Windows validation of this newer visual layer remains open.
 
 ## PLATFORM: Windows
 
@@ -8,7 +8,7 @@ The productization work is on branch `productization/v1.0.5`; **v1.0.5 is not pu
 |---|---|---|
 | Installer/package | PASS | Native GitHub Actions packaging produced Windows artifacts. |
 | Launch | PASS | Native Windows packaged executable survived the launch smoke. |
-| Onboarding and browser shell | PASS | Native Windows UI Automation run `32935389959` produced `artifacts/windows-ui-evidence-ci/01-launch.png` and `02-after-skip.png`. |
+| Onboarding and browser shell | PASS WITH PRIOR EVIDENCE | Native Windows UI Automation run `32935389959` produced `artifacts/windows-ui-evidence-ci/01-launch.png` and `02-after-skip.png`; those screenshots predate the whole-product visual redesign. |
 | Settings and provider setup UI | PASS | Native Windows evidence `03-settings.png` visibly shows provider, key, base URL, model, save, and reset controls. Provider-backed Windows connection was not tested. |
 | AI input | PASS | Native Windows evidence `04-ai-input.png` shows the ORION panel and prompt control. |
 | ORION running state | PASS | Native Windows evidence `05-ai-running.png` shows a submitted prompt and the agent attention/failure state. |
@@ -40,7 +40,9 @@ The productization work is on branch `productization/v1.0.5`; **v1.0.5 is not pu
 | Terminal | PARTIAL | Constrained terminal integration is wired; lifecycle and process tests were not manually exercised. |
 | Database and restart | PARTIAL | Unit/build coverage passed; full close/relaunch persistence was not manually exercised. |
 | Screen recording | FAIL | No Linux recording was requested as a substitute for the native Windows recording. |
-| Overall Linux gate | PASS WITH LIMITATIONS | The core ORION proof is complete on Linux; broader workspace and lifecycle acceptance remains partial. |
+| Whole-product visual system | PASS WITH LIMITATIONS | The current built renderer was visually inspected across browser shell, ORION, Files, Terminal, and Settings under `artifacts/whole-product-visual-latest/`; visual smoke is renderer/Xvfb evidence, not native Windows evidence. |
+| Command palette | PASS | Ctrl/Cmd+K opened the floating command surface with Open Settings, New Tab, Open Terminal, Ask ORION, and Search History commands. |
+| Overall Linux gate | PASS WITH LIMITATIONS | The core ORION proof and current whole-product renderer styling are complete on Linux; broader workspace and lifecycle acceptance remains partial. |
 
 ## Automated validation
 
@@ -68,6 +70,9 @@ WINDOWS SCREEN RECORDING: FAIL
 MACOS PACKAGE: PASS
 MACOS RUNTIME: NOT VERIFIED
 LINUX ORION: PASS WITH EVIDENCE
+WHOLE-PRODUCT VISUAL: PASS WITH RENDERER EVIDENCE
+COMMAND PALETTE: PASS
+WINDOWS REDESIGN RERUN: NOT VERIFIED
 GITHUB RELEASE v1.0.5: NOT CREATED
 OVERALL: NOT RELEASE READY
 ```

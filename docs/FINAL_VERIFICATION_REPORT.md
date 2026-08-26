@@ -10,6 +10,12 @@ The basic Welcome card was redesigned into a first-launch-only cinematic flow. T
 
 The built Electron renderer was visually inspected under `artifacts/onboarding-visual/`. The welcome and provider setup states rendered correctly, and the provider setup smoke confirmed the expected region and Save and Continue control. The persistence smoke confirmed the boot stage, Welcome stage, keyboard focus on Skip Setup, Skip Setup completion, persisted local-storage state, browser tabs after transition, and no onboarding screen after reload. The earliest boot frame was not captured by the current renderer-attached smoke because the app had already reached the renderer by connection time; a true process-launch recording remains a native desktop follow-up.
 
+## Whole-product visual verification
+
+The cinematic onboarding visual language was extended across the browser shell, sidebar, tabs, address surface, navigation progress line, workspace surfaces, Settings modal, and ORION panel. Shared CSS tokens and React primitives now provide consistent surfaces, icon buttons, inputs, reveals, active rails, modal treatment, ORION presence, result cards, and timeline motion. A Ctrl/Cmd+K command palette was also added with real actions for Settings, New Tab, Terminal, ORION, and History.
+
+The built renderer was visually inspected under `artifacts/whole-product-visual-latest/`. The browser shell, ORION panel, Files workspace, Terminal workspace, and Settings modal were captured. The command palette smoke opened the floating surface and found all five expected commands. These are renderer/Xvfb results; they are not native Windows visual acceptance of the new shell.
+
 ## ORION proof results
 
 ### Wikipedia Bangalore

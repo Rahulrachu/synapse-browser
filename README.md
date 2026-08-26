@@ -17,11 +17,15 @@ Synapse Browser is an AI-first productivity desktop browser and developer enviro
 
 > **Release honesty:** v1.0.5 is not published. Native Windows launch, onboarding, Settings, AI input, and running-state screenshots are available from CI, but a completed Windows ORION workflow and the requested real Windows screen recording are not yet available. The release remains blocked rather than being marked PASS without evidence.
 
-## First Launch Experience
+## Synapse product experience
 
-Synapse provides a guided first-launch experience for configuring AI and introducing ORION. A short cinematic boot sequence establishes the Synapse core, then transitions into the Welcome screen and a dedicated provider setup flow. Users can choose a provider, test a connection, save credentials securely, or use Skip Setup and configure AI later from Settings. The experience respects reduced-motion preferences, keeps keyboard focus and accessible labels, and leaves returning launches fast by preserving the existing onboarding-completion flag.
+Synapse now uses one restrained visual system across the application: near-black and deep-navy surfaces, soft white typography, thin illuminated borders, subtle blue ambient light, floating tabs, spatial workspace transitions, and quiet status indicators. Shared CSS and React primitives cover raised surfaces, icon buttons, inputs, reveals, active rails, modal treatment, progress lines, and ORION presence states.
 
-The cinematic implementation has been visually inspected in the built Electron renderer under `artifacts/onboarding-visual/`. The native Windows evidence bundle currently attached to CI was captured before this visual redesign; a fresh Windows packaged-app run is still required before claiming Windows visual acceptance for the new animation layer.
+The browser shell, sidebar, tabs, address surface, navigation progress, Files, Editor, Terminal, History, Bookmarks, Downloads, Settings modal, and ORION panel inherit the same visual language. Real callbacks and secure IPC remain unchanged; the visual layer does not replace browser navigation, file operations, terminal execution, provider configuration, or agent actions with simulations.
+
+The first-launch experience remains guided and first-launch-only: a short Synapse boot stage transitions into Welcome, provider setup, secure connection status, and ORION-ready completion. Skip Setup and `synapse.onboardingComplete` persistence remain intact. Reduced-motion preferences suppress orbit, particle, breathing, and large transition effects globally.
+
+The whole-product visual implementation has been inspected in the built Electron renderer under `artifacts/whole-product-visual/` and `artifacts/onboarding-visual/`. The native Windows evidence bundle currently attached to CI predates this whole-product visual redesign; a fresh Windows packaged-app run is still required before claiming Windows visual acceptance for the new shell and animation layer.
 
 ## ORION browser agent
 
