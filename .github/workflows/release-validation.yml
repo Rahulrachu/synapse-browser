@@ -63,7 +63,8 @@ jobs:
         run: |
           $executable = Join-Path $pwd 'release\\win-unpacked\\Synapse Browser.exe'
           if (-not (Test-Path $executable)) { throw "Packaged executable not found: $executable" }
-          $process = Start-Process -FilePath $executable -ArgumentList '--no-sandbox', '--disable-gpu', '--remote-debugging-port=9222' -PassThru
+          $env:SYNAPSE_E2E = '1'
+          $process = Start-Process -FilePath $executable -ArgumentList '--no-sandbox', '--disable-gpu' -PassThru
           try {
             Start-Sleep -Seconds 10
             if ($process.HasExited) { throw "Synapse Browser exited during Windows launch smoke with code $($process.ExitCode)" }

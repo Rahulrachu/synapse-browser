@@ -23,6 +23,11 @@ import os from 'os';
 
 let mainWindow: any = null;
 
+if (process.env.SYNAPSE_E2E === '1') {
+  app.commandLine.appendSwitch('remote-debugging-address', '127.0.0.1');
+  app.commandLine.appendSwitch('remote-debugging-port', '9222');
+}
+
 app.on('ready', async () => {
   mainWindow = createWindow();
   new AgentRuntime(mainWindow);
