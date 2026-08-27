@@ -162,7 +162,9 @@
 
 /* v1.0.6 provider popover: avoid platform-native white select menus. */
 @layer components {
-  .synapse-provider-select { z-index: 30; }
+  .synapse-provider-select { z-index: 30; color-scheme: dark; }
+  .synapse-provider-select button, .synapse-provider-select [role='option'] { color-scheme: dark; }
+  select, select option { color: var(--synapse-ink); background-color: #050505; color-scheme: dark; }
   .synapse-provider-trigger { border: 1px solid var(--synapse-line); background: rgba(0,0,0,.72); transition: border-color .2s ease, background .2s ease, box-shadow .2s ease; }
   .synapse-provider-trigger:hover, .synapse-provider-trigger[aria-expanded='true'] { border-color: var(--synapse-line-strong); background: rgba(174,180,185,.06); box-shadow: 0 0 18px rgba(174,180,185,.05); }
   .synapse-provider-menu { border: 1px solid var(--synapse-line-strong); background: #050505; box-shadow: 0 22px 56px rgba(0,0,0,.72), inset 0 1px rgba(208,212,215,.045); }

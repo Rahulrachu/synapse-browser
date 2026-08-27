@@ -22,6 +22,7 @@ export default function AIWorkspacePanel() {
   const [running, setRunning] = useState(false);
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [confirmation, setConfirmation] = useState<AgentEvent | null>(null);
+  const [confirmationReply, setConfirmationReply] = useState('');
 
   useEffect(() => {
     if (!window.electron) return;
@@ -88,13 +89,27 @@ export default function AIWorkspacePanel() {
 
   const handleConfirmation = async (confirmed: boolean) => {
     if (!runId) return;
+    setConfirmationReply('');
     setConfirmation(null);
     try { await window.electron.invoke('agent:confirm', { runId, confirmed }); } catch (error) { setRunning(false); setEvents(current => [...current, { runId, type: 'error', message: error instanceof Error ? error.message : 'Confirmation failed.', at: Date.now() }]); }
+  };
+
+  const handleNewChat = async () => {
+    if (runId && running && window.electron) await window.electron.invoke('agent:cancel', runId);
+    setGoal(''); setQuickPrompt(''); setRunId(null); setEvents([]); setAnswer(''); setConfirmation(null); setConfirmationReply(''); setRunning(false); setDetailsOpen(false);
+  };
+
+  const submitConfirmationReply = (event: React.FormEvent) => {
+    event.preventDefault();
+    const reply = confirmationReply.trim().toLowerCase();
+    if (reply === 'yes' || reply === 'y' || reply === 'confirm' || reply === 'approve') void handleConfirmation(true);
+    else if (reply === 'no' || reply === 'n' || reply === 'cancel' || reply === 'deny') void handleConfirmation(false);
   };
 
   return (
     <section className={`synapse-orion-shell flex h-full flex-col text-white ${running ? 'is-active' : ''}`} aria-label="ORION browser agent">
       <header className="flex items-center justify-between border-b border-white/[0.07] px-5 py-4">
+        <button type="button" onClick={() => void handleNewChat()} className="rounded-lg border border-white/10 px-2.5 py-1.5 text-[10px] text-white/55 hover:bg-white/10 hover:text-white">New chat</button>
         <div className="flex items-center gap-3">
           <div className={`synapse-orion-presence flex h-8 w-8 items-center justify-center rounded-xl border border-white/10 bg-white/[0.06] text-white shadow-[0_0_24px_rgba(255,255,255,0.06)] ${running ? 'is-active' : ''}`}><Sparkles size={15} /></div>
           <div><h2 className="text-[13px] font-semibold tracking-[0.16em] text-white">ORION</h2><p className="mt-0.5 text-[10px] text-white/40">Browser agent</p></div>
@@ -113,14 +128,14 @@ export default function AIWorkspacePanel() {
 
           <div className="synapse-surface-raised rounded-2xl p-3 focus-within:border-white/25">
             <textarea aria-label="What do you want me to do?" value={goal} onChange={e => setGoal(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void handleRun(); } }} rows={4} disabled={running} placeholder="Tell me what you want to do…" className="w-full resize-none bg-transparent px-1 py-1 text-[13px] leading-6 text-white outline-none placeholder:text-white/25 disabled:opacity-50" />
-            <div className="mt-3 flex items-center justify-between border-t border-white/[0.07] pt-3"><span className="text-[10px] text-white/25">Enter to run · Shift + Enter for a new line</span><button aria-label={running ? 'Stop ORION' : 'Run ORION'} onClick={running ? handleStop : handleRun} disabled={!running && !goal.trim()} className={`flex items-center gap-2 rounded-lg px-3 py-2 text-[11px] font-medium transition ${running ? 'bg-white/10 text-white hover:bg-white/15' : goal.trim() ? 'bg-white text-black hover:bg-white/90' : 'bg-white/10 text-white/25'}`}>{running ? <><Square size={12} fill="currentColor" />Stop</> : <><Activity size={13} />Run</>}</button></div>
+            <div className="mt-3 flex items-center justify-between border-t border-white/[0.07] pt-3"><span className="text-[10px] text-white/25">Enter to run · Shift + Enter for a new line</span><div className="flex items-center gap-2"><button type="button" aria-label="Start a new ORION chat" onClick={() => void handleNewChat()} className="rounded-lg px-2 py-2 text-[10px] text-white/40 hover:bg-white/10 hover:text-white">Clear</button><button aria-label={running ? 'Stop ORION' : 'Run ORION'} onClick={running ? handleStop : handleRun} disabled={!running && !goal.trim()} className={`flex items-center gap-2 rounded-lg px-3 py-2 text-[11px] font-medium transition ${running ? 'bg-white/10 text-white hover:bg-white/15' : goal.trim() ? 'bg-white text-black hover:bg-white/90' : 'bg-white/10 text-white/25'}`}>{running ? <><Square size={12} fill="currentColor" />Stop</> : <><Activity size={13} />Run</>}</button></div></div>
           </div>
 
           {answer && <div className="synapse-orion-response mt-4 rounded-xl border p-4" aria-label="ORION response"><p className="text-[10px] uppercase tracking-[0.15em] text-emerald-200/70">ORION response</p><p className="mt-2 whitespace-pre-wrap text-[12px] leading-5 text-white/75">{answer}</p></div>}
 
           <div className="synapse-surface mt-6 rounded-xl px-3 py-3"><div className="flex items-center gap-2 text-[11px] text-white/65">{running ? <Loader2 size={13} className="animate-spin text-white" /> : latest?.type === 'done' ? <Check size={13} className="text-emerald-400" /> : <Circle size={8} className="fill-white/30 text-white/30" />}<span>{status}</span><span className="ml-auto text-[10px] text-white/25">{events.length ? `${events.length} updates` : ''}</span></div><p className="mt-2 truncate text-[11px] text-white/40">{statusMessage}</p><div className="mt-3 grid grid-cols-3 gap-2 border-t border-white/[0.06] pt-3 text-[9px] uppercase tracking-[0.12em] text-white/25"><span><span className="block text-white/55">Phase</span>{taskState.phase || 'ready'}</span><span><span className="block text-white/55">Confidence</span>{confidence}</span><span className="text-right"><span className="block text-white/55">Steps</span>{typeof taskState.remainingSteps === 'number' ? taskState.remainingSteps : '—'}</span></div><p className="mt-2 truncate text-[10px] text-white/25">{originLabel}</p></div>
 
-          {confirmation && <div className="synapse-surface mt-4 rounded-xl border-amber-300/25 bg-amber-300/[0.06] p-4"><div className="flex gap-3"><ShieldAlert size={16} className="mt-0.5 shrink-0 text-amber-200" /><div><p className="text-[12px] font-medium text-amber-100">Confirmation required</p><p className="mt-2 text-[11px] leading-5 text-white/55">ORION is ready to activate <span className="text-white/85">{confirmationText}</span>. This may cause an external side effect.</p><div className="mt-4 flex justify-end gap-2"><button onClick={() => void handleConfirmation(false)} className="rounded-lg px-3 py-2 text-[11px] text-white/55 hover:bg-white/10">Cancel</button><button onClick={() => void handleConfirmation(true)} className="rounded-lg bg-white px-3 py-2 text-[11px] font-medium text-black hover:bg-white/90">Confirm</button></div></div></div></div>}
+          {confirmation && <div className="synapse-surface mt-4 rounded-xl border-amber-300/25 bg-amber-300/[0.06] p-4"><div className="flex gap-3"><ShieldAlert size={16} className="mt-0.5 shrink-0 text-amber-200" /><div className="min-w-0 flex-1"><p className="text-[12px] font-medium text-amber-100">Confirmation required</p><p className="mt-2 text-[11px] leading-5 text-white/55">ORION is ready to activate <span className="text-white/85">{confirmationText}</span>. This may cause an external side effect.</p><form onSubmit={submitConfirmationReply} className="mt-4 flex gap-2"><input autoFocus aria-label="Reply to ORION confirmation" value={confirmationReply} onChange={event => setConfirmationReply(event.target.value)} placeholder="Type yes or no" className="min-w-0 flex-1 rounded-lg border border-white/10 bg-black/40 px-3 py-2 text-[11px] text-white outline-none placeholder:text-white/25" /><button type="submit" className="rounded-lg bg-white px-3 py-2 text-[11px] font-medium text-black hover:bg-white/90">Reply</button></form><div className="mt-2 flex justify-end gap-2"><button type="button" onClick={() => void handleConfirmation(false)} className="rounded-lg px-3 py-2 text-[11px] text-white/55 hover:bg-white/10">Cancel</button><button type="button" onClick={() => void handleConfirmation(true)} className="rounded-lg border border-white/20 px-3 py-2 text-[11px] text-white hover:bg-white/10">Confirm</button></div></div></div></div>}
 
           <button onClick={() => setDetailsOpen(value => !value)} className="mt-5 flex w-full items-center justify-between border-t border-white/[0.07] pt-4 text-[10px] uppercase tracking-[0.15em] text-white/30 hover:text-white/60"><span>Details</span><ChevronDown size={13} className={detailsOpen ? 'rotate-180 transition-transform' : 'transition-transform'} /></button>
           {detailsOpen && <div className="mt-3 space-y-2 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">{events.length === 0 ? <p className="text-[10px] text-white/30">No run details yet.</p> : events.map((event, index) => <div key={`${event.at}-${index}`} className="synapse-timeline-item flex gap-2 text-[10px] leading-4 text-white/40" style={{ animationDelay: `${Math.min(index, 8) * 35}ms` }}><span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-white/35" /><span>{event.message}</span></div>)}</div>}

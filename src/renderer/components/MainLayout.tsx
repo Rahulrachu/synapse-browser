@@ -220,14 +220,14 @@ const MainLayout: React.FC = () => {
   const desktop = typeof window !== 'undefined' && Boolean(window.electron);
 
   useEffect(() => {
-    if (!desktop) { const previewTab: Tab = { id: 'preview-tab', url: 'https://www.google.com', title: 'Preview', isLoading: false, canGoBack: false, canGoForward: false }; setTabs([previewTab]); setActiveTabId(previewTab.id); return; }
+    if (!desktop) { const previewTab: Tab = { id: 'preview-tab', url: 'about:blank', title: 'New Tab', isLoading: false, canGoBack: false, canGoForward: false }; setTabs([previewTab]); setActiveTabId(previewTab.id); return; }
     let disposed = false;
     const init = async () => {
       try {
         const result = await window.electron.invoke('get-all-tabs');
         if (disposed) return;
         if (result.tabs?.length > 0) { setTabs(result.tabs); setActiveTabId(result.activeTabId || result.tabs[0].id); }
-        else { const newTab = await window.electron.invoke('create-tab', 'https://www.google.com'); setTabs(newTab.tabs); setActiveTabId(newTab.activeTabId); }
+        else { const newTab = await window.electron.invoke('create-tab', 'about:blank'); setTabs(newTab.tabs); setActiveTabId(newTab.activeTabId); }
       } catch (error) { console.error('[Renderer] Failed to initialize tabs', error); }
     };
     void init();
