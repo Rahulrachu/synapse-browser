@@ -383,13 +383,17 @@ class BrowserManager {
   private clampBrowserBounds(bounds: BrowserBounds, content: { width: number; height: number }): BrowserBounds {
     const x = Math.max(72, Math.round(Number.isFinite(bounds.x) ? bounds.x : 72));
     const y = Math.max(96, Math.round(Number.isFinite(bounds.y) ? bounds.y : 96));
-    const maxWidth = Math.max(320, content.width - x - 380);
-    const maxHeight = Math.max(240, content.height - y - 32);
+    // The renderer already measures the exact browser rectangle after the
+    // sidebar and AI panel are laid out. Reserving another fixed 380px here
+    // caused the native view to overlap the panel and become unusable at
+    // smaller window sizes. Clamp only to the actual content bounds.
+    const maxWidth = Math.max(1, content.width - x);
+    const maxHeight = Math.max(1, content.height - y);
     return {
       x,
       y,
-      width: Math.min(maxWidth, Math.max(320, Math.round(bounds.width))),
-      height: Math.min(maxHeight, Math.max(240, Math.round(bounds.height))),
+      width: Math.min(maxWidth, Math.max(1, Math.round(bounds.width))),
+      height: Math.min(maxHeight, Math.max(1, Math.round(bounds.height))),
     };
   }
 

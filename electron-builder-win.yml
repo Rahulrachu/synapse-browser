@@ -1,0 +1,15 @@
+appId: com.synapse.browser
+productName: Synapse Browser
+files:
+  - out/**/*
+  - dist/**/*
+  - package.json
+directories:
+  buildResources: public
+  output: release
+win:
+  target:
+    - portable
+    - zip
+  icon: public/icon.ico
+  artifactName: Synapse-Browser-${version}-${os}-${arch}.${ext}

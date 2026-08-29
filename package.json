@@ -1,7 +1,7 @@
 {
   "type": "module",
   "name": "synapse-browser",
-  "version": "1.0.6",
+  "version": "1.1.0",
   "main": "out/main/background.cjs",
   "description": "AI-First Productivity Browser",
   "author": "Rahul S R <rahul.s.r@example.com>",
@@ -40,15 +40,19 @@
     "win": {
       "target": [
         {
-          "target": "nsis",
-          "arch": ["x64"]
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "zip",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
-      "icon": "public/icon.png",
+      "icon": "public/icon.ico",
       "artifactName": "Synapse-Browser-${version}-${os}-${arch}.${ext}"
     },
     "nsis": {

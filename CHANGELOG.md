@@ -2,6 +2,18 @@
 
 All notable changes to Synapse Browser will be documented in this file.
 
+## [1.1.0] - 2026-08-29
+
+### Added
+- Replaced the app branding with the supplied Synapse Browser logo and packaged PNG/ICO assets.
+- Added selectable Google, Bing, DuckDuckGo, and Brave Search providers for address-bar searches.
+- Added a customizable home tab with persisted background color/image and editable website shortcuts.
+
+### Fixed
+- Kept the ORION AI panel available when tasks open or switch to a new tab, with persisted panel visibility.
+- Made the AI panel and browser content responsive at smaller window sizes.
+- Corrected native browser bounds clamping so the WebContentsView follows the measured layout instead of reserving a duplicate fixed panel width.
+
 ## [1.0.0] - 2026-08-11
 
 ### Added
