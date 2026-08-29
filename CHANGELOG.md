@@ -2,6 +2,15 @@
 
 All notable changes to Synapse Browser will be documented in this file.
 
+## [1.1.2] - 2026-08-29
+
+### Fixed
+- Added a real desktop-persisted AI API settings form for provider name, API key, base URL, model, enable/disable state, and connection testing.
+- Updated ORION to consume the saved API configuration rather than only process environment variables.
+- Added a native image chooser that compresses selected images to a safe data URL and renders them as home-tab backgrounds.
+- Made ORION visible by default on every launch and corrected custom data-URL background rendering.
+- Verified the corrected app with a production build, focused browser-manager tests, and a headless Electron startup smoke test.
+
 ## [1.1.1] - 2026-08-29
 
 ### Fixed

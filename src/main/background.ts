@@ -1,4 +1,6 @@
-import { app, ipcMain } from 'electron';
+import { app, dialog, ipcMain, nativeImage } from 'electron';
+import { promises as fsPromises } from 'node:fs';
+import path from 'node:path';
 import { exec } from 'child_process';
 import { createWindow } from './BrowserWindow.js';
 import BrowserManager from './BrowserManager.js';
@@ -22,6 +24,37 @@ import AIServiceManager from './AIServiceManager.js';
 import os from 'os';
 
 let mainWindow: any = null;
+
+ipcMain.handle('ai-settings:get', () => AIServiceManager.getPublicPrimaryService());
+ipcMain.handle('ai-settings:save', (_event, updates: any) => {
+  const current = AIServiceManager.getPrimaryService();
+  const safeUpdates = { ...updates };
+  if (!String(safeUpdates.apiKey || '').trim()) delete safeUpdates.apiKey;
+  return AIServiceManager.updatePrimaryService(safeUpdates) && AIServiceManager.getPublicPrimaryService();
+});
+ipcMain.handle('ai-settings:test', async () => {
+  const service = AIServiceManager.getPrimaryService();
+  if (!service.apiKey) return { ok: false, message: 'Add an API key first.' };
+  try {
+    const response = await fetch(`${(service.baseUrl || 'https://api.openai.com/v1').replace(/\/$/, '')}/models`, { headers: { Authorization: `Bearer ${service.apiKey}` } });
+    return { ok: response.ok, message: response.ok ? 'API connection succeeded.' : `API returned HTTP ${response.status}.` };
+  } catch (error: any) { return { ok: false, message: error?.message || 'API connection failed.' }; }
+});
+
+ipcMain.handle('pick-home-background', async () => {
+  if (!mainWindow || mainWindow.isDestroyed()) return null;
+  const result = await dialog.showOpenDialog(mainWindow, { title: 'Choose home background image', properties: ['openFile'], filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif'] }] });
+  const selected = result.filePaths[0];
+  if (result.canceled || !selected) return null;
+  const stat = await fsPromises.stat(selected);
+  if (stat.size > 12 * 1024 * 1024) throw new Error('Background image must be 12 MB or smaller.');
+  const image = nativeImage.createFromPath(selected);
+  if (image.isEmpty()) throw new Error('The selected file is not a readable image.');
+  const size = image.getSize();
+  const scale = Math.min(1, 1600 / Math.max(size.width, size.height));
+  const normalized = scale < 1 ? image.resize({ width: Math.max(1, Math.round(size.width * scale)), height: Math.max(1, Math.round(size.height * scale)) }) : image;
+  return `data:image/jpeg;base64,${normalized.toJPEG(82).toString('base64')}`;
+});
 
 ipcMain.handle('window-control', async (_event, action: 'minimize' | 'maximize' | 'close') => {
   if (!mainWindow || mainWindow.isDestroyed()) return false;

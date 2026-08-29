@@ -7,7 +7,7 @@ const ALLOWED_INVOKE_CHANNELS = [
   'get-profiles', 'get-profile', 'create-profile', 'update-profile', 'delete-profile',
   'get-downloads', 'pause-download', 'resume-download', 'cancel-download', 'open-download', 'show-download-in-folder', 'remove-download',
   'find-in-page', 'stop-find-in-page', 'zoom-in', 'zoom-out', 'zoom-reset', 'print-page', 'save-page-pdf',
-  'set-browser-area-bounds', 'set-browser-view-visibility', 'window-control',
+  'set-browser-area-bounds', 'set-browser-view-visibility', 'window-control', 'ai-settings:get', 'ai-settings:save', 'ai-settings:test', 'pick-home-background',
   'navigate-to', 'go-back', 'go-forward', 'reload', 'stop-loading',
   'get-current-url', 'get-current-title',
   'get-bookmarks', 'get-bookmark-folders', 'create-bookmark-folder', 'update-bookmark-folder', 'delete-bookmark-folder',

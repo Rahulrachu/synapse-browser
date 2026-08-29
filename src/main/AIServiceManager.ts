@@ -93,9 +93,32 @@ class AIServiceManager {
     return serviceConfig;
   }
 
+  getPrimaryService(): AIServiceConfig {
+    const existing = this.services.get('primary-api');
+    if (existing) return existing;
+    const envService: AIServiceConfig = { id: 'primary-api', service: 'chatgpt', name: 'OpenAI-compatible API', apiKey: process.env.OPENAI_API_KEY, baseUrl: process.env.OPENAI_API_BASE || 'https://api.openai.com/v1', model: process.env.OPENAI_MODEL || 'gpt-4.1-mini', enabled: Boolean(process.env.OPENAI_API_KEY), createdAt: Date.now() };
+    this.services.set(envService.id, envService);
+    this.saveServices();
+    return envService;
+  }
+
+  updatePrimaryService(updates: Partial<AIServiceConfig>): AIServiceConfig {
+    const current = this.getPrimaryService();
+    const next = { ...current, ...updates, id: 'primary-api', createdAt: current.createdAt };
+    this.services.set('primary-api', next);
+    this.saveServices();
+    return next;
+  }
+
+  getPublicPrimaryService(): Omit<AIServiceConfig, 'apiKey'> & { hasApiKey: boolean } {
+    const service = this.getPrimaryService();
+    const { apiKey, ...safe } = service;
+    return { ...safe, hasApiKey: Boolean(apiKey) };
+  }
+
   /**
    * Retrieves all registered AI service configurations.
-   * @returns An array of all AI service configurations.
+   * @returns An array of all registered AI service configurations.
    */
   getServices(): AIServiceConfig[] {
     return Array.from(this.services.values());
