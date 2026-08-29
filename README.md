@@ -12,7 +12,7 @@ No screenshot is included until a native Windows capture of the installed v1.0.0
 
 ## Included v1 surfaces
 
-The v1 source includes a Chromium-based browser view with tabs, navigation controls, address-bar search, bookmarks, history, downloads, sessions, and workspace panels. The desktop shell also includes an AI workspace, command palette, notes, developer tools, terminal, file explorer, Git tools, settings, and agent-monitoring surfaces.
+The v1 source includes a Chromium-based browser view with tabs, navigation controls, address-bar search, bookmarks, history, downloads, sessions, and workspace panels. Settings includes a persisted **Search Engine** selector for Google, Bing, DuckDuckGo, Brave Search, and Ecosia; plain-text address-bar entries use the selected provider while direct URLs are opened normally. The desktop shell also includes an AI workspace, command palette, notes, developer tools, terminal, file explorer, Git tools, settings, and agent-monitoring surfaces.
 
 The v1 source includes agent and tool runtime code for browser interaction, planning, research, coding, terminal, file-system, and workspace workflows. Actual behavior depends on the configured AI provider, the target website, network access, and the permissions available to the application.
 

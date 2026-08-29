@@ -4,6 +4,14 @@ import { useWorkspaceStore } from '../store/workspaceStore';
 import { useBrowserStore } from '../store/browserStore';
 import AdvancedTabBar from './AdvancedTabBar';
 
+const SEARCH_URLS: Record<string, string> = {
+  google: 'https://www.google.com/search?q=',
+  bing: 'https://www.bing.com/search?q=',
+  duckduckgo: 'https://duckduckgo.com/?q=',
+  brave: 'https://search.brave.com/search?q=',
+  ecosia: 'https://www.ecosia.org/search?q=',
+};
+
 interface Tab {
   id: string;
   title: string;
@@ -167,12 +175,23 @@ export default function BrowserPanel() {
   };
 
   const handleNavigate = async () => {
-    if (urlInput.trim()) {
-      try {
-        await (window as any).electron.ipcRenderer.invoke('navigate-to', urlInput);
-      } catch (error) {
-        console.error('Failed to navigate:', error);
+    const input = urlInput.trim();
+    if (!input) return;
+
+    try {
+      const isUrl = /^(https?:\/\/|about:|file:)/i.test(input) ||
+        (/^[\w.-]+\.[a-z]{2,}(\/.*)?$/i.test(input) && !input.includes(' '));
+      let destination = input;
+
+      if (!isUrl) {
+        const engine = await (window as any).electron.ipcRenderer.invoke('get-search-engine');
+        const searchBase = SEARCH_URLS[engine] || SEARCH_URLS.google;
+        destination = `${searchBase}${encodeURIComponent(input)}`;
       }
+
+      await (window as any).electron.ipcRenderer.invoke('navigate-to', destination);
+    } catch (error) {
+      console.error('Failed to navigate:', error);
     }
   };
 

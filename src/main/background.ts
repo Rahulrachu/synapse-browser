@@ -183,6 +183,18 @@ ipcMain.handle('get-current-title', async () => {
   return BrowserManager.getCurrentTitle();
 });
 
+// Search engine preference handlers
+ipcMain.handle('get-search-engine', async () => {
+  return (await Storage.get('search-engine')) || 'google';
+});
+
+ipcMain.handle('set-search-engine', async (_event, engine: string) => {
+  const allowedEngines = ['google', 'bing', 'duckduckgo', 'brave', 'ecosia'];
+  const selectedEngine = allowedEngines.includes(engine) ? engine : 'google';
+  await Storage.set('search-engine', selectedEngine);
+  return selectedEngine;
+});
+
 // Storage handlers
 ipcMain.handle('get-bookmarks', async () => {
   return Storage.getBookmarks();
