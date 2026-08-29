@@ -2,6 +2,14 @@
 
 All notable changes to Synapse Browser will be documented in this file.
 
+## [1.1.1] - 2026-08-29
+
+### Fixed
+- Fixed native browser resizing so the active WebContentsView cannot cover or push out the AI panel.
+- Kept the ORION panel mounted as the primary workspace while auxiliary tools are opened.
+- Connected sidebar and window-control icons to real actions, including Notes, Chromium DevTools, terminal feedback, settings, help, profile feedback, minimize, maximize/restore, and close.
+- Fixed the Notes panel’s invalid hook usage so the Files control opens without a React runtime error.
+
 ## [1.1.0] - 2026-08-29
 
 ### Added

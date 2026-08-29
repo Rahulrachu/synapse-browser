@@ -23,6 +23,14 @@ import os from 'os';
 
 let mainWindow: any = null;
 
+ipcMain.handle('window-control', async (_event, action: 'minimize' | 'maximize' | 'close') => {
+  if (!mainWindow || mainWindow.isDestroyed()) return false;
+  if (action === 'minimize') mainWindow.minimize();
+  else if (action === 'maximize') mainWindow.isMaximized() ? mainWindow.unmaximize() : mainWindow.maximize();
+  else if (action === 'close') mainWindow.close();
+  return true;
+});
+
 app.on('ready', async () => {
   mainWindow = createWindow();
   new AgentRuntime(mainWindow);

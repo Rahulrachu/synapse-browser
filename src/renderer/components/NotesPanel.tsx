@@ -12,6 +12,7 @@ interface Note {
 
 export default function NotesPanel() {
   const isDarkMode = useWorkspaceStore((state) => state.isDarkMode);
+  const notesFromStore = useWorkspaceStore((state) => state.notes);
   const [notes, setNotes] = useState<Note[]>([]);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -19,11 +20,8 @@ export default function NotesPanel() {
 
   // Load notes from store
   useEffect(() => {
-    const storeNotes = useWorkspaceStore((state) => state.notes);
-    if (storeNotes) {
-      setNotes(storeNotes);
-    }
-  }, []);
+    setNotes(notesFromStore || []);
+  }, [notesFromStore]);
 
   const selectedNote = notes.find((n) => n.id === selectedNoteId);
 
