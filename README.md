@@ -6,24 +6,9 @@ Synapse Browser is a Windows desktop browser with an integrated AI workspace. Us
 
 This repository is intentionally scoped to the **v1.0.0 Windows release**. Later cross-platform packaging, later-release documentation, and unrelated generated assets are not part of this tree.
 
-## v1 release gallery
+## Screenshots
 
-These are the screenshots shipped with the `v1.0.0` release source. They show the product surface that this repository preserves.
-
-| Main browser workspace | AI workspace |
-| --- | --- |
-| ![Synapse Browser v1 main window](docs/screenshots/v1-main-window.png) | ![Synapse Browser v1 AI workspace](docs/screenshots/v1-ai-workspace.png) |
-| *Tabbed browsing, quick links, editor, and file explorer in one desktop workspace.* | *Browse the web beside an AI assistant and start a new session.* |
-
-| Command palette | Agent monitor |
-| --- | --- |
-| ![Synapse Browser v1 command palette](docs/screenshots/v1-command-palette.png) | ![Synapse Browser v1 agent monitor](docs/screenshots/v1-agent-monitor.png) |
-| *Search and invoke browser workspace commands.* | *Inspect agent activity and task progress.* |
-
-| Settings | |
-| --- | --- |
-| ![Synapse Browser v1 settings](docs/screenshots/v1-settings.png) | |
-| *Configure the v1 desktop workspace.* | |
+No screenshot is included until a native Windows capture of the installed v1.0.0 application is available. Design assets and headless blank frames are intentionally excluded; they would not be valid evidence of the released browser UI.
 
 ## Included v1 surfaces
 
@@ -74,7 +59,7 @@ npm test -- --run
 | `src/agents/` and `src/engine/` | Agent planning and execution layers. |
 | `src/tools/` | Browser, file-system, terminal, and other agent tools. |
 | `tests/` | v1 engine and integration tests. |
-| `docs/screenshots/` | Screenshots retained from the v1.0.0 release source. |
+| `docs/` | Release documentation kept intentionally minimal for v1.0.0. |
 
 ## License
 
