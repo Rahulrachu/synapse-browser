@@ -1,7 +1,9 @@
-import { app, ipcMain } from 'electron';
+import { app, dialog, ipcMain } from 'electron';
+import * as fs from 'fs';
 import { createWindow } from './BrowserWindow.js';
 import BrowserManager from './BrowserManager.js';
 import Storage from './Storage.js';
+import PasswordManager from './PasswordManager.js';
 import SessionManager from './SessionManager.js';
 import TabGroupManager from './TabGroupManager.js';
 import PanelManager from './PanelManager.js';
@@ -193,6 +195,50 @@ ipcMain.handle('set-search-engine', async (_event, engine: string) => {
   const selectedEngine = allowedEngines.includes(engine) ? engine : 'google';
   await Storage.set('search-engine', selectedEngine);
   return selectedEngine;
+});
+
+// Password manager handlers
+ipcMain.handle('passwords:list', async () => PasswordManager.list());
+ipcMain.handle('passwords:save', async (_event, entry) => {
+  PasswordManager.save(entry);
+  return PasswordManager.list();
+});
+ipcMain.handle('passwords:delete', async (_event, id: string) => {
+  PasswordManager.remove(id);
+  return PasswordManager.list();
+});
+ipcMain.handle('passwords:autofill', async (_event, id: string) => {
+  const activeTab = BrowserManager.getActiveTab();
+  const view = activeTab ? BrowserManager.getWebContents(activeTab.id) : undefined;
+  if (!view) throw new Error('No active browser page is available.');
+  const credentials = PasswordManager.getForAutofill(id);
+  if (credentials.url && activeTab?.url) {
+    try {
+      if (new URL(credentials.url).origin !== new URL(activeTab.url).origin) {
+        throw new Error('This login is saved for a different website.');
+      }
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('saved for a different')) throw error;
+    }
+  }
+  const payload = JSON.stringify(JSON.stringify(credentials));
+  await view.webContents.executeJavaScript(`(() => {
+    const credentials = JSON.parse(${payload});
+    const fields = Array.from(document.querySelectorAll('input'));
+    const username = fields.find((field) => /email|user|login/i.test(field.name + ' ' + field.id + ' ' + field.autocomplete));
+    const password = fields.find((field) => field.type === 'password' || /password/i.test(field.name + ' ' + field.id + ' ' + field.autocomplete));
+    const setValue = (field, value) => {
+      if (!field) return;
+      const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set;
+      setter?.call(field, value);
+      field.dispatchEvent(new Event('input', { bubbles: true }));
+      field.dispatchEvent(new Event('change', { bubbles: true }));
+    };
+    setValue(username, credentials.username);
+    setValue(password, credentials.password);
+    return Boolean(username || password);
+  })()`);
+  return true;
 });
 
 // Storage handlers
@@ -450,6 +496,18 @@ ipcMain.handle('create-file', async (event, projectId: string, filePath: string)
 
 ipcMain.handle('create-directory', async (event, projectId: string, dirPath: string) => {
   return ProjectManager.createDirectory(projectId, dirPath);
+});
+
+ipcMain.handle('save-file-as', async (_event, { defaultPath, content }: { defaultPath?: string; content: string }) => {
+  const result = await dialog.showSaveDialog({
+    title: 'Save file',
+    defaultPath: defaultPath || 'synapse-output.txt',
+    buttonLabel: 'Save',
+    properties: ['createDirectory'],
+  });
+  if (result.canceled || !result.filePath) return { canceled: true };
+  fs.writeFileSync(result.filePath, content, 'utf8');
+  return { canceled: false, filePath: result.filePath };
 });
 
 // Git handlers

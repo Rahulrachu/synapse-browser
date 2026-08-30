@@ -62,6 +62,7 @@ const SearchCenterPanel = lazy(() => import('../components/SearchCenterPanel'));
 const AgentMonitorPanel = lazy(() => import('../components/AgentMonitorPanel'));
 const ModelSelectionPanel = lazy(() => import('../components/ModelSelectionPanel'));
 const PromptLibraryPanel = lazy(() => import('../components/PromptLibraryPanel'));
+const PasswordManagerPanel = lazy(() => import('../components/PasswordManagerPanel'));
 
 class PanelRegistry {
   private panels: Map<string, PanelRegistryEntry> = new Map();
@@ -464,6 +465,18 @@ class PanelRegistry {
       permissions: ['storage', 'network'],
       defaultLayout: 'split',
       shortcuts: { key: 'm', ctrlKey: true, altKey: true },
+      lazy: true,
+    });
+
+    // Password Manager Panel
+    this.register({
+      id: 'passwords',
+      title: 'Password Manager',
+      icon: Lock,
+      component: PasswordManagerPanel,
+      permissions: ['storage', 'network'],
+      defaultLayout: 'split',
+      shortcuts: { key: 'l', ctrlKey: true, altKey: true },
       lazy: true,
     });
 
