@@ -2,7 +2,7 @@
 
 The Windows installer published as v1.0 was built from code that was never pushed to this repository. The repository held an older, different codebase.
 
-For 1.0.1 the source was recovered from that installer's `app.asar` (internal version 1.0.6) and split back into modules:
+For 1.0.11 the source was recovered from that installer's `app.asar` (internal version 1.0.6) and split back into modules:
 
 | Part of the app | Folder |
 | --- | --- |

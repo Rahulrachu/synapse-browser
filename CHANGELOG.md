@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.0.1
+## 1.0.11
 
 ### Fixed
 - **AI panel split screen.** Opening the AI panel now shrinks the web page and shows the panel beside it. The page container measured 0px tall, so the browser surface never received its real size and stayed full width over the AI panel.
