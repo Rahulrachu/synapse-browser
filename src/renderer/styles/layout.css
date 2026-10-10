@@ -1,0 +1,30 @@
+/* Hand-written layout styles (synapse.css is the compiled Tailwind theme from v1.0.6). */
+
+.synapse-resize-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -4px;
+  z-index: 30;
+  width: 8px;
+  cursor: col-resize;
+  touch-action: none;
+  transition: background-color 0.15s ease;
+}
+
+.synapse-resize-handle:hover,
+.synapse-resize-handle.is-active {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.synapse-crash-banner {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+}

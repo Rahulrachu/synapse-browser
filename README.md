@@ -1,66 +1,46 @@
-# Synapse Browser v1.0.0
+<p align="center"><img src="build/icon.png" width="96" alt="Synapse Browser" /></p>
 
-> **Tell your browser what to do. Synapse does it.**
+# Synapse Browser
 
-Synapse Browser is a Windows desktop browser with an integrated AI workspace. Use natural-language commands to work with the web, keep browsing sessions organized, and access AI assistance beside the active page.
+An AI-first desktop browser for Windows. Tell Synapse what to do: its agent, ORION, works on the current website, checks its progress, and asks before anything consequential, like submitting, buying or posting.
 
-This repository is intentionally scoped to the **v1.0.0 Windows release**. Later cross-platform packaging, later-release documentation, and unrelated generated assets are not part of this tree.
+## Download
 
-## Screenshots
+Get the latest `Synapse-Browser-<version>-Windows-x64-Setup.exe` from [Releases](https://github.com/Rahulrachu/synapse-browser/releases). Installed copies update themselves.
 
-No screenshot is included until a native Windows capture of the installed v1.0.0 application is available. Design assets and headless blank frames are intentionally excluded; they would not be valid evidence of the released browser UI.
+## Highlights
 
-## Included v1 surfaces
+- Chromium tabs with profiles, private tabs, pinning, mute, recently closed and session restore
+- A split-screen AI panel you can resize (`Ctrl+Shift+A`)
+- An ORION browser agent with origin permissions, prompt-injection filtering and confirmation before risky actions
+- Bring your own model: OpenAI, Gemini, Anthropic, OpenRouter or a local provider
+- Built-in files, editor, terminal (safe commands only), history, bookmarks and downloads
+- Command palette (`Ctrl+K`)
+- Crashed tabs recover on their own, only one instance runs at a time, and the packaged UI uses a strict CSP
 
-The v1 source includes a Chromium-based browser view with tabs, navigation controls, address-bar search, bookmarks, history, downloads, sessions, and workspace panels. Settings includes a persisted **Search Engine** selector for Google, Bing, DuckDuckGo, Brave Search, and Ecosia; plain-text address-bar entries use the selected provider while direct URLs are opened normally. The desktop shell also includes an AI workspace, command palette, notes, developer tools, terminal, file explorer, Git tools, settings, and agent-monitoring surfaces.
+## Development
 
-The v1 source includes agent and tool runtime code for browser interaction, planning, research, coding, terminal, file-system, and workspace workflows. Actual behavior depends on the configured AI provider, the target website, network access, and the permissions available to the application.
-
-## Download the Windows release
-
-Download the installer from the [Synapse Browser v1.0.0 release](https://github.com/Rahulrachu/synapse-browser/releases/tag/v1.0.0):
-
-[**Synapse-Browser-1.0-Windows-x64-Setup.exe**](https://github.com/Rahulrachu/synapse-browser/releases/download/v1.0.0/Synapse-Browser-1.0-Windows-x64-Setup.exe)
-
-## Build the Windows application
-
-The v1 package requires Node.js and npm. From a Windows development terminal:
-
-```powershell
-git clone --branch v1.0.0 https://github.com/Rahulrachu/synapse-browser.git
-cd synapse-browser
+```bash
 npm install
-npm run dev
+npm run dev        # run with hot reload
+npm run build      # build main, preload and renderer into out/
+npm run dist:win   # build the Windows installer into release/
 ```
 
-Create the production Windows package with:
+Pushing a `v*` tag builds the Windows installer on GitHub Actions and attaches it to the release.
 
-```powershell
-npm run build
-npm run pack
+## Project layout
+
+```
+src/main/        Electron main process (tabs, storage, downloads, IPC)
+src/main/agent/  ORION agent runtime and browser automation
+src/main/app/    Hardening (single instance, crash recovery) and auto-update
+src/preload/     IPC allow-list bridge
+src/renderer/    React UI
 ```
 
-The v1 packaging configuration produces the Windows installer and portable application targets defined in `package.json`.
-
-## Test
-
-Run the v1 test suite with:
-
-```powershell
-npm test -- --run
-```
-
-## Project structure
-
-| Path | Purpose |
-| --- | --- |
-| `src/main/` | Desktop process, browser management, AI services, agent runtime, and workspace services. |
-| `src/renderer/` | Browser shell, AI workspace, panels, stores, and user interface. |
-| `src/agents/` and `src/engine/` | Agent planning and execution layers. |
-| `src/tools/` | Browser, file-system, terminal, and other agent tools. |
-| `tests/` | v1 engine and integration tests. |
-| `docs/` | Release documentation kept intentionally minimal for v1.0.0. |
+See [docs/SOURCE.md](docs/SOURCE.md) for how this source matches the shipped app, and [CHANGELOG.md](CHANGELOG.md) for what's new.
 
 ## License
 
-MIT License. See [LICENSE](LICENSE).
+MIT © Rahul S R
