@@ -7,15 +7,11 @@ jobs:
   clean:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/github-script@v7
-        with:
-          script: |
-            const { owner, repo } = context.repo;
-            const arts = await github.paginate(github.rest.actions.listArtifactsForRepo, { owner, repo, per_page: 100 });
-            let bytes = 0;
-            for (const a of arts) {
-              await github.rest.actions.deleteArtifact({ owner, repo, artifact_id: a.id });
-              bytes += a.size_in_bytes;
-              core.info(`Deleted ${a.name} (${a.size_in_bytes} bytes)`);
-            }
-            core.info(`Deleted ${arts.length} artifacts, ${(bytes/1048576).toFixed(1)} MB`);
+      - name: Delete all artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ids=$(gh api --paginate "repos/${{ github.repository }}/actions/artifacts?per_page=100" --jq '.artifacts[].id')
+          n=0
+          for id in $ids; do gh api -X DELETE "repos/${{ github.repository }}/actions/artifacts/$id"; n=$((n+1)); done
+          echo "Deleted $n artifacts"
